@@ -343,6 +343,74 @@ New decisions use **Platform Admin**, **Organization Admin**, **Instructor** and
 
 **Implemented in:** commit `09139a4` on `phase-1-foundations` (public header and footer, and the About and Contact items on the landing and course-detail pages).
 
+## D27 — Development-only demo layer (A1, A2, A4, A5, A6)
+
+*D25 and D26 are reserved for the 21 October 2026 stack and sign-in approvals, recorded separately. The original A1–A6 text in D11 is unchanged and keeps its provisional wording. This entry approves only the development-build demo architecture described below. It does not resolve production decisions or every provisional statement in A1–A6.*
+
+**Confirmed in conversation (21 October 2026): scope**
+- **Friday 23 October demo:** a local development-build demo on the owner's PC. No hosted or deployed demo build. If a hosted URL turns out to be required, stop and ask before changing A6.
+- **Production is unchanged by this entry.** Production builds keep only `/` and the Not Found page. A route existing in the demo does not approve it for production.
+- **Demo behaviour is not security.** Persona switching, permission checks in the interface and route guards are user-experience only. They are not authentication or authorization. The database is the security boundary. No real authentication is implemented for the demo.
+
+**Confirmed in conversation (21 October 2026): demo architecture**
+- **A4:** async service functions, with development-only sample data kept outside page components. No data-fetching library.
+- **A6 (unchanged):** sample users and data are enabled only by `import.meta.env.DEV`. No environment-variable override, hosted demo build or production sample-data mode. Production output must not contain usable personas, sample data or development routes.
+- **A2:** one central permission file, `can(permission, scope)`. Pages never check role names. Public browsing of public course outlines does not require a profile. Signed-in permission checks require an active profile. Organization-specific access and actions require the applicable permission in the list below and the organization state under F4: an active organization for learners, a draft or active one for staff. The only exception is `learning.own_records.view`, which lets a learner read their own existing records from a suspended organization and grants no organization access.
+- **A1:** URLs, organization slugs, course IDs and organization IDs identify resources and never grant access. Checks use the organization recorded on the resource itself, so pairing a resource with another organization's URL shows "no access".
+- **Suspended organizations, general rule (F4):** a suspended organization grants no organization access to any role: no courses, lesson content or quizzes, no new activity (enrolments, progress or attempts), no memberships and no other members' records.
+- **Suspended organizations, exception:** a learner keeps **read-only** access to **their own existing** records (enrolments, progress and attempts) from that organization, through `learning.own_records.view` only. The exception grants no access to that organization's courses, lesson content or quizzes, no new activity, and no other members' records.
+
+**Confirmed in conversation (21 October 2026): demo route map (development build only)**
+
+| Area | Routes |
+|---|---|
+| Public | `/` (landing and navigation unchanged, D24); `/courses/:courseId` |
+| Learner (personal; eligible courses from every organization) | `/learn`; `/learn/courses/:courseId/lessons/:lessonId`; `/learn/courses/:courseId/quizzes/:quizId`; `/learn/courses/:courseId/complete` |
+| Instructor | `/o/:orgSlug/teach`; `/o/:orgSlug/teach/courses/:courseId`; `/o/:orgSlug/teach/courses/:courseId/quizzes/:quizId` |
+| Organization Admin | `/o/:orgSlug/manage`; `/o/:orgSlug/manage/members`; `/o/:orgSlug/manage/invitations`; `/o/:orgSlug/manage/settings` |
+| Platform Admin | `/admin/organizations`; `/admin/organizations/:orgId` |
+| Development | `/design-system` |
+
+`/dev/learner-dashboard` and `/dev/course-detail` are replaced by `/learn` and `/courses/:courseId`.
+
+**Confirmed in conversation (21 October 2026): demo permission list**
+
+| Permission | Granted to (demo rule) |
+|---|---|
+| `learning.own_records.view` | Any signed-in user: own existing enrolments, progress and attempts, read-only. Includes records from a suspended organization under the exception above. |
+| `course.content.view` | Active enrolment in a published course; for organization courses, also an active membership in an active organization |
+| `quiz.attempt.submit` | A separate permission: requires `course.content.view` and attempts remaining; shows score and pass/fail only |
+| `teach.workspace.view` | `instructor` in that organization |
+| `course.edit` | **Provisional demo rule, not a Q5 decision:** on that course's staff, draft courses only |
+| `manage.workspace.view` | `org_admin` of that organization |
+| `org.members.view` | `org_admin` |
+| `org.members.manage_roles` | `org_admin`; `instructor` and `learner` roles only, never `org_admin` (F3); never removes the last org admin |
+| `org.invitations.view` | `org_admin`, own organization |
+| `org.invitations.create` | `org_admin`; Instructor and Learner invitations only (D6, D18) |
+| `org.invitations.revoke` | **Provisional demo rule, pending the Priority 4 review of migration 0004 and D18:** `org_admin`; Instructor and Learner invitations in their own organization. D18's open question (which administrators may revoke which invitations) is not resolved by this entry. |
+| `org.learning_records.view` | `org_admin`; organization members only, never public learners |
+| `org.settings.view` | `org_admin`; view only |
+| `platform.organizations.view` | Platform Admin |
+| `platform.organizations.set_status` | Platform Admin |
+| `platform.org_admin_access.view` | Platform Admin: an organization's org admins, its pending org-admin invitations and invitations they sent. No user list, support search or learning records (D17, L11) |
+| `platform.org_admin_invitations.manage` | Platform Admin: create org-admin invitations (D18, F3). Revoking them is a **provisional demo rule**, pending the same Priority 4 review. |
+
+Shown as unavailable in the demo, not granted: publishing and publication approval, editing settings, support search, inviting from an Instructor account, and creating organizations (on hold under D4).
+
+**Confirmed in conversation (21 October 2026): A5 personas**
+- Fictional names and `@example.com` addresses only; organizations "Sample Org A", "Sample Org B" and "Sample Org C (suspended)". Real people's names are not used. The persona switcher and every sample view are labelled as demo or sample data.
+- Signed out; Alex Sample (learner, no organization); Bea Sample (learner, Org A); Chris Sample (learner, Org A and Org B); Dana Sample (instructor, Org A); Eli Sample (org admin and instructor, Org A); Fran Sample (Platform Admin); Gabi Sample (signed in, pending Learner invitation to Org A); Hugo Sample (learner, Org C suspended: own existing records read-only, nothing else from Org C).
+
+**Provisional or open**
+- Instructor editing scope (Q5): the demo rule above is not a final decision.
+- Invitation revocation: which administrators may revoke which invitations (D18), pending the Priority 4 review of migration 0004.
+- The publishing workflow (organization-admin approval, L2) is not shown in the demo.
+- Which organization settings can be edited.
+- The L11 wording, to be recorded with Priority 4.
+- An Instructor persona for AQS-owned courses: excluded until it is decided who authors platform-owned courses.
+- Not designed: suspended-organization, no-access and workspace-switching screens; invitation acceptance; certificates on course completion.
+- A3's correction is deferred to the update recording the 21 October approvals.
+
 ## Amendment index
 
 The older entries listed here keep their original text. This index records how later entries relate to them.
@@ -356,6 +424,6 @@ The older entries listed here keep their original text. This index records how l
 | D10 | D13 | Reaffirmed in conversation. The installation note is out of date (see D13). |
 | D11 | D15 | Limited explicit instruction: non-functional layouts for the approved Google-only authentication designs only. The "no stored passwords" interpretation is recorded in D15. |
 | A3 (provisional) | D13, D15 | **Proposed amendment note:** A3's "Google sign-in only" conflicts with D15's proposed email/password sign-in, and its naming of Firebase Authentication conflicts with D13 (no provider selected). A3's text is unchanged; it remains provisional and is not approved. |
-| A2 (provisional) | D16–D20 | Open: will need permissions for course sharing, preview approval, inviting Organization Admins, revoking invitations and resource grants. |
-| A5 (provisional) | D16, D22 | Open: may need an Instructor persona for platform-owned courses. |
-| A1, A4, A6 (provisional) | — | Unchanged and still provisional. |
+| A2 | D16–D20, D27 | A2's text in D11 is unchanged. D27 approves a central minimal permission list for the development-build demo only. Still open: permissions for course sharing, preview approval, invitation revocation (D18) and resource grants, and production authorization. |
+| A5 | D16, D22, D27 | A5's text in D11 is unchanged. D27 approves the revised fictional persona set for the demo. An Instructor persona for platform-owned courses stays excluded until that authoring question is decided. |
+| A1, A4, A6 | D27 | Their text in D11 is unchanged. D27 approves them for the development-build demo only, with the route map in D27; A6 is unchanged in substance. Production routes and other unresolved production decisions are not settled by D27. |
