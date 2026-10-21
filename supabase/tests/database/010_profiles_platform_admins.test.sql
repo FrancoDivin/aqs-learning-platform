@@ -60,9 +60,9 @@ select is_empty(
   'no SECURITY DEFINER function in public/private lacks a fixed empty search_path');
 select set_eq(
   $$ select p.oid::regprocedure::text from pg_proc p
-      where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace) and p.prosecdef $$,
+      where p.pronamespace = 'private'::regnamespace and p.prosecdef $$,
   $$ values ('private.handle_new_auth_user()'), ('private.sync_auth_user_email()') $$,
-  'only the two Auth trigger functions are SECURITY DEFINER');
+  'in private, only the two Auth trigger functions are SECURITY DEFINER (database-wide list: 900_api_exposure)');
 select has_trigger('auth', 'users', 'on_auth_user_created', 'profile-creation trigger exists on auth.users');
 select has_trigger('auth', 'users', 'on_auth_user_email_changed', 'email-sync trigger exists on auth.users');
 
@@ -102,20 +102,22 @@ select set_eq(
        cross join (values ('anon'), ('authenticated')) r(rol)
        cross join (values ('SELECT'), ('INSERT'), ('UPDATE'), ('DELETE'), ('TRUNCATE'), ('REFERENCES'), ('TRIGGER')) p(priv)
       where c.relnamespace = 'public'::regnamespace and c.relkind in ('r', 'v', 'm', 'f', 'p')
+        and c.relname in ('profiles', 'platform_admins')
         and has_table_privilege(r.rol, c.oid, p.priv) $$,
   $$ values ('profiles', 'authenticated', 'SELECT') $$,
-  'table-level client privileges in public are exactly: authenticated may SELECT profiles');
+  'table-level client privileges on the 0002 tables: authenticated may SELECT profiles only (database-wide list: 900_api_exposure)');
 select set_eq(
   $$ select c.relname::text, a.attname::text, x.grantee::regrole::text, x.privilege_type
        from pg_attribute a
        join pg_class c on c.oid = a.attrelid
        cross join lateral aclexplode(a.attacl) x
       where c.relnamespace = 'public'::regnamespace
+        and c.relname in ('profiles', 'platform_admins')
         and x.grantee in ('anon'::regrole, 'authenticated'::regrole) $$,
   $$ values ('profiles', 'full_name', 'authenticated', 'UPDATE'),
             ('platform_admins', 'user_id', 'authenticated', 'SELECT'),
             ('platform_admins', 'granted_at', 'authenticated', 'SELECT') $$,
-  'column-level client privileges in public are exactly the three intended ones');
+  'column-level client privileges on the 0002 tables are exactly the three intended ones');
 select is_empty(
   $$ select c.relname from pg_class c cross join (values ('anon'), ('authenticated')) r(rol)
       where c.relnamespace = 'public'::regnamespace and c.relkind = 'S'
@@ -123,9 +125,9 @@ select is_empty(
   'client roles have no sequence privileges in public');
 select is_empty(
   $$ select p.oid::regprocedure::text from pg_proc p cross join (values ('anon'), ('authenticated')) r(rol)
-      where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace)
+      where p.pronamespace = 'private'::regnamespace
         and has_function_privilege(r.rol, p.oid, 'EXECUTE') $$,
-  'client roles can execute no function in public or private');
+  'client roles can execute no function in private (public allowlist: 900_api_exposure)');
 select ok(not has_table_privilege('anon', 'private.platform_admin_audit', 'SELECT')
           and not has_table_privilege('authenticated', 'private.platform_admin_audit', 'SELECT')
           and not has_table_privilege('service_role', 'private.platform_admin_audit', 'SELECT'),
@@ -133,8 +135,9 @@ select ok(not has_table_privilege('anon', 'private.platform_admin_audit', 'SELEC
 select ok(not has_table_privilege('service_role', 'public.platform_admins', 'INSERT')
           and not has_table_privilege('service_role', 'public.platform_admins', 'DELETE')
           and not has_table_privilege('service_role', 'public.profiles', 'INSERT')
-          and not has_table_privilege('service_role', 'public.profiles', 'DELETE'),
-  'service_role cannot create Platform Admins or create/delete profiles');
+          and not has_table_privilege('service_role', 'public.profiles', 'DELETE')
+          and not has_table_privilege('service_role', 'public.profiles', 'TRUNCATE'),
+  'service_role cannot create Platform Admins or create, delete or truncate profiles');
 
 -- 6. Ownership diagnostic (application objects vs Supabase-managed objects) ---------
 -- Application objects in public (not members of an extension) must be owned by
