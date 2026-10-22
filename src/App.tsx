@@ -22,6 +22,10 @@ const LearnerDashboardPage = import.meta.env.DEV
  * Provisional: its design is still "Needs review". Excluded from production builds. */
 const CourseDetailPage = import.meta.env.DEV ? lazy(() => import('./pages/CourseDetailPage')) : null
 
+/* Development-only mock sign-in screen at /sign-in (D27). Presentation only: no sign-in,
+ * provider, API or session behaviour (D15). /sign-in/error and /sign-up come in later batches. */
+const SignInPage = import.meta.env.DEV ? lazy(() => import('./pages/SignInPage')) : null
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -53,6 +57,16 @@ export default function App() {
             element={
               <Suspense fallback={<p style={{ padding: 24 }}>Loading course detail…</p>}>
                 <CourseDetailPage />
+              </Suspense>
+            }
+          />
+        ) : null}
+        {SignInPage ? (
+          <Route
+            path="/sign-in"
+            element={
+              <Suspense fallback={<p style={{ padding: 24 }}>Loading sign-in…</p>}>
+                <SignInPage />
               </Suspense>
             }
           />
