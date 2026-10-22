@@ -7,7 +7,7 @@
 -- lists in the same pull request, so any unplanned exposure fails here.
 -- Per-migration test files check their own objects; this file checks the whole.
 --
--- Last updated for: migration 0003.
+-- Last updated for: migration 0004.
 -- =============================================================================
 begin;
 create extension if not exists pgtap with schema extensions;
@@ -38,8 +38,20 @@ select set_eq(
         and x.grantee in ('anon'::regrole, 'authenticated'::regrole) $$,
   $$ values ('profiles', 'full_name', 'authenticated', 'UPDATE'),
             ('platform_admins', 'user_id', 'authenticated', 'SELECT'),
-            ('platform_admins', 'granted_at', 'authenticated', 'SELECT') $$,
-  'column-level client privileges in public are exactly the approved ones');
+            ('platform_admins', 'granted_at', 'authenticated', 'SELECT'),
+            ('invitations', 'id', 'authenticated', 'SELECT'),
+            ('invitations', 'org_id', 'authenticated', 'SELECT'),
+            ('invitations', 'email', 'authenticated', 'SELECT'),
+            ('invitations', 'role', 'authenticated', 'SELECT'),
+            ('invitations', 'status', 'authenticated', 'SELECT'),
+            ('invitations', 'invited_by', 'authenticated', 'SELECT'),
+            ('invitations', 'created_at', 'authenticated', 'SELECT'),
+            ('invitations', 'expires_at', 'authenticated', 'SELECT'),
+            ('invitations', 'accepted_by', 'authenticated', 'SELECT'),
+            ('invitations', 'accepted_at', 'authenticated', 'SELECT'),
+            ('invitations', 'revoked_by', 'authenticated', 'SELECT'),
+            ('invitations', 'revoked_at', 'authenticated', 'SELECT') $$,
+  'column-level client privileges in public are exactly the approved ones (token_hash is never granted)');
 
 -- 3. Nothing in private or authz tables is reachable by client roles -------------
 select is_empty(
@@ -76,6 +88,10 @@ select set_eq(
             ('public.grant_org_role(uuid, uuid, org_role)'),
             ('public.revoke_org_role(uuid, uuid, org_role)'),
             ('public.set_membership_status(uuid, uuid, membership_status)'),
+            ('public.create_invitation(uuid, text, org_role, bytea)'),
+            ('public.revoke_invitation(uuid)'),
+            ('public.preview_invitation(text)'),
+            ('public.accept_invitation(text)'),
             ('authz.is_platform_admin()'),
             ('authz.has_org_role(uuid, org_role[])'),
             ('authz.is_org_member(uuid)') $$,
@@ -95,7 +111,11 @@ select set_eq(
             ('public.set_organization_status(uuid, organization_status)'),
             ('public.grant_org_role(uuid, uuid, org_role)'),
             ('public.revoke_org_role(uuid, uuid, org_role)'),
-            ('public.set_membership_status(uuid, uuid, membership_status)') $$,
+            ('public.set_membership_status(uuid, uuid, membership_status)'),
+            ('public.create_invitation(uuid, text, org_role, bytea)'),
+            ('public.revoke_invitation(uuid)'),
+            ('public.preview_invitation(text)'),
+            ('public.accept_invitation(text)') $$,
   'the SECURITY DEFINER functions are exactly the approved list');
 
 -- 8. Every SECURITY DEFINER function pins an empty search_path --------------------
