@@ -168,9 +168,10 @@ function CourseDetailContent() {
                 {totalDuration}
               </li>
             </ul>
-            {/* Enrolment is not built (D8, D11, D15): shown, but disabled. */}
+            {/* Enrolment is not built (D8, D11, D15): shown, but disabled. D24 requires the hidden label. */}
             <Button disabled className={styles.enroll}>
               Enroll
+              <span className="visually-hidden"> (not available yet)</span>
             </Button>
           </div>
 
