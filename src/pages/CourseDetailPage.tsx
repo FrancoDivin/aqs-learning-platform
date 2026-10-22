@@ -1,13 +1,15 @@
 import { useId, useState } from 'react'
+import { useParams } from 'react-router'
 import { PublicLayout } from '../components/layout/PublicLayout'
 import type { NavItem } from '../components/layout/types'
 import { Banner, Button, Card, Icon } from '../components/ui'
 import { cx } from '../lib/cx'
+import { NotFound } from './NotFound'
 import styles from './CourseDetailPage.module.css'
 
 /*
  * Public course detail — PROVISIONAL DEVELOPMENT PREVIEW (registered at
- * /dev/course-detail under import.meta.env.DEV, excluded from production).
+ * /courses/:courseId under import.meta.env.DEV, excluded from production).
  *
  * Built from frame 1 of `design-reference/2 Screens/Learner courses &
  * quizzes [Needs review].png`. The design is still "Needs review": this page
@@ -25,6 +27,9 @@ type LessonType = 'Video' | 'Reading' | 'Quiz'
 
 type MockLesson = { title: string; type: LessonType; minutes: number }
 type MockModule = { id: string; title: string; lessons: MockLesson[] }
+
+/** The only course id this demo serves. Any other /courses/:courseId shows the Not Found page. */
+const SAMPLE_COURSE_ID = 'sample-regression'
 
 const MOCK_COURSE_DETAIL = {
   category: 'Data & analytics',
@@ -116,7 +121,13 @@ function formatMinutes(total: number) {
 
 const sumMinutes = (lessons: MockLesson[]) => lessons.reduce((sum, lesson) => sum + lesson.minutes, 0)
 
+/** Route element for /courses/:courseId. Only the sample course id renders the page. */
 export default function CourseDetailPage() {
+  const { courseId } = useParams()
+  return courseId === SAMPLE_COURSE_ID ? <CourseDetailContent /> : <NotFound />
+}
+
+function CourseDetailContent() {
   const course = MOCK_COURSE_DETAIL
   const lessonCount = course.modules.reduce((sum, module) => sum + module.lessons.length, 0)
   const totalDuration = formatMinutes(course.modules.reduce((sum, module) => sum + sumMinutes(module.lessons), 0))

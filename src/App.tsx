@@ -18,8 +18,8 @@ const LearnerDashboardPage = import.meta.env.DEV
   ? lazy(() => import('./pages/LearnerDashboardPage'))
   : null
 
-/* Development-only preview of the public course detail page (provisional,
- * design still "Needs review"). No permanent /courses/:slug route yet. */
+/* Development-only demo of the public course detail page at /courses/:courseId (D27).
+ * Provisional: its design is still "Needs review". Excluded from production builds. */
 const CourseDetailPage = import.meta.env.DEV ? lazy(() => import('./pages/CourseDetailPage')) : null
 
 export default function App() {
@@ -49,7 +49,7 @@ export default function App() {
         ) : null}
         {CourseDetailPage ? (
           <Route
-            path="/dev/course-detail"
+            path="/courses/:courseId"
             element={
               <Suspense fallback={<p style={{ padding: 24 }}>Loading course detail…</p>}>
                 <CourseDetailPage />
