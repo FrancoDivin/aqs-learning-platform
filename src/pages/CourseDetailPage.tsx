@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 import { PublicLayout } from '../components/layout/PublicLayout'
 import type { NavItem } from '../components/layout/types'
 import { Banner, Button, Card, Icon } from '../components/ui'
@@ -30,6 +30,12 @@ type MockModule = { id: string; title: string; lessons: MockLesson[] }
 
 /** The only course id this demo serves. Any other /courses/:courseId shows the Not Found page. */
 const SAMPLE_COURSE_ID = 'sample-regression'
+
+/**
+ * "Check your understanding" rows link to the development quiz sample (D27). Enrolment is not
+ * enforced here: this is a preview, and the protected-resource rules (D20) are not built.
+ */
+const SAMPLE_QUIZ_PATH = '/learn/courses/sample-regression/quizzes/regression-check'
 
 const MOCK_COURSE_DETAIL = {
   category: 'Data & analytics',
@@ -207,6 +213,9 @@ function CourseDetailContent() {
               Course content
             </h2>
             <p className={styles.contentMeta}>{courseStructure}</p>
+            <p className={styles.quizNote}>
+              Quiz rows open the development quiz sample. Enrolment is not enforced in this development preview.
+            </p>
             <ModuleList modules={course.modules} initiallyOpenId={course.initiallyOpenModuleId} />
           </section>
 
@@ -287,7 +296,15 @@ function ModuleList({ modules, initiallyOpenId }: { modules: MockModule[]; initi
             <ul id={panelId} className={styles.lessons} hidden={!isOpen}>
               {module.lessons.map((lesson) => (
                 <li key={lesson.title} className={styles.lesson}>
-                  <span className={styles.lessonTitle}>{lesson.title}</span>
+                  <span className={styles.lessonTitle}>
+                    {lesson.type === 'Quiz' ? (
+                      <Link to={SAMPLE_QUIZ_PATH} className={styles.lessonLink}>
+                        {lesson.title}
+                      </Link>
+                    ) : (
+                      lesson.title
+                    )}
+                  </span>
                   <span className={styles.lessonType}>{lesson.type}</span>
                   <span className={styles.lessonDuration}>{lesson.minutes} min</span>
                 </li>
