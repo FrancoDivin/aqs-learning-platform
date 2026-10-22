@@ -1,7 +1,19 @@
 import type { ReactNode } from 'react'
+import { useSearchParams } from 'react-router'
 import { AppShell } from '../components/layout/AppShell'
 import type { CurrentUser, NavItem } from '../components/layout/types'
-import { Badge, Banner, Button, Icon, ProgressBar, Tabs, type TabItem } from '../components/ui'
+import {
+  Badge,
+  Banner,
+  Button,
+  EmptyState,
+  Icon,
+  ProgressBar,
+  Skeleton,
+  StatCard,
+  Tabs,
+  type TabItem,
+} from '../components/ui'
 import { cx } from '../lib/cx'
 import styles from './LearnerDashboardPage.module.css'
 
@@ -9,10 +21,10 @@ import styles from './LearnerDashboardPage.module.css'
  * Learner dashboard — DEVELOPMENT PREVIEW ONLY (registered at
  * /learn under import.meta.env.DEV, excluded from production).
  *
- * Built from frame 1 of the approved design
- * `design-reference/new designs/2 Screens/Learner dashboard [Ready].png`.
- * Other states (new learner, completed, loading, offline, syncing) are not
- * built yet. There is no session, permission check or API call here.
+ * Built from the approved design `design-reference/new designs/2 Screens/Learner dashboard
+ * [Ready].png`, all six frames: default (frame 1), new learner, completed, loading, offline and
+ * syncing. The state is chosen with ?state= (development only). There is no session, permission
+ * check or API call here. Offline and syncing are labelled as mock states (decision D7).
  */
 
 // ---------------------------------------------------------------------------
@@ -54,9 +66,12 @@ const MOCK_LEARNER: CurrentUser & { firstName: string } = {
   roleLabel: 'Learner',
 }
 
+/** The course the design features in the hero card of the offline, syncing and completed states. */
+const FEATURED_COURSE_ID = 'mock-enrolled-1'
+
 const MOCK_ENROLLED_COURSES: MockEnrolledCourse[] = [
   {
-    id: 'mock-enrolled-1',
+    id: FEATURED_COURSE_ID,
     category: 'Data & analytics',
     title: 'Data analytics fundamentals',
     lessons: 7,
@@ -112,6 +127,13 @@ const MOCK_ENROLLED_COURSES: MockEnrolledCourse[] = [
   },
 ]
 
+/** Completed state (frame 3): the featured course is finished and certified. */
+const COMPLETED_STATE_COURSES: MockEnrolledCourse[] = MOCK_ENROLLED_COURSES.map((course) =>
+  course.id === FEATURED_COURSE_ID
+    ? { ...course, nextLesson: undefined, certificateEarned: true, status: 'completed', progress: 100 }
+    : course,
+)
+
 const MOCK_RECOMMENDED_COURSES: MockCatalogCourse[] = [
   {
     id: 'mock-rec-1',
@@ -164,6 +186,14 @@ const MOCK_NEW_COURSES: MockCatalogCourse[] = [
 ]
 // --------------------------------------------------------------------------- end mock data
 
+/** The six states of the Ready design. Anything else in ?state= shows the default view. */
+const DASHBOARD_STATES = ['default', 'new', 'completed', 'loading', 'offline', 'syncing'] as const
+type DashboardState = (typeof DASHBOARD_STATES)[number]
+
+function readDashboardState(value: string | null): DashboardState {
+  return DASHBOARD_STATES.find((state) => state === value) ?? 'default'
+}
+
 /*
  * Sidebar from the design. Only this preview exists, so the other workspace
  * pages are shown as unavailable instead of linking to missing routes.
@@ -183,8 +213,16 @@ const STATUS_LABEL: Record<LearningStatus, string> = {
   completed: 'Completed',
 }
 
+/** Action labels on the default view (frame 1). */
 const ACTION_LABEL: Record<LearningStatus, string> = {
   'in-progress': 'Resume',
+  'not-started': 'Start',
+  completed: 'Review',
+}
+
+/** Action labels on the other states, as in frames 2–6 of the design. */
+const STATE_ACTION_LABEL: Record<LearningStatus, string> = {
+  'in-progress': 'Continue',
   'not-started': 'Start',
   completed: 'Review',
 }
@@ -198,27 +236,51 @@ const STATUS_FILTERS: Array<{ id: 'all' | LearningStatus; label: string }> = [
 
 const IMAGE_TINTS = [styles.tintBlue, styles.tintOrange, styles.tintBlueStrong]
 
+/** Stat values by state (frames 2, 3, 5 and 6). The default view shows no stats. */
+const STAT_VALUES: Record<Exclude<DashboardState, 'default' | 'loading'>, [number, number, number]> = {
+  new: [0, 0, 0],
+  completed: [2, 15, 3],
+  offline: [3, 15, 2],
+  syncing: [3, 15, 2],
+}
+
+const STAT_LABELS = ['Courses in progress', 'Lessons completed', 'Certificates earned']
+const NEW_LEARNER_NOTES = ['Your next skill starts here', 'Every lesson is a step forward', 'Earn certificates as you learn']
+const CONTINUING_NOTES = ['Keep your momentum going', 'Every lesson is a step forward', 'Skills worth celebrating']
+
+function coursesFor(state: DashboardState): MockEnrolledCourse[] {
+  if (state === 'new') return []
+  if (state === 'completed') return COMPLETED_STATE_COURSES
+  return MOCK_ENROLLED_COURSES
+}
+
+function actionFor(course: MockEnrolledCourse, state: DashboardState): string {
+  if (state === 'default') return ACTION_LABEL[course.status]
+  if (state === 'completed' && course.id === FEATURED_COURSE_ID) return 'View certificate'
+  return STATE_ACTION_LABEL[course.status]
+}
+
+function stateBanner(state: DashboardState): ReactNode {
+  if (state === 'offline') {
+    return (
+      <Banner tone="warning" icon="wifiOff" flush>
+        Mock state: You're offline. Your progress will sync when you reconnect.
+      </Banner>
+    )
+  }
+  if (state === 'syncing') {
+    return (
+      <Banner tone="info" icon="refresh" flush>
+        Mock state: Syncing...
+      </Banner>
+    )
+  }
+  return null
+}
+
 export default function LearnerDashboardPage() {
-  const filterTabs: TabItem[] = STATUS_FILTERS.map((filter) => {
-    const courses =
-      filter.id === 'all'
-        ? MOCK_ENROLLED_COURSES
-        : MOCK_ENROLLED_COURSES.filter((course) => course.status === filter.id)
-    return {
-      id: filter.id,
-      label: filter.label,
-      count: courses.length,
-      content: (
-        <ul className={cx(styles.grid, styles.gridThree)}>
-          {courses.map((course, index) => (
-            <li key={course.id}>
-              <EnrolledCourseCard course={course} tint={IMAGE_TINTS[index % IMAGE_TINTS.length]} />
-            </li>
-          ))}
-        </ul>
-      ),
-    }
-  })
+  const [searchParams] = useSearchParams()
+  const state = readDashboardState(searchParams.get('state'))
 
   return (
     <AppShell
@@ -226,10 +288,13 @@ export default function LearnerDashboardPage() {
       user={MOCK_LEARNER}
       unavailableActions
       banner={
-        <Banner tone="info" icon="info" flush>
-          Development preview with sample data. Course actions, other workspace pages, notifications, help and sign
-          out are not connected yet.
-        </Banner>
+        <>
+          {stateBanner(state)}
+          <Banner tone="info" icon="info" flush>
+            Development preview with sample data. Course actions, other workspace pages, notifications, help and sign
+            out are not connected yet.
+          </Banner>
+        </>
       }
     >
       <header className={styles.pageHeader}>
@@ -239,6 +304,19 @@ export default function LearnerDashboardPage() {
         </p>
       </header>
 
+      {state === 'default' ? <DefaultBody /> : null}
+      {state === 'loading' ? <LoadingBody /> : null}
+      {state !== 'default' && state !== 'loading' ? <StateBody state={state} /> : null}
+    </AppShell>
+  )
+}
+
+/** The default view (frame 1): My learning, Recommended for you and New courses. */
+function DefaultBody() {
+  const filterTabs = courseTabs(MOCK_ENROLLED_COURSES, 'default')
+
+  return (
+    <>
       <section className={styles.section} aria-labelledby="my-learning-heading">
         <SectionHeader
           headingId="my-learning-heading"
@@ -249,21 +327,7 @@ export default function LearnerDashboardPage() {
         <Tabs label="Filter my courses by status" variant="pill" items={filterTabs} />
       </section>
 
-      <section className={styles.section} aria-labelledby="recommended-heading">
-        <SectionHeader
-          headingId="recommended-heading"
-          title="Recommended for you"
-          description="Build on your interests in data, leadership, and practical skills."
-          actionLabel="Explore catalog"
-        />
-        <ul className={cx(styles.grid, styles.gridThree)}>
-          {MOCK_RECOMMENDED_COURSES.map((course, index) => (
-            <li key={course.id}>
-              <CatalogCourseCard course={course} tint={IMAGE_TINTS[index % IMAGE_TINTS.length]} />
-            </li>
-          ))}
-        </ul>
-      </section>
+      <RecommendedSection />
 
       <section className={styles.section} aria-labelledby="new-courses-heading">
         <SectionHeader
@@ -280,7 +344,161 @@ export default function LearnerDashboardPage() {
           ))}
         </ul>
       </section>
-    </AppShell>
+    </>
+  )
+}
+
+/** The new, completed, offline and syncing states (frames 2, 3, 5 and 6). */
+function StateBody({ state }: { state: Exclude<DashboardState, 'default' | 'loading'> }) {
+  const isNewLearner = state === 'new'
+  const emptyContent = isNewLearner ? (
+    <EmptyState
+      title="Start your first course"
+      description="Discover something new. Choose a course from the catalog to start building your skills."
+      action={
+        /* Destination not built yet: shown, but disabled */
+        <Button variant="primary" disabled>
+          Browse courses
+        </Button>
+      }
+    />
+  ) : undefined
+
+  return (
+    <>
+      {state === 'completed' ? <CompletedHero /> : null}
+      {state === 'offline' || state === 'syncing' ? <ContinueHero /> : null}
+
+      <StatsRow values={STAT_VALUES[state]} notes={isNewLearner ? NEW_LEARNER_NOTES : CONTINUING_NOTES} />
+
+      <section className={styles.section} aria-labelledby="my-courses-heading">
+        <SectionHeader
+          headingId="my-courses-heading"
+          title="My courses"
+          description="Your learning, all in one place."
+          actionLabel="View all courses"
+        />
+        <Tabs
+          label="Filter my courses by status"
+          variant="pill"
+          items={courseTabs(coursesFor(state), state, emptyContent)}
+        />
+      </section>
+
+      <RecommendedSection />
+    </>
+  )
+}
+
+/** The loading state (frame 4): placeholders for every section, announced as busy. */
+function LoadingBody() {
+  return (
+    <div aria-busy="true">
+      <p className="visually-hidden">Loading your dashboard</p>
+
+      <div className={styles.hero} aria-hidden="true">
+        <Skeleton height={24} width={180} />
+        <div className={styles.heroBody}>
+          <div className={cx(styles.image, styles.heroImage)}>
+            <Skeleton height={160} />
+          </div>
+          <div className={styles.heroDetails}>
+            <Skeleton shape="text" width="30%" />
+            <Skeleton height={24} width="60%" />
+            <Skeleton shape="text" width="80%" />
+            <Skeleton height={8} />
+          </div>
+        </div>
+      </div>
+
+      <div className={styles.statsRow} aria-hidden="true">
+        {STAT_LABELS.map((label) => (
+          <div key={label} className={styles.card}>
+            <Skeleton shape="text" width="50%" />
+            <Skeleton height={28} width="30%" />
+          </div>
+        ))}
+      </div>
+
+      <div className={styles.section} aria-hidden="true">
+        <Skeleton height={28} width={220} />
+        <ul className={cx(styles.grid, styles.gridThree)}>
+          {MOCK_ENROLLED_COURSES.map((course) => (
+            <li key={course.id}>
+              <div className={styles.card}>
+                <Skeleton height={120} />
+                <Skeleton shape="text" width="40%" />
+                <Skeleton height={20} width="80%" />
+                <Skeleton shape="text" width="60%" />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className={styles.section} aria-hidden="true">
+        <Skeleton height={28} width={220} />
+        <ul className={cx(styles.grid, styles.gridThree)}>
+          {MOCK_RECOMMENDED_COURSES.map((course) => (
+            <li key={course.id}>
+              <div className={styles.card}>
+                <Skeleton height={120} />
+                <Skeleton shape="text" width="40%" />
+                <Skeleton height={20} width="80%" />
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  )
+}
+
+/** Tab items for the course filters. The counts come from the courses shown in each state. */
+function courseTabs(courses: MockEnrolledCourse[], state: DashboardState, emptyContent?: ReactNode): TabItem[] {
+  return STATUS_FILTERS.map((filter) => {
+    const matching = filter.id === 'all' ? courses : courses.filter((course) => course.status === filter.id)
+    return {
+      id: filter.id,
+      label: filter.label,
+      count: matching.length,
+      content:
+        matching.length === 0 && emptyContent ? (
+          emptyContent
+        ) : (
+          <ul className={cx(styles.grid, styles.gridThree)}>
+            {matching.map((course, index) => (
+              <li key={course.id}>
+                <EnrolledCourseCard
+                  course={course}
+                  tint={IMAGE_TINTS[index % IMAGE_TINTS.length]}
+                  actionLabel={actionFor(course, state)}
+                />
+              </li>
+            ))}
+          </ul>
+        ),
+    }
+  })
+}
+
+function RecommendedSection() {
+  return (
+    <section className={styles.section} aria-labelledby="recommended-heading">
+      <SectionHeader
+        headingId="recommended-heading"
+        title="Recommended for you"
+        description="Build on your interests in data, leadership, and practical skills."
+        actionLabel="Explore catalog"
+      />
+      <ul className={cx(styles.grid, styles.gridThree)}>
+        {MOCK_RECOMMENDED_COURSES.map((course, index) => (
+          <li key={course.id}>
+            <CatalogCourseCard course={course} tint={IMAGE_TINTS[index % IMAGE_TINTS.length]} />
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
@@ -324,7 +542,89 @@ function ImagePlaceholder({ tint, wide = false }: { tint: string; wide?: boolean
   )
 }
 
-function EnrolledCourseCard({ course, tint }: { course: MockEnrolledCourse; tint: string }) {
+/** The hero for the offline and syncing states: a course the learner is part-way through. */
+function ContinueHero() {
+  return (
+    <section className={styles.hero} aria-labelledby="continue-heading">
+      <div className={styles.heroHeader}>
+        <h2 className={cx('text-h3', styles.heroHeading)} id="continue-heading">
+          Continue learning
+        </h2>
+        <Badge tone="info">Last opened yesterday</Badge>
+      </div>
+      <div className={styles.heroBody}>
+        <div className={cx(styles.image, styles.heroImage, styles.tintBlue)} aria-hidden="true">
+          Image placeholder
+        </div>
+        <div className={styles.heroDetails}>
+          <p className={styles.category}>Data &amp; analytics</p>
+          <h3 className={cx('text-h3', styles.heroTitle)}>Data analytics fundamentals</h3>
+          <p className={styles.meta}>Next: Lesson 4 — Introduction to Regression</p>
+          <div className={styles.progress}>
+            <ProgressBar value={42} label="Course progress" />
+          </div>
+          <p className={styles.heroFootnote}>18 min lesson</p>
+        </div>
+        {/* Course player not built yet: shown, but disabled */}
+        <Button variant="primary" disabled className={styles.heroAction}>
+          Continue
+        </Button>
+      </div>
+    </section>
+  )
+}
+
+/** The hero for the completed state: the featured course is finished and certified. */
+function CompletedHero() {
+  return (
+    <section className={styles.hero} aria-labelledby="completed-heading">
+      <div className={styles.heroHeader}>
+        <h2 className={cx('text-h3', styles.heroHeading)} id="completed-heading">
+          Completed
+        </h2>
+        <Badge tone="info">Certificate earned</Badge>
+      </div>
+      <div className={styles.heroBody}>
+        <div className={cx(styles.image, styles.heroImage, styles.tintBlue)} aria-hidden="true">
+          Image placeholder
+        </div>
+        <div className={styles.heroDetails}>
+          <p className={styles.category}>Data &amp; analytics</p>
+          <h3 className={cx('text-h3', styles.heroTitle)}>Data analytics fundamentals</h3>
+          <p className={styles.meta}>All lessons completed. Your certificate is ready.</p>
+          <div className={styles.progress}>
+            <ProgressBar value={100} label="Course progress" />
+          </div>
+          <p className={styles.heroFootnote}>7 of 7 lessons completed</p>
+        </div>
+        {/* Certificate page not built yet: shown, but disabled */}
+        <Button variant="primary" disabled className={styles.heroAction}>
+          View certificate
+        </Button>
+      </div>
+    </section>
+  )
+}
+
+function StatsRow({ values, notes }: { values: [number, number, number]; notes: string[] }) {
+  return (
+    <div className={styles.statsRow}>
+      {STAT_LABELS.map((label, index) => (
+        <StatCard key={label} label={label} value={values[index]} note={notes[index]} />
+      ))}
+    </div>
+  )
+}
+
+function EnrolledCourseCard({
+  course,
+  tint,
+  actionLabel,
+}: {
+  course: MockEnrolledCourse
+  tint: string
+  actionLabel: string
+}) {
   const meta = [`${course.lessons} lessons`, course.duration, course.certificateEarned ? 'Certificate earned' : null]
     .filter(Boolean)
     .join(' · ')
@@ -349,7 +649,7 @@ function EnrolledCourseCard({ course, tint }: { course: MockEnrolledCourse; tint
         </div>
         {/* Course player not built yet: shown, but disabled */}
         <Button variant="secondary" fullWidth disabled className={styles.cardAction}>
-          {ACTION_LABEL[course.status]}
+          {actionLabel}
         </Button>
       </div>
     </article>

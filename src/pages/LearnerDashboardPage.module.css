@@ -168,6 +168,70 @@
   margin: var(--space-12) 0 0 calc(-1 * var(--space-12));
 }
 
+/* ---- Dashboard states (frames 2–6 of the Ready design) ---- */
+.hero {
+  margin-bottom: var(--space-40);
+  padding: var(--space-24);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-white);
+  box-shadow: var(--shadow-1);
+}
+
+.heroHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-16);
+  margin-bottom: var(--space-16);
+}
+
+.heroHeading {
+  color: var(--color-text);
+}
+
+.heroBody {
+  display: flex;
+  align-items: center;
+  gap: var(--space-24);
+}
+
+.heroImage {
+  flex: 0 0 280px;
+  height: 160px;
+}
+
+.heroDetails {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.heroTitle {
+  margin-top: var(--space-8);
+  color: var(--color-navy);
+}
+
+.heroFootnote {
+  margin-top: var(--space-8);
+  color: var(--color-text-subtle);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+.heroAction {
+  flex-shrink: 0;
+}
+
+.statsRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-16);
+  margin-bottom: var(--space-40);
+}
+
 /* ---- Responsive (D9: learner screens on desktop and mobile) ---- */
 /* Three 300px+ columns no longer fit below ~1180px (sidebar + padding) */
 @media (max-width: 1180px) {
@@ -189,6 +253,20 @@
 
   .gridThree,
   .gridTwo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .heroBody {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .heroImage {
+    flex-basis: auto;
+    width: 100%;
+  }
+
+  .statsRow {
     grid-template-columns: minmax(0, 1fr);
   }
 }
