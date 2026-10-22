@@ -7,7 +7,7 @@ import styles from './LearnerDashboardPage.module.css'
 
 /*
  * Learner dashboard — DEVELOPMENT PREVIEW ONLY (registered at
- * /dev/learner-dashboard under import.meta.env.DEV, excluded from production).
+ * /learn under import.meta.env.DEV, excluded from production).
  *
  * Built from frame 1 of the approved design
  * `design-reference/new designs/2 Screens/Learner dashboard [Ready].png`.
@@ -169,7 +169,7 @@ const MOCK_NEW_COURSES: MockCatalogCourse[] = [
  * pages are shown as unavailable instead of linking to missing routes.
  */
 const LEARNER_NAV: NavItem[] = [
-  { label: 'Dashboard', to: '/dev/learner-dashboard' },
+  { label: 'Dashboard', to: '/learn' },
   { label: 'My courses', to: '/my-courses', unavailable: true },
   { label: 'Catalog', to: '/catalog', unavailable: true },
   { label: 'Certificates', to: '/certificates', unavailable: true },

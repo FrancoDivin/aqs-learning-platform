@@ -16,7 +16,7 @@ test.describe('learner sidebar drawer at mobile width', () => {
   test.use({ viewport: MOBILE })
 
   test('opens as a modal dialog from the menu toggle', async ({ page }) => {
-    await page.goto('/dev/learner-dashboard')
+    await page.goto('/learn')
     await expect(menuToggle(page)).toBeVisible()
     await expect(drawer(page)).toHaveCount(0)
 
@@ -32,7 +32,7 @@ test.describe('learner sidebar drawer at mobile width', () => {
   // "Close menu" button and the "Dashboard" link. The other sidebar items are unavailable
   // (not focusable). Opening the drawer focuses "Close menu".
   test('Tab and Shift+Tab wrap between the first and last drawer controls', async ({ page }) => {
-    await page.goto('/dev/learner-dashboard')
+    await page.goto('/learn')
     await menuToggle(page).focus()
     await page.keyboard.press('Enter')
     await expect(drawer(page)).toBeVisible()
@@ -62,7 +62,7 @@ test.describe('learner sidebar drawer at mobile width', () => {
   })
 
   test('Escape closes the drawer and restores focus to the toggle', async ({ page }) => {
-    await page.goto('/dev/learner-dashboard')
+    await page.goto('/learn')
     await menuToggle(page).focus()
     await page.keyboard.press('Enter')
     await expect(drawer(page)).toBeVisible()
@@ -76,7 +76,7 @@ test.describe('learner sidebar drawer at mobile width', () => {
   // At desktop width the menu toggle is hidden, so closing the drawer must not drop focus on
   // the body. Focus moves to the page content instead.
   test('growing to desktop width closes the drawer and moves focus to the page content', async ({ page }) => {
-    await page.goto('/dev/learner-dashboard')
+    await page.goto('/learn')
     await menuToggle(page).focus()
     await page.keyboard.press('Enter')
     await expect(drawer(page)).toBeVisible()
