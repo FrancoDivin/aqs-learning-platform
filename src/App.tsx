@@ -27,6 +27,8 @@ const CourseDetailPage = import.meta.env.DEV ? lazy(() => import('./pages/Course
 const SignInPage = import.meta.env.DEV ? lazy(() => import('./pages/SignInPage')) : null
 const SignInErrorPage = import.meta.env.DEV ? lazy(() => import('./pages/SignInErrorPage')) : null
 const SignUpPage = import.meta.env.DEV ? lazy(() => import('./pages/SignUpPage')) : null
+/* Development-only quiz with sample content and fixed sample results (D27, D19). */
+const QuizPage = import.meta.env.DEV ? lazy(() => import('./pages/QuizPage')) : null
 
 export default function App() {
   return (
@@ -89,6 +91,16 @@ export default function App() {
             element={
               <Suspense fallback={<p style={{ padding: 24 }}>Loading sign-up…</p>}>
                 <SignUpPage />
+              </Suspense>
+            }
+          />
+        ) : null}
+        {QuizPage ? (
+          <Route
+            path="/learn/courses/:courseId/quizzes/:quizId"
+            element={
+              <Suspense fallback={<p style={{ padding: 24 }}>Loading quiz…</p>}>
+                <QuizPage />
               </Suspense>
             }
           />
