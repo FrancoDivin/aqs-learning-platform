@@ -7,7 +7,7 @@
  * Everything here uses MOCK content. It is not a product page and is excluded
  * from production builds (see src/App.tsx).
  */
-import type { MouseEvent, ReactNode } from 'react'
+import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react'
 import { AppShell, AuthLayout, FocusLayout, PublicLayout, type NavItem } from '../../components/layout'
 import {
   Avatar,
@@ -100,6 +100,9 @@ const typeScale = [
   { name: 'Hint', className: 'text-hint', spec: '12 / 16 · 400', measured: '11–12', use: 'Helper text, subtitles under names', sample: 'Separate multiple addresses with commas.' },
   { name: 'Eyebrow', className: 'eyebrow', spec: '12 / 16 · 600 · caps', measured: '12', use: 'Labels above headings', sample: 'Featured courses' },
 ]
+
+/* Type styles that are not in the reference scale; labelled in the preview as intentional extensions. */
+const extensionTypes = new Set(['Page title', 'Section title', 'Card title M', 'Panel title', 'Lead', 'Body small', 'Hint', 'Eyebrow'])
 
 const spacing = [
   { step: '1×', px: 8 },
@@ -214,19 +217,46 @@ function ContrastBadge({ hex }: { hex: string }) {
   )
 }
 
-/** Stops links inside the sample layouts from leaving the preview page. */
+/**
+ * Stops links inside the sample layouts from leaving the preview page. A skip link
+ * moves focus to the <main> inside its own frame instead; the query is scoped to
+ * the frame, so it cannot reach the preview page or another frame.
+ */
 function stopNavigation(event: MouseEvent<HTMLDivElement>) {
-  if ((event.target as HTMLElement).closest('a')) event.preventDefault()
+  const link = (event.target as HTMLElement).closest('a')
+  if (!link) return
+  event.preventDefault()
+  if (link.classList.contains('skip-link')) {
+    const id = link.hash.slice(1)
+    event.currentTarget.querySelector<HTMLElement>(`[id="${id}"]`)?.focus()
+  }
 }
 
-function Frame({ label, note, children }: { label: string; note: string; children: ReactNode }) {
+/** Shown under the title of the frames that have a working skip link. */
+const skipFrameCue = 'Ordinary links and buttons are illustrative. The skip link works.'
+
+function Frame({ label, note, cue, children }: { label: string; note: string; cue?: string; children: ReactNode }) {
+  const viewportRef = useRef<HTMLDivElement>(null)
+
+  // Ordinary mock links are not navigation here, so they stop being links: removing href
+  // takes them out of the tab order and the link role. Skip links keep href (see stopNavigation).
+  useEffect(() => {
+    viewportRef.current?.querySelectorAll<HTMLAnchorElement>('a[href]:not(.skip-link)').forEach((link) => {
+      link.removeAttribute('href')
+      link.dataset.mock = 'true'
+    })
+  }, [])
+
   return (
     <div className={styles.frame}>
       <div className={styles.frameLabel}>
-        <span>{label}</span>
+        <div className={styles.frameTitle}>
+          <span>{label}</span>
+          {cue ? <span className={styles.frameCue}>{cue}</span> : null}
+        </div>
         <Badge tone="neutral">{note}</Badge>
       </div>
-      <div className={styles.frameViewport} onClickCapture={stopNavigation}>
+      <div ref={viewportRef} className={styles.frameViewport} onClickCapture={stopNavigation}>
         {children}
       </div>
     </div>
@@ -241,7 +271,7 @@ export default function DesignSystemPage() {
   return (
     <div className={styles.page}>
       <header className={`${styles.topBar} on-dark`}>
-        <p className={styles.topTitle}>AQS design system preview</p>
+        <h1 className={styles.topTitle}>AQS design system preview</h1>
         <span className={styles.devTag}>Development only</span>
       </header>
 
@@ -274,7 +304,7 @@ export default function DesignSystemPage() {
             {colourGroups.map((group) => (
               <div key={group.title} className={styles.stack}>
                 <div>
-                  <h3 className={styles.subheading}>{group.title}</h3>
+                  <h2 className={styles.subheading}>{group.title}</h2>
                   <p className="text-caption text-muted">{group.note}</p>
                 </div>
                 <div className={styles.swatchGrid}>
@@ -311,6 +341,7 @@ export default function DesignSystemPage() {
                 <div key={type.name} className={styles.typeRow}>
                   <p className={styles.typeMeta}>
                     <strong>{type.name}</strong>
+                    {extensionTypes.has(type.name) ? <span className={styles.extensionTag}>Extension, not in reference</span> : null}
                     <span className={styles.mono}>.{type.className}</span>
                     {type.spec}
                     <br />
@@ -420,12 +451,18 @@ export default function DesignSystemPage() {
                   ))}
                 </div>
               </Card>
-              <Card padding="lg">
-                <CardHeader title="12px corner radius" subtitle="Cards, buttons, inputs and content panels." headingLevel="h3" />
-                <div className={styles.radiusDemo}>
-                  <Button size="sm">12px radius</Button>
+              <div className={styles.radiusPanel}>
+                <h3 className={styles.radiusHeading}>
+                  <span className={styles.radiusLabel}>Corner radius</span>
+                  <span className={styles.radiusFigure}>12px</span>
+                </h3>
+                <p className={styles.radiusText}>The standard radius for cards, buttons, inputs, and content panels.</p>
+                <div className={styles.radiusSample}>
+                  <span className={styles.radiusBar} aria-hidden="true" />
+                  <Button size="sm">12PX RADIUS</Button>
                 </div>
-              </Card>
+                <p className={`${styles.mono} ${styles.radiusFoot}`}>border-radius: 12px;</p>
+              </div>
             </div>
             <div className={styles.twoCol}>
               <Card padding="lg" className={styles.elevationCard}>
@@ -488,6 +525,16 @@ export default function DesignSystemPage() {
                 ))}
               </div>
             </Card>
+            <div className={styles.guidanceGrid}>
+              <div className={`${styles.guidance} ${styles.guidanceDo}`}>
+                <h3 className={styles.guidanceTitle}>Do</h3>
+                <p className="text-body-sm">Use an action-first label that clearly predicts the outcome.</p>
+              </div>
+              <div className={`${styles.guidance} ${styles.guidanceAvoid}`}>
+                <h3 className={`${styles.guidanceTitle} ${styles.guidanceTitleAvoid}`}>Avoid</h3>
+                <p className="text-body-sm">Do not place multiple orange actions in the same decision area.</p>
+              </div>
+            </div>
             <div className={styles.row}>
               <Button iconEnd="arrowRight">Continue</Button>
               <Button variant="secondary" iconStart="plus">
@@ -697,12 +744,12 @@ export default function DesignSystemPage() {
           <Section
             id="layouts"
             title="Layouts"
-            note="The four shells every screen will use, filled with mock blocks. Links inside these frames are disabled. Resize the browser window to see the tablet and mobile behaviour."
+            note="The four shells every screen will use, filled with mock blocks. In these frames only the Skip to content links are active. Other links and buttons are preview-only. Resize the browser window to see the tablet and mobile behaviour."
           >
-            <Frame label="PublicLayout — landing, course detail, request a demo" note="Mock content">
+            <Frame label="PublicLayout — landing, course detail, request a demo" note="Mock content" cue={skipFrameCue}>
               <PublicLayout mainId="sample-public-main">
                 <div className={styles.mockHero}>
-                  <h1 className={`text-h1 ${styles.mockHeroTitle}`}>Sample heading for a public page</h1>
+                  <h3 className={`text-h1 ${styles.mockHeroTitle}`}>Sample heading for a public page</h3>
                   <p className="text-lead text-muted" style={{ margin: '16px 0 24px', maxWidth: 560 }}>
                     Mock hero content. The real landing page is built in Phase 2 using hero option A (pending your
                     confirmation of D3).
@@ -717,7 +764,7 @@ export default function DesignSystemPage() {
 
             <Frame label="AuthLayout — sign in, invitation, errors" note="Mock content">
               <AuthLayout mainId="sample-auth-main">
-                <h1 className="text-h2">Welcome back</h1>
+                <h3 className="text-h2">Welcome back</h3>
                 <p className="text-muted" style={{ margin: '12px 0 32px' }}>
                   Sign in to continue your courses and pick up right where you left off.
                 </p>
@@ -727,7 +774,7 @@ export default function DesignSystemPage() {
               </AuthLayout>
             </Frame>
 
-            <Frame label="AppShell — learner, instructor and admin workspaces" note="Mock content">
+            <Frame label="AppShell — learner, instructor and admin workspaces" note="Mock content" cue={skipFrameCue}>
               <AppShell
                 mainId="sample-shell-main"
                 navItems={learnerNav}
@@ -739,7 +786,7 @@ export default function DesignSystemPage() {
                   </Banner>
                 }
               >
-                <h1 className="text-title">Welcome back, Sample</h1>
+                <h3 className="text-title">Welcome back, Sample</h3>
                 <p className="text-muted" style={{ margin: '8px 0 24px' }}>
                   A little progress, every day. (Mock content.)
                 </p>
@@ -754,7 +801,7 @@ export default function DesignSystemPage() {
               </AppShell>
             </Frame>
 
-            <Frame label="FocusLayout — course player and quiz" note="Mock content">
+            <Frame label="FocusLayout — course player and quiz" note="Mock content" cue={skipFrameCue}>
               <FocusLayout
                 mainId="sample-focus-main"
                 back={{ label: 'My courses', to: '/mock/my-courses' }}

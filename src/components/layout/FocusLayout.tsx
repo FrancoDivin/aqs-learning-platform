@@ -42,7 +42,7 @@ export function FocusLayout({
         </Link>
         <div className={styles.titleBlock}>
           {eyebrow ? <p className={styles.eyebrow}>{eyebrow}</p> : null}
-          <h1 className={styles.title}>{title}</h1>
+          <h3 className={styles.title}>{title}</h3>
         </div>
         <div className={styles.end}>
           {progress ? (

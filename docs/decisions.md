@@ -411,6 +411,118 @@ Shown as unavailable in the demo, not granted: publishing and publication approv
 - Not designed: suspended-organization, no-access and workspace-switching screens; invitation acceptance; certificates on course completion.
 - A3's correction is deferred to the update recording the 21 October approvals.
 
+## D28 — Phase 1: Foundations Acceptance Criteria
+
+**Status:** Approved
+**Approved:** 22 October 2026
+**Scope:** Frontend foundations only
+
+**Decision**
+
+Phase 1 — Foundations will be accepted against the following criteria. Existing implementation must be inspected before changes are proposed; components or layouts that already satisfy the criteria must not be rebuilt unnecessarily.
+
+1. Design tokens and global styles
+   * Establish and verify reusable design tokens and global styles for colors, typography, spacing, borders, radii, shadows, and focus states.
+   * Use the approved AQS design-system reference as the source of truth for visual decisions.
+2. Reusable design-system components
+   * Verify or implement the following reusable components as appropriate: `Button`, `FormField`, `Card`, `Badge`, `Avatar`, `ProgressBar`, `Skeleton`, `EmptyState`, `Banner`, `Table`, `Tabs`, and `Icon`.
+   * Components must have clear, consistent interfaces and appropriate semantic and interactive behavior.
+3. Application layouts
+   * Verify or implement the `Public`, `Auth`, `AppShell`, and `Focus` layouts.
+   * Provide a development-only `/design-system` route for inspecting the design-system components and their relevant states. It must not be exposed as a production application route.
+4. Visual comparison
+   * Compare the implemented design system against the approved `Design system.png` reference.
+   * Record material discrepancies and resolve them, or explicitly document any remaining discrepancies for owner review.
+5. Responsive behavior
+   * Check the relevant design-system examples and layouts at viewport widths of 390, 768, 1024, 1280, and 1440 pixels.
+   * Record the results and resolve unintended horizontal overflow and material layout failures.
+6. Accessibility
+   * Check keyboard navigation and visible focus states, semantic structure, and color contrast for the approved color combinations.
+   * Record findings and resolve identified issues within the Phase 1 scope.
+7. Quality checks and evidence
+   * Run the agreed frontend build, lint, and relevant test checks.
+   * Record the commands, results, and any known failures or limitations.
+   * Do not claim a check passed unless its result has been verified.
+
+**Explicit exclusions**
+
+Phase 1 does not include real Google OAuth configuration or implementation, completion of D18 invitation identity verification, backend workflows, database integration, or database migrations. These remain separate work items and must not be introduced as dependencies for Phase 1 acceptance.
+
+**Acceptance rule**
+
+Phase 1 may be declared complete only after the criteria above have been checked against the actual implementation and the results recorded. Missing evidence is not proof of failure, but it is also not proof of completion. Any unresolved material discrepancy or failed check must be documented for review before Phase 1 is declared complete.
+
+**Implementation guardrail**
+
+Inspect the current repository and existing implementation before making changes. Prefer targeted corrections over rebuilding working code. Preserve existing approved decisions, original design references, and historical records. This decision approves the acceptance baseline only; it does not authorize implementation, unrelated changes, staging, commits, or pushes.
+
+**Acceptance evidence recorded so far (not a completion claim)**
+
+* 22 October 2026, criterion 6 (semantic structure): the `/design-system` preview now has one page-level `h1` (the preview title). Two mock frame headings, "Welcome back" in the Auth frame and "Welcome back, Sample" in the AppShell frame, were changed from `h1` to `h3` in `src/dev/design-system/DesignSystemPage.tsx`. Their rendered width and height matched the previous `h1` rendering at 390, 768, 1024, 1280 and 1440 pixels. No horizontal page overflow was observed at those widths.
+* Known remaining item: `FocusLayout` renders its title as `h3` (`src/components/layout/FocusLayout.tsx`), which skips the level under the page `h1` in the preview. This is not yet resolved.
+* The flagged unnamed icon-only button was checked and found to be a false positive: the notification icon already has an accessible name through its `role="img"` and `aria-label`. No change was made.
+* Lint passed on the changed source. The production build and Playwright e2e tests were not rerun after this change.
+
+**Verification pass, 22 October 2026 (evidence only; not a completion claim)**
+
+* Files changed in this pass: `src/dev/design-system/DesignSystemPage.tsx` and `src/dev/design-system/DesignSystemPage.module.css`. `FocusLayout.tsx` was not changed in this pass.
+* Preview changes covered by this pass:
+  * Skip links in the PublicLayout, AppShell and FocusLayout frames move focus to their own frame's `<main>`. The hash and URL do not change.
+  * Ordinary links inside the four layout frames no longer have an `href`, so they are not in the tab order.
+  * Do and Avoid panels were added under the button variants table, using the reference wording.
+  * The corner-radius panel is navy with a 12px figure. Its sample button reads "12PX RADIUS".
+  * Each of the PublicLayout, AppShell and FocusLayout frames has a visible cue: "Ordinary links and buttons are illustrative. The skip link works." The AuthLayout frame has no cue, because it has no skip link.
+  * Between 1024 px and 1145 px, the button-variant grid uses four state columns with each variant name on its own row. The Avoid heading uses the navy token.
+* Responsive results, measured in the browser:
+  * Before the change, buttons overflowed their borders at 1024 px (12 buttons, up to 31 px) and 1100 px (12 buttons, up to 12 px), with 4 buttons overflowing by up to 2 px at 1140 px. It was clean at 1146 px.
+  * After the change, there were 0 overflowing buttons and 0 text collisions at 1024, 1080, 1100, 1120, 1140 and 1145 px.
+  * At 1146, 1151, 1152, 1280 and 1440 px, the column widths match the earlier baseline measurements (110.25, 111.5, 111.75, 143.75 and 183.75 px).
+  * At 390, 768 and 800 px the grid is one column, and the page does not scroll sideways.
+* Keyboard results, at 1440 px:
+  * A forward traversal reached 52 tab stops in order, with no gaps or stray stops. Each stop showed a visible focus ring.
+  * The three skip links are stops 41, 45 and 49. Activating each one with Enter moves focus to its own frame's `<main>`.
+  * The Course sections and Filter courses tablists can each be reached with Tab. Arrow keys change the selected tab, and Home and End move to the first and last tab.
+* Commands run on the current code, with exit codes:
+  * `npm run lint`: exit 0.
+  * `npm run build`: exit 0.
+  * `npm run test:e2e`: exit 0, 11 of 11 tests passed.
+* Remaining evidence gaps:
+  * No pixel-diff comparison was saved. The layout checks rely on measured geometry and screenshots reviewed on screen, which were not stored.
+  * Intermediate widths were sampled, not exhaustively covered. The 1024–1145 px band was checked at 1024, 1080, 1100, 1120, 1140 and 1145 px. The upper widths were checked at 1146, 1151, 1152, 1280 and 1440 px. The single-column widths were checked at 390, 768 and 800 px.
+  * The accessibility-tree role of the ordinary mock links is unresolved. The browser inspection tool still reports them as "link", although they have no `href` and cannot receive focus. The platform role was not confirmed.
+* Unresolved items, for owner decision (no approval has been given):
+  * Body copy in the Do and Avoid panels: the reference colour `#64748B` gives 4.37:1 and 4.48:1 on the tinted panels, below the 4.5:1 AA threshold for body text. The preview keeps `#0F172A`.
+  * The FocusLayout title is an `h3` under the "Layouts" `h2` in the preview, so the outline has no skipped level there. That heading was not changed.
+  * Whether the AuthLayout frame should also have a cue.
+
+**Phase 1 acceptance, 22 October 2026: accepted with documented limitations**
+
+Basis: each criterion above was checked against the evidence recorded in this entry and in the verification pass of 22 October 2026. No criterion has an unresolved failure. The limitations below are recorded for owner review. Accepting Phase 1 does not resolve them.
+
+1. Tokens and global styles: **verified.** Colours, type scale, spacing, radius and shadow values match the reference values.
+2. Reusable components: **verified** in the preview, with lint, build and E2E passing. The Neutral and Danger button variants are labelled "(added)" as extensions.
+3. Application layouts: **verified** in the preview frames. `/design-system` is development-only (`src/App.tsx`). The links inside the frames are inert by design.
+4. Visual comparison: **verified qualitatively** against the reference. Remaining discrepancies for owner review:
+   * No saved pixel-diff comparison exists.
+   * Body copy in the Do and Avoid panels: the preview keeps `#0F172A`. The reference grey `#64748B` gives 4.37:1 and 4.48:1 on the tinted panels, below the 4.5:1 AA threshold.
+   * The primary button colour (`#C2410C`) and its hover (`#9A3412`) are the approved D1 exception to the reference `#F97316`.
+   * The corner-radius label uses the D1 light blue (`#93C5FD`) on navy, not the reference orange.
+5. Responsive behaviour: **verified** at 390, 768, 1024, 1280 and 1440 px, and at 800 px. The button-variant overlap in the 1024–1145 px band was corrected and re-measured. Intermediate widths were sampled, not covered exhaustively.
+6. Accessibility: **verified** for the 52-stop forward keyboard traversal with visible focus, the three skip links, the Tabs controls, a single page-level `h1`, and the D1 colour pairings. Remaining limitations:
+   * The platform accessibility role of the ordinary mock links is unconfirmed. They have no `href` and cannot receive focus, but the browser inspection tool still reports them as "link".
+   * In the preview, the FocusLayout title is an `h3` under the Layouts `h2`, so the outline has no skipped level.
+7. Quality checks: **verified** on the current code. `npm run lint` exit 0. `npm run build` exit 0. `npm run test:e2e` exit 0, 11 of 11 passed. Known limitation: the database test suite (`supabase test db`) has previously reported failures in 010, 020 and 030 from local test residue. It was not rerun. Database checks are outside Phase 1 scope under the explicit exclusions.
+
+The explicit exclusions are unaffected. Phase 1 does not include Google OAuth, D18 completion, backend work, database integration or migrations.
+
+No approval decision has changed. D1 colours, D24 unavailable navigation and the D27 demo layer remain as approved. This acceptance does not approve the open owner decisions listed above.
+
+**Implemented in:**
+
+* Phase 1 foundation commit `1ee920d` (`chore: establish platform foundations`): design tokens, the `/design-system` preview and the UI components.
+* Phase 1 layout and focus commits: `09139a4`, `e34f884`, `f1ad3a8`, `38a7f60`, `ffb7fe6` and `90e8752`.
+* Verification tooling: `bc3d796` (Playwright end-to-end setup).
+* **Uncommitted at acceptance:** the 22 October 2026 preview corrections in `src/dev/design-system/DesignSystemPage.tsx`, `src/dev/design-system/DesignSystemPage.module.css` and `src/components/layout/FocusLayout.tsx` (heading level), plus this file. These changes need a separate commit, which requires owner approval, before the accepted state is fully recorded in Git.
 ## Amendment index
 
 The older entries listed here keep their original text. This index records how later entries relate to them.

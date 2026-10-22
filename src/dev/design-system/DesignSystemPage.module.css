@@ -245,15 +245,111 @@
   justify-content: space-between;
 }
 
-.radiusDemo {
+/* ---- Corner radius (navy panel, as in the reference) ---- */
+.radiusPanel {
   display: flex;
-  align-items: flex-end;
-  width: 100%;
-  height: 120px;
+  flex-direction: column;
+  gap: var(--space-16);
+  padding: var(--space-24);
+  border-radius: var(--radius);
+  background: var(--color-navy);
+  color: var(--color-white);
+}
+
+.radiusHeading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.radiusLabel {
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--focus-ring-on-dark);
+}
+
+.radiusFigure {
+  font-size: 56px;
+  line-height: 60px;
+  font-weight: 700;
+  letter-spacing: -1.68px;
+}
+
+.radiusText {
+  color: var(--color-border-strong);
+}
+
+.radiusSample {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-16);
   padding: var(--space-16);
+  border-radius: var(--radius);
+  background: var(--color-white);
+}
+
+.radiusBar {
+  width: 100%;
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+}
+
+.radiusFoot {
+  margin: 0;
+  color: var(--color-border-strong);
+}
+
+/* ---- Do / Avoid guidance (reference wording) ---- */
+.guidanceGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-16);
+}
+
+.guidance {
+  padding: var(--space-16) var(--space-24);
   border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  background: var(--color-canvas);
+}
+
+.guidanceDo {
+  background: var(--color-blue-50);
+}
+
+.guidanceAvoid {
+  background: var(--color-orange-50);
+}
+
+.guidanceTitle {
+  margin-bottom: var(--space-4);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: var(--weight-semibold);
+  color: var(--color-navy);
+}
+
+.guidanceTitleAvoid {
+  color: var(--color-navy);
+}
+
+/* ---- Marker for type styles that are not in the reference scale ---- */
+.extensionTag {
+  display: inline-block;
+  padding: 2px var(--space-8);
+  border-radius: var(--radius-full);
+  background: var(--color-surface-muted);
+  color: var(--color-text-subtle);
+  font-size: var(--text-label);
+  font-weight: var(--weight-semibold);
+}
+
+/* Links in layout frames that are preview-only (see Frame in DesignSystemPage.tsx). */
+.frameViewport [data-mock] {
+  cursor: default;
 }
 
 /* ---- Layout frames ---- */
@@ -275,6 +371,20 @@
   background: var(--color-surface-muted);
   font-size: var(--text-caption);
   font-weight: var(--weight-semibold);
+}
+
+.frameTitle {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.frameCue {
+  font-size: var(--text-hint);
+  line-height: var(--leading-hint);
+  font-weight: 400;
+  color: var(--color-text-subtle);
 }
 
 .frameViewport {
@@ -324,7 +434,8 @@
 
   .stateGrid,
   .twoCol,
-  .threeCol {
+  .threeCol,
+  .guidanceGrid {
     grid-template-columns: minmax(0, 1fr);
   }
 
@@ -338,6 +449,27 @@
 
   .topBar {
     padding: var(--space-12) var(--space-24);
+  }
+}
+
+/* Variants grid between 1024px and 1145px: at five columns the labels overflow their buttons. */
+@media (min-width: 1024px) and (max-width: 1145px) {
+  .stateGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    column-gap: var(--space-16);
+  }
+
+  .stateGrid > .stateHead:first-child {
+    display: none;
+  }
+
+  .stateGrid > div > div:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .stateGrid button {
+    padding-left: var(--space-12);
+    padding-right: var(--space-12);
   }
 }
 
