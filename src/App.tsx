@@ -22,9 +22,11 @@ const LearnerDashboardPage = import.meta.env.DEV
  * Provisional: its design is still "Needs review". Excluded from production builds. */
 const CourseDetailPage = import.meta.env.DEV ? lazy(() => import('./pages/CourseDetailPage')) : null
 
-/* Development-only mock sign-in screen at /sign-in (D27). Presentation only: no sign-in,
- * provider, API or session behaviour (D15). /sign-in/error and /sign-up come in later batches. */
+/* Development-only mock auth screens (D27). Presentation only: no sign-in, provider, API,
+ * session or storage behaviour (D15). */
 const SignInPage = import.meta.env.DEV ? lazy(() => import('./pages/SignInPage')) : null
+const SignInErrorPage = import.meta.env.DEV ? lazy(() => import('./pages/SignInErrorPage')) : null
+const SignUpPage = import.meta.env.DEV ? lazy(() => import('./pages/SignUpPage')) : null
 
 export default function App() {
   return (
@@ -67,6 +69,26 @@ export default function App() {
             element={
               <Suspense fallback={<p style={{ padding: 24 }}>Loading sign-in…</p>}>
                 <SignInPage />
+              </Suspense>
+            }
+          />
+        ) : null}
+        {SignInErrorPage ? (
+          <Route
+            path="/sign-in/error"
+            element={
+              <Suspense fallback={<p style={{ padding: 24 }}>Loading sign-in error…</p>}>
+                <SignInErrorPage />
+              </Suspense>
+            }
+          />
+        ) : null}
+        {SignUpPage ? (
+          <Route
+            path="/sign-up"
+            element={
+              <Suspense fallback={<p style={{ padding: 24 }}>Loading sign-up…</p>}>
+                <SignUpPage />
               </Suspense>
             }
           />
