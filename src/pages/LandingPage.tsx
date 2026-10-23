@@ -7,9 +7,9 @@ import { cx } from '../lib/cx'
 import styles from './LandingPage.module.css'
 
 /*
- * Public landing page, built from the approved updated design
- * `design-reference/new designs/2 Screens/Landing [Ready].png`
- * (frame 1 = "For learners", frame 2 = "For organizations").
+ * Public landing page: one page, built from frame 1 of the approved updated design
+ * `design-reference/new designs/2 Screens/Landing [Ready].png`. Frame 2 ("For
+ * organizations") is not a separate page.
  *
  * Everything here is presentation only: no authentication, no API calls.
  * Hero imagery (D3, still open) and partner logos are placeholders.
@@ -80,21 +80,14 @@ const MOCK_FEATURED_COURSES: MockCourse[] = [
 ]
 // --------------------------------------------------------------------------- end mock content
 
-type Audience = 'learners' | 'organizations'
-
-/** Copy that changes with the audience selector (frame 1 vs frame 2). */
-const HERO_COPY: Record<Audience, { heading: string; lead: string; coursesHeading: string }> = {
-  learners: {
-    heading: 'Build the skills that move your career forward.',
-    lead: 'Practical courses, expert instruction, and flexible pathways help you build capability that lasts.',
-    coursesHeading: 'Start with the courses learners are taking right now.',
-  },
-  organizations: {
-    heading: 'Build stronger teams through learning.',
-    lead: 'Build team skills, track progress, and recognize achievement with AQS.',
-    coursesHeading: 'Start with the courses teams are learning right now.',
-  },
+const HERO_COPY = {
+  heading: 'Build the skills that move your career forward.',
+  lead: 'Practical courses, expert instruction, and flexible pathways help you build capability that lasts.',
+  coursesHeading: 'Start with the courses learners are taking right now.',
 }
+
+/** Pills shown above the hero heading, as in frame 1. Labels only, not controls. */
+const HERO_PILLS = ['For learners', 'For organizations']
 
 const STEPS = [
   { title: 'Sign in', text: 'Sign in with Google and learn from any device.' },
@@ -128,18 +121,6 @@ const THUMBNAIL_TINTS = [styles.tintBlue, styles.tintOrange, styles.tintBlueStro
 
 export function LandingPage() {
   const location = useLocation()
-  const [audience, setAudience] = useState<Audience>(() =>
-    location.hash === '#for-organizations' ? 'organizations' : 'learners',
-  )
-
-  // Clicking "For Organizations" in the header also switches the audience.
-  // Adjusting state while rendering (instead of in an effect) is React's
-  // recommended pattern for reacting to a changed value.
-  const [handledLocationKey, setHandledLocationKey] = useState(location.key)
-  if (location.key !== handledLocationKey) {
-    setHandledLocationKey(location.key)
-    if (location.hash === '#for-organizations') setAudience('organizations')
-  }
 
   // React Router does not scroll to #anchors by itself, so do it here and move
   // keyboard focus to the section so the next Tab continues from there.
@@ -151,67 +132,46 @@ export function LandingPage() {
     target.focus({ preventScroll: true })
   }, [location.key, location.hash])
 
-  const copy = HERO_COPY[audience]
-  const heroTextId = useId()
+  const heroHeadingId = useId()
 
   return (
     <PublicLayout navItems={LANDING_NAV}>
       {/* ---------------------------------------------------------------- Hero */}
-      <section className={styles.hero} id="for-organizations" tabIndex={-1} aria-labelledby={`${heroTextId}-h`}>
+      <section className={styles.hero} id="for-organizations" tabIndex={-1} aria-labelledby={heroHeadingId}>
         <div className={styles.heroDecor} aria-hidden="true">
+          <HeroNetwork />
           <span className={styles.heroCircle} />
           <span className={styles.heroDot} />
         </div>
         <div className={cx(styles.container, styles.heroInner)}>
-          <div className={styles.heroText} id={heroTextId}>
-            <div className={styles.audience} role="group" aria-label="Show this page for">
-              <button
-                type="button"
-                className={styles.audienceButton}
-                aria-pressed={audience === 'learners'}
-                aria-controls={heroTextId}
-                onClick={() => setAudience('learners')}
-              >
-                For learners
-              </button>
-              <button
-                type="button"
-                className={styles.audienceButton}
-                aria-pressed={audience === 'organizations'}
-                aria-controls={heroTextId}
-                onClick={() => setAudience('organizations')}
-              >
-                For organizations
-              </button>
-            </div>
+          <div className={styles.heroText}>
+            <ul className={styles.pills} aria-label="Audiences">
+              {HERO_PILLS.map((pill, index) => (
+                <li key={pill}>
+                  <span className={cx(styles.pill, index === 0 && styles.pillFilled)}>{pill}</span>
+                </li>
+              ))}
+            </ul>
 
-            <h1 className={cx('text-h1', styles.heroHeading)} id={`${heroTextId}-h`}>
-              {copy.heading}
+            <h1 className={cx('text-h1', styles.heroHeading)} id={heroHeadingId}>
+              {HERO_COPY.heading}
             </h1>
-            <p className={cx('text-lead', styles.heroLead)}>{copy.lead}</p>
+            <p className={cx('text-lead', styles.heroLead)}>{HERO_COPY.lead}</p>
 
             {/*
-              Hero actions. "Continue with Google" (learners) and "Request a demo"
-              (organizations) appear in the design but are hidden until Google
-              sign-in and a demo-request flow exist. The organizations view
-              therefore has no button yet.
+              Hero actions. "Continue with Google" and "Request a demo" appear in the
+              design but are hidden until Google sign-in and a demo-request flow exist.
             */}
-            {audience === 'learners' ? (
-              <div className={styles.heroActions}>
-                <ButtonLink to="#courses" iconEnd="arrowRight">
-                  Browse courses
-                </ButtonLink>
-              </div>
-            ) : null}
+            <div className={styles.heroActions}>
+              <ButtonLink to="#courses" iconEnd="arrowRight">
+                Browse courses
+              </ButtonLink>
+            </div>
           </div>
 
           <div className={styles.heroMedia}>
             <span className={styles.heroShape} aria-hidden="true" />
-            <div
-              className={cx(styles.heroImage, audience === 'organizations' && styles.heroImageSquare)}
-              role="img"
-              aria-label="Hero image placeholder"
-            >
+            <div className={styles.heroImage} role="img" aria-label="Hero image placeholder">
               <span className={styles.placeholderText} aria-hidden="true">
                 Hero image placeholder
                 <br />
@@ -239,7 +199,7 @@ export function LandingPage() {
         <div className={styles.container}>
           <p className="eyebrow">Featured courses</p>
           <h2 className={cx('text-h2', styles.sectionHeading, styles.coursesHeading)} id="courses-heading">
-            {copy.coursesHeading}
+            {HERO_COPY.coursesHeading}
           </h2>
           <p className={cx('text-lead', styles.sectionLead)}>
             From leadership to operations, every course is designed to be practical, flexible, and easy to apply.
@@ -290,6 +250,42 @@ export function LandingPage() {
         </div>
       </section>
     </PublicLayout>
+  )
+}
+
+/*
+ * Faint connected-node network behind the hero (frame 1's background). It drifts
+ * slowly; CSS turns the drift off for reduced motion. Decorative only.
+ */
+const NETWORK_ROWS = [180, 300, 420, 540]
+const NETWORK_COLUMNS = [100, 280, 460, 640, 820, 1000, 1180]
+
+function HeroNetwork() {
+  const nodes = NETWORK_ROWS.flatMap((y, row) => NETWORK_COLUMNS.map((x, col) => ({ key: `${row}-${col}`, x, y })))
+  const segments: { key: string; x1: number; y1: number; x2: number; y2: number }[] = []
+  NETWORK_ROWS.forEach((y1, row) =>
+    NETWORK_COLUMNS.forEach((x1, col) => {
+      const x2 = NETWORK_COLUMNS[col + 1]
+      if (x2 === undefined) return
+      if ((row + col) % 3 !== 2) segments.push({ key: `h-${row}-${col}`, x1, y1, x2, y2: y1 })
+      const y2 = NETWORK_ROWS[row + 1]
+      if (y2 !== undefined && col % 2 === 0) segments.push({ key: `d-${row}-${col}`, x1, y1, x2, y2 })
+    }),
+  )
+
+  return (
+    <svg className={styles.heroNetwork} viewBox="0 0 1440 800" preserveAspectRatio="xMidYMid slice" focusable="false">
+      <g className={styles.heroNetworkLines}>
+        {segments.map((segment) => (
+          <line key={segment.key} x1={segment.x1} y1={segment.y1} x2={segment.x2} y2={segment.y2} />
+        ))}
+      </g>
+      <g className={styles.heroNetworkNodes}>
+        {nodes.map((node) => (
+          <circle key={node.key} cx={node.x} cy={node.y} r={4} />
+        ))}
+      </g>
+    </svg>
   )
 }
 

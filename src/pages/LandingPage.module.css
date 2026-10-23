@@ -38,6 +38,37 @@
   pointer-events: none;
 }
 
+/*
+ * Background network (frame 1). Drawn slightly larger than the hero so the slow
+ * drift never shows an edge. Reduced motion keeps it still (see the media query below).
+ */
+.heroNetwork {
+  position: absolute;
+  top: -40px;
+  left: -40px;
+  width: calc(100% + 80px);
+  height: calc(100% + 80px);
+  animation: heroDrift 28s ease-in-out infinite alternate;
+}
+
+.heroNetworkLines line {
+  stroke: #c3d7e6;
+  stroke-width: 1;
+}
+
+.heroNetworkNodes circle {
+  fill: #b4cde0;
+}
+
+@keyframes heroDrift {
+  from {
+    transform: translate3d(-16px, 0, 0);
+  }
+  to {
+    transform: translate3d(16px, -12px, 0);
+  }
+}
+
 /* Large pale circle behind the headline */
 .heroCircle {
   position: absolute;
@@ -79,36 +110,32 @@
   min-width: 0;
 }
 
-.audience {
+/* Audience pills from frame 1. Labels only, not controls. */
+.pills {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-8);
-  margin-bottom: var(--space-32);
+  margin: 0 0 var(--space-32);
+  padding: 0;
+  list-style: none;
 }
 
-.audienceButton {
+.pill {
+  display: inline-flex;
+  align-items: center;
   min-height: 33px;
   padding: 0 var(--space-16);
   border: 1px solid var(--color-border-strong);
   border-radius: var(--radius-full);
   background: var(--color-white);
   color: var(--color-navy);
-  font: inherit;
   font-size: var(--text-caption);
   line-height: 1;
   font-weight: var(--weight-semibold);
-  cursor: pointer;
-  transition:
-    background-color var(--transition-fast),
-    color var(--transition-fast);
 }
 
-.audienceButton:hover {
-  border-color: var(--color-navy);
-}
-
-/* Selected: the design shows #F97316; D1 requires #C2410C under white text */
-.audienceButton[aria-pressed='true'] {
+/* Filled pill: the design shows #F97316; D1 requires #C2410C under white text */
+.pillFilled {
   border-color: var(--color-action);
   background: var(--color-action);
   color: var(--color-white);
@@ -160,11 +187,6 @@
   border-radius: 0 0 0 24px;
   background: rgb(255 255 255 / 0.7);
   text-align: center;
-}
-
-/* "For organizations" frame shows a photo with evenly rounded corners */
-.heroImageSquare {
-  border-radius: var(--radius);
 }
 
 .placeholderText {
