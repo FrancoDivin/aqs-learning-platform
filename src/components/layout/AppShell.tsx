@@ -109,7 +109,7 @@ export function AppShell({
   }, [])
 
   const isActive = (item: NavItem) =>
-    item.active ?? (pathname === item.to || pathname.startsWith(`${item.to}/`))
+    item.active ?? (pathname === item.to || (!item.exact && pathname.startsWith(`${item.to}/`)))
 
   return (
     <div className={styles.shell} data-drawer={drawerOpen ? 'open' : 'closed'}>

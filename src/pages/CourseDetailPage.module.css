@@ -269,6 +269,8 @@
   color: var(--color-text-muted);
   font-size: 13px;
   line-height: 18px;
+  /* The design shows the lesson count in regular weight; the module button around it is semibold. */
+  font-weight: 400;
 }
 
 .chevron {
@@ -477,4 +479,16 @@
     padding: var(--space-12) var(--space-16) var(--space-12) 64px;
     min-height: 0;
   }
+}
+
+/* Enrolment and access notes (development draft). The control keeps its existing style. */
+.accessBlock {
+  display: grid;
+  gap: var(--space-12);
+  justify-items: start;
+}
+
+.accessNote {
+  margin: 0;
+  color: var(--color-text-subtle);
 }

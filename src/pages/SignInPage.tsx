@@ -36,7 +36,11 @@ export default function SignInPage() {
         </Banner>
       </div>
 
-      <h1 className={cx('text-h2', styles.heading)}>Welcome</h1>
+      {/* The narrow-screen design uses "Welcome back" (mobile frame, 390 px); desktop keeps "Welcome". */}
+      <h1 className={cx('text-h2', styles.heading)}>
+        <span className={styles.headingDesktop}>Welcome</span>
+        <span className={styles.headingMobile}>Welcome back</span>
+      </h1>
       <p className={cx('text-body', styles.lead)}>
         Sign in to continue your courses and pick up right where you left off.
       </p>

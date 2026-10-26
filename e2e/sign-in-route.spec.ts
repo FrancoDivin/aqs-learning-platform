@@ -85,6 +85,12 @@ test.describe('sign-in demo route (development only)', () => {
 test.describe('sign-in demo route at mobile width', () => {
   test.use({ viewport: { width: 390, height: 844 } })
 
+  test('uses the narrow-screen heading "Welcome back" from the mobile design', async ({ page }) => {
+    await page.goto('/sign-in')
+    await expect(page.getByRole('heading', { level: 1, name: 'Welcome back' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1, name: 'Welcome', exact: true })).toHaveCount(0)
+  })
+
   test('has no horizontal overflow at 390px', async ({ page }) => {
     await page.goto('/sign-in')
     await expect(googleButton(page)).toBeVisible()

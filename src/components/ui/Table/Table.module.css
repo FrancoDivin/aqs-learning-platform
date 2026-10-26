@@ -64,3 +64,18 @@
   text-align: center;
   color: var(--color-text-muted);
 }
+
+/* Phones: tighter cell padding so more columns fit before the table scrolls sideways inside its card. */
+@media (max-width: 767px) {
+  .th,
+  .td {
+    padding-left: var(--space-16);
+    padding-right: var(--space-16);
+  }
+
+  .footer,
+  .emptyCell {
+    padding-left: var(--space-16);
+    padding-right: var(--space-16);
+  }
+}

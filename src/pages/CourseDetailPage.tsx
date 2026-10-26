@@ -1,11 +1,20 @@
 import { useId, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
 import { PublicLayout } from '../components/layout/PublicLayout'
 import type { NavItem } from '../components/layout/types'
-import { Banner, Button, Card, Icon } from '../components/ui'
+import { publicHeaderNav } from '../lib/public-navigation'
+import { Banner, Button, ButtonLink, Card, Icon } from '../components/ui'
 import { cx } from '../lib/cx'
+import {
+  SAMPLE_COURSE_ID,
+  SAMPLE_MODULES,
+  SAMPLE_QUIZ_PATH,
+  type SampleLesson as MockLesson,
+  type SampleModule as MockModule,
+} from '../dev/sample-course'
 import { NotFound } from './NotFound'
 import styles from './CourseDetailPage.module.css'
+import { countOf } from '../lib/plural'
 
 /*
  * Public course detail — PROVISIONAL DEVELOPMENT PREVIEW (registered at
@@ -23,19 +32,6 @@ import styles from './CourseDetailPage.module.css'
 // modules 01, 03 and 04 are sample placeholders that match the design's
 // lesson counts and durations.
 // ---------------------------------------------------------------------------
-type LessonType = 'Video' | 'Reading' | 'Quiz'
-
-type MockLesson = { title: string; type: LessonType; minutes: number }
-type MockModule = { id: string; title: string; lessons: MockLesson[] }
-
-/** The only course id this demo serves. Any other /courses/:courseId shows the Not Found page. */
-const SAMPLE_COURSE_ID = 'sample-regression'
-
-/**
- * "Check your understanding" rows link to the development quiz sample (D27). Enrolment is not
- * enforced here: this is a preview, and the protected-resource rules (D20) are not built.
- */
-const SAMPLE_QUIZ_PATH = '/learn/courses/sample-regression/quizzes/regression-check'
 
 const MOCK_COURSE_DETAIL = {
   category: 'Data & analytics',
@@ -52,44 +48,8 @@ const MOCK_COURSE_DETAIL = {
     'Evaluate model fit with residuals and R², and spot common pitfalls.',
     'Make predictions and explain their limits to a non-technical audience.',
   ],
-  modules: [
-    {
-      id: 'module-1',
-      title: 'Regression foundations',
-      lessons: [
-        { title: 'What regression is for', type: 'Video', minutes: 10 },
-        { title: 'Variables and relationships', type: 'Reading', minutes: 8 },
-        { title: 'Reading a scatter plot', type: 'Video', minutes: 12 },
-      ],
-    },
-    {
-      id: 'module-2',
-      title: 'Simple linear regression',
-      lessons: [
-        { title: 'The regression equation', type: 'Video', minutes: 12 },
-        { title: 'Slope & intercept guide', type: 'Reading', minutes: 6 },
-        { title: 'Fitting a regression line', type: 'Video', minutes: 18 },
-        { title: 'Check your understanding', type: 'Quiz', minutes: 8 },
-      ],
-    },
-    {
-      id: 'module-3',
-      title: 'Evaluating your model',
-      lessons: [
-        { title: 'Residuals and model fit', type: 'Video', minutes: 12 },
-        { title: 'Understanding R²', type: 'Reading', minutes: 8 },
-        { title: 'Check your understanding', type: 'Quiz', minutes: 12 },
-      ],
-    },
-    {
-      id: 'module-4',
-      title: 'Put regression into practice',
-      lessons: [
-        { title: 'Making predictions', type: 'Video', minutes: 14 },
-        { title: 'Explaining results to others', type: 'Reading', minutes: 10 },
-      ],
-    },
-  ] satisfies MockModule[],
+  /* Shared sample outline (src/dev/sample-course.ts), so the lesson links match the player. */
+  modules: SAMPLE_MODULES satisfies MockModule[],
   instructor: {
     name: 'Dr. Amara Niyonsenga',
     initials: 'AN',
@@ -107,16 +67,11 @@ const MOCK_COURSE_DETAIL = {
 // --------------------------------------------------------------------------- end mock data
 
 /*
- * Header links: the course list and organization pages are not built, so
- * Courses and For Organizations go back to the landing page sections.
- * About and Contact are not built yet, so they are shown as unavailable.
+ * Header links: the course list and organization pages are not built, so Courses and For
+ * Organizations go back to the landing page sections. About and Contact come from the shared public
+ * navigation (lib/public-navigation.ts).
  */
-const COURSE_DETAIL_NAV: NavItem[] = [
-  { label: 'Courses', to: '/#courses' },
-  { label: 'For Organizations', to: '/#for-organizations' },
-  { label: 'About', to: '/about', unavailable: true },
-  { label: 'Contact', to: '/contact', unavailable: true },
-]
+const COURSE_DETAIL_NAV: NavItem[] = publicHeaderNav()
 
 function formatMinutes(total: number) {
   const hours = Math.floor(total / 60)
@@ -133,15 +88,85 @@ export default function CourseDetailPage() {
   return courseId === SAMPLE_COURSE_ID ? <CourseDetailContent /> : <NotFound />
 }
 
+/*
+ * Enrolment and access states from the design (development draft, sample data). The default (no ?access=)
+ * is the existing disabled control. Access follows D31: active membership in an active organization is
+ * required, and an email domain alone never grants access. Nothing is enrolled or recorded.
+ */
+type AccessState = 'default' | 'member' | 'none' | 'inactive' | 'unavailable' | 'denied'
+const ACCESS_STATES: AccessState[] = ['default', 'member', 'none', 'inactive', 'unavailable', 'denied']
+
+function readAccess(value: string | null): AccessState {
+  return ACCESS_STATES.find((state) => state === value) ?? 'default'
+}
+
+function EnrolControl({ access }: { access: AccessState }) {
+  const disabledEnrol = (
+    // Enrolment is not built (D8, D11, D15): shown, but disabled. D24 requires the hidden label.
+    <Button disabled className={styles.enroll}>
+      Enroll
+      <span className="visually-hidden"> (not available yet)</span>
+    </Button>
+  )
+
+  if (access === 'member') {
+    return (
+      <div className={styles.accessBlock}>
+        <p className={styles.accessNote}>Included in ABC Corporation's courses. Sample only: no enrolment is recorded.</p>
+        <ButtonLink to="/learn/courses/sample-regression/lessons/what-regression-is-for" className={styles.enroll}>
+          Start course (sample)
+        </ButtonLink>
+      </div>
+    )
+  }
+  if (access === 'none') {
+    return (
+      <div className={styles.accessBlock}>
+        <p className={styles.accessNote}>This course is available to members of an organization. Your account isn't a member of one yet.</p>
+        {disabledEnrol}
+      </div>
+    )
+  }
+  if (access === 'inactive') {
+    return (
+      <div className={styles.accessBlock}>
+        <p className={styles.accessNote}>ABC Corporation isn't active, so new courses can't be started. Existing progress stays visible.</p>
+        {disabledEnrol}
+      </div>
+    )
+  }
+  if (access === 'unavailable') {
+    return (
+      <div className={styles.accessBlock}>
+        <p className={styles.accessNote}>This course isn't available to your organization.</p>
+        {disabledEnrol}
+      </div>
+    )
+  }
+  if (access === 'denied') {
+    return (
+      <div className={styles.accessBlock}>
+        <p className={styles.accessNote}>You need to be a member of an active organization to open this course.</p>
+        <ButtonLink variant="neutral" to="/learn">
+          Back to my courses
+        </ButtonLink>
+      </div>
+    )
+  }
+  return disabledEnrol
+}
+
 function CourseDetailContent() {
+  const [searchParams] = useSearchParams()
+  const access = readAccess(searchParams.get('access'))
   const course = MOCK_COURSE_DETAIL
   const lessonCount = course.modules.reduce((sum, module) => sum + module.lessons.length, 0)
   const totalDuration = formatMinutes(course.modules.reduce((sum, module) => sum + sumMinutes(module.lessons), 0))
-  const courseStructure = `${course.modules.length} modules · ${lessonCount} lessons · ${totalDuration}`
+  const courseStructure = `${countOf(course.modules.length, 'module')} · ${countOf(lessonCount, 'lesson')} · ${totalDuration}`
 
   return (
     <PublicLayout navItems={COURSE_DETAIL_NAV}>
-      <Banner tone="info" icon="info" flush>
+      <Banner tone="info" flush>
         Preview with sample course data. Enrolment is not connected yet.
       </Banner>
 
@@ -168,11 +193,7 @@ function CourseDetailContent() {
                 {totalDuration}
               </li>
             </ul>
-            {/* Enrolment is not built (D8, D11, D15): shown, but disabled. D24 requires the hidden label. */}
-            <Button disabled className={styles.enroll}>
-              Enroll
-              <span className="visually-hidden"> (not available yet)</span>
-            </Button>
+            <EnrolControl access={access} />
           </div>
 
           <figure className={styles.imageCard}>
@@ -287,13 +308,13 @@ function ModuleList({ modules, initiallyOpenId }: { modules: MockModule[]; initi
                     {module.title}
                   </span>
                   <span className={styles.moduleMeta}>
-                    {module.lessons.length} lessons · {formatMinutes(sumMinutes(module.lessons))}
+                    {countOf(module.lessons.length, 'lesson')} · {formatMinutes(sumMinutes(module.lessons))}
                   </span>
                 </span>
                 <Icon name={isOpen ? 'chevronUp' : 'chevronDown'} size={20} className={styles.chevron} />
               </button>
             </h3>
-            {/* Lessons are plain text: the course player is not built yet. */}
+            {/* Non-quiz lessons open the development lesson player (Phase 3); quiz rows open the quiz sample. */}
             <ul id={panelId} className={styles.lessons} hidden={!isOpen}>
               {module.lessons.map((lesson) => (
                 <li key={lesson.title} className={styles.lesson}>
@@ -303,7 +324,9 @@ function ModuleList({ modules, initiallyOpenId }: { modules: MockModule[]; initi
                         {lesson.title}
                       </Link>
                     ) : (
-                      lesson.title
+                      <Link to={`/learn/courses/${SAMPLE_COURSE_ID}/lessons/${lesson.id}`} className={styles.lessonLink}>
+                        {lesson.title}
+                      </Link>
                     )}
                   </span>
                   <span className={styles.lessonType}>{lesson.type}</span>

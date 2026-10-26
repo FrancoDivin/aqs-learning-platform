@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import { trackWrites } from './support/write-requests.js'
 
 // D27 / D19: the quiz is a development-only sample. Its ten questions and results are sample
 // content. Nothing is graded, computed, saved or sent.
@@ -14,6 +15,12 @@ async function nextQuestion(page: Page, times: number) {
 }
 
 test.describe('quiz sample (development only)', () => {
+  test('the quiz has one level-one heading, the course title', async ({ page }) => {
+    await page.goto(QUIZ)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Introduction to Regression')
+  })
+
   test('shows the sample notice, and question 3 with the design answers', async ({ page }) => {
     await page.goto(QUIZ)
     await expect(page.getByText(SAMPLE_NOTICE, { exact: true })).toBeVisible()
@@ -53,28 +60,42 @@ test.describe('quiz sample (development only)', () => {
     await expect(page.getByText('Pass mark 70%', { exact: true })).toBeVisible()
     await expect(page.getByText('Sample result. Nothing is graded or saved.', { exact: true })).toBeVisible()
     await expect(page.getByText('Your result has been saved', { exact: false })).toHaveCount(0)
-    await expect(page.getByRole('button', { name: 'Continue' })).toBeDisabled()
+    await expect(page.getByRole('link', { name: 'Continue' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Review answers' })).toBeDisabled()
   })
 
-  test('the not-passed sample shows attempts remaining, with Try again disabled', async ({ page }) => {
+  test('the sample pass result "Continue" opens the next lesson after the quiz', async ({ page }) => {
+    await page.goto(`${QUIZ}?view=results&outcome=pass`)
+    const continueLink = page.getByRole('link', { name: 'Continue' })
+    await expect(continueLink).toHaveAttribute('href', '/learn/courses/sample-regression/lessons/residuals-and-model-fit')
+    await continueLink.click()
+    await expect(page).toHaveURL(/\/learn\/courses\/sample-regression\/lessons\/residuals-and-model-fit$/)
+    await expect(page.getByRole('heading', { level: 2, name: 'Residuals and model fit' })).toBeVisible()
+  })
+
+  test('the not-passed sample shows attempts remaining, with a Try again link to the quiz', async ({ page }) => {
     await page.goto(`${QUIZ}?view=results&outcome=fail`)
     await expect(page.getByRole('heading', { level: 2, name: 'Not passed' })).toBeVisible()
     await expect(page.getByText('55%', { exact: true })).toBeVisible()
     await expect(page.getByText('Attempts remaining: 2', { exact: true })).toBeVisible()
-    await expect(page.getByRole('button', { name: 'Try again' })).toBeDisabled()
+    await expect(page.getByRole('link', { name: 'Try again' })).toHaveAttribute('href', QUIZ)
   })
 
-  test('the result controls are inert: no navigation or request', async ({ page }) => {
+  test('"Try again" returns to question 1 of the same quiz, with no answers kept', async ({ page }) => {
+    await page.goto(`${QUIZ}?view=results&outcome=fail`)
+    await page.getByRole('link', { name: 'Try again' }).click()
+    await expect(page).toHaveURL(new RegExp(`${QUIZ}$`))
+    await expect(page.getByText('Question 1 of 10', { exact: true })).toBeVisible()
+    await expect(page.getByRole('radio', { checked: true })).toHaveCount(0)
+  })
+
+  test('the result navigation makes no request and does not change the sample result', async ({ page }) => {
     await page.goto(`${QUIZ}?view=results&outcome=pass`)
     await expect(page.getByRole('heading', { level: 2, name: 'Passed' })).toBeVisible()
-    const requests: string[] = []
-    page.on('request', (request) => requests.push(request.url()))
-    const urlBefore = page.url()
-    await page.getByRole('button', { name: 'Continue' }).click({ force: true })
-    await page.waitForLoadState('networkidle')
-    expect(page.url()).toBe(urlBefore)
-    expect(requests).toEqual([])
+    const writes = trackWrites(page)
+    await page.getByRole('link', { name: 'Continue' }).click()
+    await expect(page.getByRole('heading', { level: 2, name: 'Residuals and model fit' })).toBeVisible()
+    expect(writes).toEqual([])
   })
 
   test('unknown quiz and course ids show Not Found', async ({ page }) => {

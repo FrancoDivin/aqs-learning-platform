@@ -6,6 +6,7 @@ import {
   Badge,
   Banner,
   Button,
+  ButtonLink,
   EmptyState,
   Icon,
   ProgressBar,
@@ -15,7 +16,40 @@ import {
   type TabItem,
 } from '../components/ui'
 import { cx } from '../lib/cx'
+import { getShellDefinition } from '../lib/navigation'
+import { useCompletedLessons } from '../dev/learner-progress'
+import { SAMPLE_DATA_ANALYTICS_COURSE_ID } from '../dev/sample-course'
+import { sampleLearningService, type CourseProgress } from '../dev/sample-learning-service'
 import styles from './LearnerDashboardPage.module.css'
+
+/** The dashboard's featured course is the player's sample course "Data analytics fundamentals". */
+const FEATURED_PLAYER_COURSE_ID = SAMPLE_DATA_ANALYTICS_COURSE_ID
+
+/** The featured course's progress from the in-memory lesson progress (Phase 3, D27). */
+function useFeaturedProgress(): CourseProgress | null {
+  const done = useCompletedLessons()
+  return sampleLearningService.getCourseProgress(FEATURED_PLAYER_COURSE_ID, done)
+}
+
+/**
+ * The featured course's status, progress and next lesson come from the in-memory progress. The other
+ * courses keep their approved sample figures.
+ */
+function withLiveProgress(courses: MockEnrolledCourse[], progress: CourseProgress): MockEnrolledCourse[] {
+  return courses.map((course) => {
+    if (course.id !== FEATURED_COURSE_ID) return course
+    const status: LearningStatus =
+      progress.done === 0 ? 'not-started' : progress.done === progress.total ? 'completed' : 'in-progress'
+    return {
+      ...course,
+      status,
+      progress: progress.percent,
+      nextLesson: progress.next
+        ? `Lesson ${progress.next.position} — ${progress.next.title} · ${progress.next.minutes} min`
+        : undefined,
+    }
+  })
+}
 
 /*
  * Learner dashboard — DEVELOPMENT PREVIEW ONLY (registered at
@@ -194,18 +228,8 @@ function readDashboardState(value: string | null): DashboardState {
   return DASHBOARD_STATES.find((state) => state === value) ?? 'default'
 }
 
-/*
- * Sidebar from the design. Only this preview exists, so the other workspace
- * pages are shown as unavailable instead of linking to missing routes.
- */
-const LEARNER_NAV: NavItem[] = [
-  { label: 'Dashboard', to: '/learn' },
-  { label: 'My courses', to: '/my-courses', unavailable: true },
-  { label: 'Catalog', to: '/catalog', unavailable: true },
-  { label: 'Certificates', to: '/certificates', unavailable: true },
-  { label: 'Messages', to: '/messages', unavailable: true },
-  { label: 'Profile', to: '/profile', unavailable: true },
-]
+/* Sidebar from the design, shared with the other role shells in lib/navigation.ts. */
+const LEARNER_NAV: NavItem[] = getShellDefinition('learner', '/learn').navItems
 
 const STATUS_LABEL: Record<LearningStatus, string> = {
   'in-progress': 'In progress',
@@ -290,7 +314,7 @@ export default function LearnerDashboardPage() {
       banner={
         <>
           {stateBanner(state)}
-          <Banner tone="info" icon="info" flush>
+          <Banner tone="info" flush>
             Development preview with sample data. Course actions, other workspace pages, notifications, help and sign
             out are not connected yet.
           </Banner>
@@ -313,7 +337,9 @@ export default function LearnerDashboardPage() {
 
 /** The default view (frame 1): My learning, Recommended for you and New courses. */
 function DefaultBody() {
-  const filterTabs = courseTabs(MOCK_ENROLLED_COURSES, 'default')
+  const progress = useFeaturedProgress()
+  const courses = progress ? withLiveProgress(MOCK_ENROLLED_COURSES, progress) : MOCK_ENROLLED_COURSES
+  const filterTabs = courseTabs(courses, 'default', undefined, progress?.next?.path)
 
   return (
     <>
@@ -351,6 +377,11 @@ function DefaultBody() {
 /** The new, completed, offline and syncing states (frames 2, 3, 5 and 6). */
 function StateBody({ state }: { state: Exclude<DashboardState, 'default' | 'loading'> }) {
   const isNewLearner = state === 'new'
+  const progress = useFeaturedProgress()
+  // Live progress applies to the offline and syncing states only. The completed state keeps its design figures.
+  const stateCourses = coursesFor(state)
+  const courses =
+    progress && (state === 'offline' || state === 'syncing') ? withLiveProgress(stateCourses, progress) : stateCourses
   const emptyContent = isNewLearner ? (
     <EmptyState
       title="Start your first course"
@@ -367,7 +398,7 @@ function StateBody({ state }: { state: Exclude<DashboardState, 'default' | 'load
   return (
     <>
       {state === 'completed' ? <CompletedHero /> : null}
-      {state === 'offline' || state === 'syncing' ? <ContinueHero /> : null}
+      {state === 'offline' || state === 'syncing' ? <ContinueHero progress={progress} /> : null}
 
       <StatsRow values={STAT_VALUES[state]} notes={isNewLearner ? NEW_LEARNER_NOTES : CONTINUING_NOTES} />
 
@@ -381,7 +412,7 @@ function StateBody({ state }: { state: Exclude<DashboardState, 'default' | 'load
         <Tabs
           label="Filter my courses by status"
           variant="pill"
-          items={courseTabs(coursesFor(state), state, emptyContent)}
+          items={courseTabs(courses, state, emptyContent, progress?.next?.path)}
         />
       </section>
 
@@ -455,7 +486,12 @@ function LoadingBody() {
 }
 
 /** Tab items for the course filters. The counts come from the courses shown in each state. */
-function courseTabs(courses: MockEnrolledCourse[], state: DashboardState, emptyContent?: ReactNode): TabItem[] {
+function courseTabs(
+  courses: MockEnrolledCourse[],
+  state: DashboardState,
+  emptyContent?: ReactNode,
+  featuredHref?: string,
+): TabItem[] {
   return STATUS_FILTERS.map((filter) => {
     const matching = filter.id === 'all' ? courses : courses.filter((course) => course.status === filter.id)
     return {
@@ -473,6 +509,7 @@ function courseTabs(courses: MockEnrolledCourse[], state: DashboardState, emptyC
                   course={course}
                   tint={IMAGE_TINTS[index % IMAGE_TINTS.length]}
                   actionLabel={actionFor(course, state)}
+                  href={course.id === FEATURED_COURSE_ID ? featuredHref : undefined}
                 />
               </li>
             ))}
@@ -543,7 +580,7 @@ function ImagePlaceholder({ tint, wide = false }: { tint: string; wide?: boolean
 }
 
 /** The hero for the offline and syncing states: a course the learner is part-way through. */
-function ContinueHero() {
+function ContinueHero({ progress }: { progress: CourseProgress | null }) {
   return (
     <section className={styles.hero} aria-labelledby="continue-heading">
       <div className={styles.heroHeader}>
@@ -559,16 +596,25 @@ function ContinueHero() {
         <div className={styles.heroDetails}>
           <p className={styles.category}>Data &amp; analytics</p>
           <h3 className={cx('text-h3', styles.heroTitle)}>Data analytics fundamentals</h3>
-          <p className={styles.meta}>Next: Lesson 4 — Introduction to Regression</p>
+          <p className={styles.meta}>
+            {progress?.next ? `Next: Lesson ${progress.next.position} — ${progress.next.title}` : 'All lessons completed'}
+          </p>
           <div className={styles.progress}>
-            <ProgressBar value={42} label="Course progress" />
+            <ProgressBar value={progress?.percent ?? 0} label="Course progress" />
           </div>
-          <p className={styles.heroFootnote}>18 min lesson</p>
+          <p className={styles.heroFootnote}>{progress?.next ? `${progress.next.minutes} min lesson` : ''}</p>
         </div>
-        {/* Course player not built yet: shown, but disabled */}
-        <Button variant="primary" disabled className={styles.heroAction}>
-          Continue
-        </Button>
+        {/* Opens the development lesson player at the design's lesson (Phase 3, D27). The hero's course
+            name is sample data and is not the same as the player's sample course (see the closure record). */}
+        {progress?.next ? (
+          <ButtonLink to={progress.next.path} className={styles.heroAction}>
+            Continue
+          </ButtonLink>
+        ) : (
+          <Button variant="primary" disabled className={styles.heroAction}>
+            Continue
+          </Button>
+        )}
       </div>
     </section>
   )
@@ -620,10 +666,13 @@ function EnrolledCourseCard({
   course,
   tint,
   actionLabel,
+  href,
 }: {
   course: MockEnrolledCourse
   tint: string
   actionLabel: string
+  /** Opens the course's next lesson in the development player. Other cards have no destination yet. */
+  href?: string
 }) {
   const meta = [`${course.lessons} lessons`, course.duration, course.certificateEarned ? 'Certificate earned' : null]
     .filter(Boolean)
@@ -647,10 +696,16 @@ function EnrolledCourseCard({
         <div className={styles.progress}>
           <ProgressBar value={course.progress} label={STATUS_LABEL[course.status]} />
         </div>
-        {/* Course player not built yet: shown, but disabled */}
-        <Button variant="secondary" fullWidth disabled className={styles.cardAction}>
-          {actionLabel}
-        </Button>
+        {href ? (
+          <ButtonLink variant="secondary" fullWidth to={href} className={styles.cardAction}>
+            {actionLabel}
+          </ButtonLink>
+        ) : (
+          /* No destination for this course yet: shown, but disabled */
+          <Button variant="secondary" fullWidth disabled className={styles.cardAction}>
+            {actionLabel}
+          </Button>
+        )}
       </div>
     </article>
   )

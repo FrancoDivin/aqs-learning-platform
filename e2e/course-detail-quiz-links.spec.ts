@@ -13,12 +13,15 @@ test.describe('course detail quiz links (development only)', () => {
     await expect(page.getByText(NOTE, { exact: true })).toBeVisible()
   })
 
-  test('the quiz rows link to the quiz sample, and other lessons stay plain text', async ({ page }) => {
+  test('the quiz rows link to the quiz sample, and other lessons link to the lesson player', async ({ page }) => {
     await page.goto(COURSE)
     // Module 2 starts open and contains a quiz row.
     const quizLink = page.getByRole('link', { name: 'Check your understanding' }).first()
     await expect(quizLink).toHaveAttribute('href', QUIZ_PATH)
-    await expect(page.getByRole('link', { name: 'The regression equation' })).toHaveCount(0)
+    await expect(page.getByRole('link', { name: 'The regression equation' })).toHaveAttribute(
+      'href',
+      '/learn/courses/sample-regression/lessons/the-regression-equation',
+    )
   })
 
   test('following a quiz row opens the quiz sample', async ({ page }) => {

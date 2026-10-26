@@ -2,8 +2,10 @@ import { useState } from 'react'
 import { useParams, useSearchParams } from 'react-router'
 import { FocusLayout } from '../components/layout/FocusLayout'
 import type { CurrentUser } from '../components/layout/types'
-import { Banner, Button, Card, Icon } from '../components/ui'
+import { Banner, Button, ButtonLink, Card, Icon } from '../components/ui'
 import { cx } from '../lib/cx'
+import { lessonAfterSampleQuiz } from '../dev/sample-course'
+import { lessonPath, sampleLearningService } from '../dev/sample-learning-service'
 import { NotFound } from './NotFound'
 import styles from './QuizPage.module.css'
 
@@ -141,8 +143,10 @@ const SAMPLE_ATTEMPTS_REMAINING = 2
 
 export default function QuizPage() {
   const { courseId, quizId } = useParams()
+  const [searchParams] = useSearchParams()
   if (courseId !== SAMPLE_COURSE_ID || quizId !== SAMPLE_QUIZ_ID) return <NotFound />
-  return <QuizContent />
+  // The key remounts the quiz whenever the view changes, so "Try again" starts again at question 1.
+  return <QuizContent key={searchParams.get('view') ?? 'questions'} />
 }
 
 function QuizContent() {
@@ -153,8 +157,16 @@ function QuizContent() {
   const showResults = searchParams.get('view') === 'results'
   const outcome = searchParams.get('outcome') === 'fail' ? 'fail' : 'pass'
 
-  const back = { label: 'My courses', to: '/learn' }
+  const back = { label: 'My courses', to: '/my-courses' }
   const title = 'Introduction to Regression'
+
+  // The next lesson after the sample quiz, only when it resolves to a real sample lesson.
+  const nextLesson = lessonAfterSampleQuiz()
+  const nextLessonPath =
+    nextLesson && sampleLearningService.getLesson(SAMPLE_COURSE_ID, nextLesson.id)
+      ? lessonPath(SAMPLE_COURSE_ID, nextLesson.id)
+      : null
+  const quizPath = `/learn/courses/${SAMPLE_COURSE_ID}/quizzes/${SAMPLE_QUIZ_ID}`
 
   if (showResults) {
     const result = SAMPLE_RESULTS[outcome]
@@ -167,7 +179,7 @@ function QuizContent() {
         user={MOCK_LEARNER}
       >
         <div className={styles.content}>
-          <Banner tone="info" icon="info">
+          <Banner tone="info">
             {SAMPLE_NOTICE}
           </Banner>
 
@@ -195,13 +207,25 @@ function QuizContent() {
             <p className={styles.sampleNote}>Sample result. Nothing is graded or saved.</p>
 
             <div className={styles.resultActions}>
-              {/* Review and continue screens not built yet: shown, but disabled */}
+              {/* Review answers is not built yet: shown, but disabled */}
               <Button variant="neutral" disabled>
                 Review answers
               </Button>
-              <Button variant={outcome === 'pass' ? 'primary' : 'neutral'} disabled>
-                {outcome === 'pass' ? 'Continue' : 'Try again'}
-              </Button>
+              {outcome === 'pass' ? (
+                nextLessonPath ? (
+                  <ButtonLink variant="primary" to={nextLessonPath}>
+                    Continue
+                  </ButtonLink>
+                ) : (
+                  <Button variant="primary" disabled>
+                    Continue
+                  </Button>
+                )
+              ) : (
+                <ButtonLink variant="neutral" to={quizPath}>
+                  Try again
+                </ButtonLink>
+              )}
             </div>
           </Card>
         </div>
@@ -229,7 +253,7 @@ function QuizContent() {
       user={MOCK_LEARNER}
     >
       <div className={styles.content}>
-        <Banner tone="info" icon="info">
+        <Banner tone="info">
           {SAMPLE_NOTICE}
         </Banner>
 

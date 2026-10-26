@@ -5,10 +5,13 @@
   margin-bottom: var(--space-24);
 }
 
+/* Slightly tighter tracking than the shared h2 (-0.02em), so "We couldn't sign you" fits on
+ * the first line of the 390px-wide card content, as in the reference. Local to mock auth. */
 .heading {
   margin-top: 0;
   margin-bottom: var(--space-8);
   color: var(--color-text);
+  letter-spacing: -0.03em;
 }
 
 .lead {
@@ -52,7 +55,15 @@
   gap: var(--space-16);
   margin: 0;
   font-size: var(--text-caption);
+  line-height: var(--leading-caption);
   color: var(--color-text-muted);
+}
+
+/* Dot separator between footer items, as in the reference */
+.footerRow > span + span::before {
+  content: '·';
+  margin-right: var(--space-16);
+  color: var(--color-text-subtle);
 }
 
 /* Destination not built yet (D24): dimmed text, no link, no tab stop. The hidden

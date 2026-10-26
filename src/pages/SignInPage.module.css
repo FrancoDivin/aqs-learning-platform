@@ -10,6 +10,22 @@
   color: var(--color-text);
 }
 
+/* Desktop heading "Welcome"; the narrow-screen heading "Welcome back" (matches AuthLayout's
+ * stacked layout below 900px). Only one is visible, so the accessible name is one heading. */
+.headingMobile {
+  display: none;
+}
+
+@media (max-width: 899px) {
+  .headingDesktop {
+    display: none;
+  }
+
+  .headingMobile {
+    display: inline;
+  }
+}
+
 .lead {
   margin: 0 0 var(--space-32);
   color: var(--color-text-muted);
@@ -38,6 +54,15 @@
   gap: var(--space-16);
   margin: 0;
   color: var(--color-text-muted);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+}
+
+/* Dot separator between footer items, as in the reference */
+.footerRow > span + span::before {
+  content: '·';
+  margin-right: var(--space-16);
+  color: var(--color-text-subtle);
 }
 
 /* Destination not built yet (D24): dimmed text, no link, no tab stop. The hidden

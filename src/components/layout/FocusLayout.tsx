@@ -9,6 +9,8 @@ type FocusLayoutProps = {
   /** Small blue label above the title, e.g. the course category. */
   eyebrow?: string
   title: string
+  /** Heading level of the title. Use h2 when the page already has its own h1 (e.g. the completion page). */
+  titleLevel?: 'h1' | 'h2'
   /** Overall progress shown on the right ("Your progress 42%"). */
   progress?: { label: string; value: number }
   user: CurrentUser
@@ -22,12 +24,14 @@ export function FocusLayout({
   back,
   eyebrow,
   title,
+  titleLevel = 'h1',
   progress,
   user,
   footer,
   children,
   mainId = 'main-content',
 }: FocusLayoutProps) {
+  const TitleTag = titleLevel
   return (
     <div className={styles.page}>
       <a className="skip-link" href={`#${mainId}`}>
@@ -42,7 +46,7 @@ export function FocusLayout({
         </Link>
         <div className={styles.titleBlock}>
           {eyebrow ? <p className={styles.eyebrow}>{eyebrow}</p> : null}
-          <h3 className={styles.title}>{title}</h3>
+          <TitleTag className={styles.title}>{title}</TitleTag>
         </div>
         <div className={styles.end}>
           {progress ? (

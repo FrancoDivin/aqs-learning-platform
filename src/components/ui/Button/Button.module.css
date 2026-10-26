@@ -81,6 +81,8 @@
 .secondary:disabled {
   border-color: var(--color-border-strong);
   color: var(--color-disabled-text);
+  /* Same muted fill as a disabled Neutral button, so an unavailable outline button never reads as active. */
+  background: var(--color-surface-muted);
 }
 
 /* ---- Neutral: grey outline, navy label ("Previous", "Cancel", "Try again") ---- */
@@ -135,6 +137,7 @@
 
 .danger:disabled {
   color: var(--color-disabled-text);
+  background: var(--color-surface-muted);
 }
 
 /* ---- Loading spinner ---- */

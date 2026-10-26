@@ -69,35 +69,61 @@ test.describe('public navigation at mobile width', () => {
   })
 })
 
-test.describe('unavailable public navigation items', () => {
+// About and Contact were authorised for the development build on 26 October 2026. The footer's legal and
+// company destinations have no approved content yet, so they stay unavailable (D24).
+test.describe('About and Contact in the public header (development build)', () => {
   test.use({ viewport: DESKTOP })
 
-  test('are not links, not focusable, and say they are not available yet', async ({ page }) => {
+  test('are links that open their pages, in tab order after For Organizations', async ({ page }) => {
     await page.goto('/')
     const nav = mainNav(page)
-    const about = nav.getByRole('listitem').filter({ hasText: 'About' })
-    const contact = nav.getByRole('listitem').filter({ hasText: 'Contact' })
 
-    // The item text includes the visually hidden "(not available yet)" label
-    await expect(about).toHaveText('About (not available yet)')
-    await expect(contact).toHaveText('Contact (not available yet)')
-
-    // Not a link or a button
-    await expect(nav.getByRole('link', { name: /About|Contact/ })).toHaveCount(0)
-    await expect(about.getByRole('button')).toHaveCount(0)
-
-    // Not focusable: focusing it leaves focus elsewhere
-    await about.locator('span').first().focus()
-    await expect(about).not.toBeFocused()
-    await expect(nav.locator(':focus')).toHaveCount(0)
-
-    // Tab from Courses goes to For Organizations, then out of the nav, never to About or Contact
-    await nav.getByRole('link', { name: 'Courses', exact: true }).focus()
+    await nav.getByRole('link', { name: 'For Organizations', exact: true }).focus()
     await page.keyboard.press('Tab')
-    await expect(nav.getByRole('link', { name: 'For Organizations', exact: true })).toBeFocused()
+    await expect(nav.getByRole('link', { name: 'About', exact: true })).toBeFocused()
     await page.keyboard.press('Tab')
-    await expect(nav.locator(':focus')).toHaveCount(0)
-    await expect(page).toHaveURL(/\/$/)
+    await expect(nav.getByRole('link', { name: 'Contact', exact: true })).toBeFocused()
+
+    await nav.getByRole('link', { name: 'About', exact: true }).click()
+    await expect(page).toHaveURL(/\/about$/)
+    await expect(page.getByRole('heading', { level: 1, name: 'About AQS E-Learning' })).toBeVisible()
+    await expect(mainNav(page).getByRole('link', { name: 'About', exact: true })).toHaveAttribute('aria-current', 'page')
+
+    await mainNav(page).getByRole('link', { name: 'Contact', exact: true }).click()
+    await expect(page).toHaveURL(/\/contact$/)
+    await expect(page.getByRole('heading', { level: 1, name: 'Contact AQS' })).toBeVisible()
+  })
+})
+
+test.describe('unavailable public footer items', () => {
+  test.use({ viewport: DESKTOP })
+
+  test('legal and company items are not links, not focusable, and say they are not available yet', async ({ page }) => {
+    await page.goto('/')
+    const legal = page.getByRole('navigation', { name: 'Legal' })
+    const company = page.getByRole('navigation', { name: 'Company' })
+
+    for (const label of ['Privacy Policy', 'Terms', 'Cookie Policy']) {
+      await expect(legal.getByRole('listitem').filter({ hasText: label })).toHaveText(`${label} (not available yet)`)
+    }
+    for (const label of ['Our Story', 'Instructors', 'Careers', 'Blog']) {
+      await expect(company.getByRole('listitem').filter({ hasText: label })).toHaveText(`${label} (not available yet)`)
+    }
+    await expect(legal.getByRole('link')).toHaveCount(0)
+    await expect(company.getByRole('link')).toHaveCount(0)
+
+    const terms = legal.getByRole('listitem').filter({ hasText: 'Terms' })
+    await terms.locator('span').first().focus()
+    await expect(legal.locator(':focus')).toHaveCount(0)
+  })
+
+  test('the footer About and Contact links open their pages', async ({ page }) => {
+    await page.goto('/')
+    const platform = page.getByRole('navigation', { name: 'Platform' })
+    await platform.getByRole('link', { name: 'Contact', exact: true }).click()
+    await expect(page).toHaveURL(/\/contact$/)
+    await page.getByRole('navigation', { name: 'Platform' }).getByRole('link', { name: 'About', exact: true }).click()
+    await expect(page).toHaveURL(/\/about$/)
   })
 })
 

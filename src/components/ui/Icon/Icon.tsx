@@ -12,6 +12,7 @@ const paths = {
   chevronDown: ['m6 9 6 6 6-6'],
   chevronUp: ['m18 15-6-6-6 6'],
   chevronRight: ['m9 18 6-6-6-6'],
+  chevronLeft: ['m15 18-6-6 6-6'],
   arrowRight: ['M5 12h14', 'm12 5 7 7-7 7'],
   arrowLeft: ['M19 12H5', 'm12 19-7-7 7-7'],
   check: ['M20 6 9 17l-5-5'],

@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { AuthLayout } from '../components/layout/AuthLayout'
 import { Button } from '../components/ui'
 import { cx } from '../lib/cx'
-import { HERO_PLACEHOLDER, MockAuthFooter, MockAuthNotice, UnavailableItem } from './MockAuthParts'
+import { HERO_PLACEHOLDER, MockAuthFooter, MockAuthNotice } from './MockAuthParts'
 import styles from './MockAuth.module.css'
 
 /*
@@ -26,8 +26,10 @@ export default function SignInErrorPage() {
         <Button variant="neutral" fullWidth aria-describedby={noticeId}>
           Try again
         </Button>
+        {/* Unavailable (D24): disabled, not focusable, and announced as "not available yet". */}
         <Button variant="neutral" fullWidth disabled>
-          <UnavailableItem>Contact support</UnavailableItem>
+          Contact support
+          <span className="visually-hidden"> (not available yet)</span>
         </Button>
       </div>
 

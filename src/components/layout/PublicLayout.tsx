@@ -3,46 +3,14 @@ import { Link, useLocation } from 'react-router'
 import { Button, Icon } from '../ui'
 import type { NavItem } from './types'
 import { Wordmark } from './Wordmark'
+import { PUBLIC_FOOTER_COLUMNS, publicHeaderNav } from '../../lib/public-navigation'
 import styles from './PublicLayout.module.css'
 
-// Navigation labels from the Landing design. Courses and For Organizations link to
-// sections of the landing page, because their own routes are not built yet. Pages
-// that are not built are marked unavailable (shown as dimmed text, not a link).
-const defaultNav: NavItem[] = [
-  { label: 'Courses', to: '/#courses' },
-  { label: 'For Organizations', to: '/#for-organizations' },
-  { label: 'About', to: '/about', unavailable: true },
-  { label: 'Contact', to: '/contact', unavailable: true },
-]
-
-const footerColumns: Array<{ heading: string; links: NavItem[] }> = [
-  {
-    heading: 'Platform',
-    links: [
-      { label: 'Courses', to: '/#courses' },
-      { label: 'For Organizations', to: '/#for-organizations' },
-      { label: 'About', to: '/about', unavailable: true },
-      { label: 'Contact', to: '/contact', unavailable: true },
-    ],
-  },
-  {
-    heading: 'Company',
-    links: [
-      { label: 'Our Story', to: '/about', unavailable: true },
-      { label: 'Instructors', to: '/instructors', unavailable: true },
-      { label: 'Careers', to: '/careers', unavailable: true },
-      { label: 'Blog', to: '/blog', unavailable: true },
-    ],
-  },
-  {
-    heading: 'Legal',
-    links: [
-      { label: 'Privacy Policy', to: '/privacy', unavailable: true },
-      { label: 'Terms', to: '/terms', unavailable: true },
-      { label: 'Cookie Policy', to: '/cookies', unavailable: true },
-    ],
-  },
-]
+// Navigation labels from the Landing design. Courses and For Organizations link to sections of the
+// landing page, because their own routes are not built yet. Destinations that are not available are
+// shown as dimmed text, not links (D24). The lists live in lib/public-navigation.ts.
+const defaultNav: NavItem[] = publicHeaderNav()
+const footerColumns = PUBLIC_FOOTER_COLUMNS
 
 type PublicLayoutProps = {
   children: ReactNode
