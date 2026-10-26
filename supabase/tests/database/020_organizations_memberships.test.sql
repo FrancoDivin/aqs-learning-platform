@@ -1,3 +1,9 @@
+-- STATUS (27 October 2026): promoted from the review drafts to the test suite on branch
+-- feature/first-release. "DRAFT" wording below refers to its review history.
+-- DRAFT COPY for draft migration 0006 (cumulative with the P12 copy): P12 activation
+-- fixture, and the Platform Admin membership test changed for L11 P1 (Platform Admins
+-- now see active Organization Admin memberships only). Replaces
+-- supabase/tests/database/020_organizations_memberships.test.sql only when 0006 is approved.
 -- =============================================================================
 -- Tests for migration 0003 (organizations, memberships and roles).
 -- Run with: npx supabase test db
@@ -33,6 +39,19 @@ begin
     execute format('grant execute on function %s to anon, authenticated, service_role', f);
   end loop;
 end $$;
+
+-- P12 fixture helper (test-only, rolled back): records an ACCEPTED org_admin invitation
+-- for a person who already holds org_admin, so the organization may be activated under
+-- the P12 draft (recommended answer to Q-P12-1: only accepted invitations count). It runs
+-- with the test owner's rights and bypasses the invitation functions on purpose; the
+-- real acceptance path is tested in 030, 035 and 045.
+create function pg_temp.p12_accept(p_org uuid, p_admin uuid) returns void language sql security definer as $p12$
+  insert into public.invitations (org_id, email, role, token_hash, status, invited_by, accepted_by, accepted_at)
+  select p_org, p.email, 'org_admin', sha256(convert_to('p12-fixture-' || p_org::text || p_admin::text, 'UTF8')),
+         'accepted', p_admin, p_admin, now()   -- recorded as sent by the admin, so no Platform Admin routinely sees it (P15)
+    from public.profiles p where p.id = p_admin;
+$p12$;
+grant execute on function pg_temp.p12_accept(uuid, uuid) to authenticated;
 
 select plan(99);
 
@@ -75,15 +94,18 @@ select set_config('aqs_test.org_b', public.create_organization('Org B', 'org-b')
 select set_config('aqs_test.org_d', public.create_organization('Org D', 'org-d')::text, true);
 select results_eq($$ select status::text from public.organizations where id = current_setting('aqs_test.org_a')::uuid $$,
   $$ values ('draft') $$, 'a new organization starts as draft (F4)');
-select lives_ok($$ select public.set_organization_status(current_setting('aqs_test.org_a')::uuid, 'active') $$,
-  'PA can activate an organization');
-select public.set_organization_status(current_setting('aqs_test.org_b')::uuid, 'active');
 select throws_ok($$ select public.set_organization_status(current_setting('aqs_test.org_a')::uuid, 'draft') $$, 'P0001', null,
   'an organization cannot return to draft');
 select lives_ok($$ select public.grant_org_role(current_setting('aqs_test.org_a')::uuid, '00000000-0000-4000-8000-0000000000a1', 'org_admin') $$,
   'PA can grant org_admin (creating the membership)');
 select public.grant_org_role(current_setting('aqs_test.org_b')::uuid, '00000000-0000-4000-8000-0000000000b1', 'org_admin');
 select public.grant_org_role(current_setting('aqs_test.org_d')::uuid, '00000000-0000-4000-8000-0000000000a1', 'org_admin');
+-- P12: activation follows an accepted Organization Admin invitation (moved here from above).
+select pg_temp.p12_accept(current_setting('aqs_test.org_a')::uuid, '00000000-0000-4000-8000-0000000000a1');
+select pg_temp.p12_accept(current_setting('aqs_test.org_b')::uuid, '00000000-0000-4000-8000-0000000000b1');
+select lives_ok($$ select public.set_organization_status(current_setting('aqs_test.org_a')::uuid, 'active') $$,
+  'PA can activate an organization');
+select public.set_organization_status(current_setting('aqs_test.org_b')::uuid, 'active');
 select public.grant_org_role(current_setting('aqs_test.org_a')::uuid, '00000000-0000-4000-8000-0000000000a2', 'learner');
 select public.grant_org_role(current_setting('aqs_test.org_a')::uuid, '00000000-0000-4000-8000-0000000000a3', 'learner');
 select public.grant_org_role(current_setting('aqs_test.org_a')::uuid, '00000000-0000-4000-8000-0000000000a4', 'learner');
@@ -93,8 +115,11 @@ select public.grant_org_role(current_setting('aqs_test.org_d')::uuid, '00000000-
 select throws_ok($$ select public.grant_org_role(current_setting('aqs_test.org_a')::uuid, '00000000-0000-4000-8000-0000000000a0', 'org_admin') $$, '42501', null,
   'a Platform Admin cannot grant themselves an organization role (D17)');
 select is((select count(*)::int from public.organizations), 3, 'PA can see all organizations');
-select is_empty($$ select 1 from public.organization_memberships $$,
-  'PA has no blanket read of memberships (member directory waits for decision L11)');
+select set_eq($$ select org_id::text || '/' || user_id::text from public.organization_memberships $$,
+  array[current_setting('aqs_test.org_a') || '/00000000-0000-4000-8000-0000000000a1',
+        current_setting('aqs_test.org_b') || '/00000000-0000-4000-8000-0000000000b1',
+        current_setting('aqs_test.org_d') || '/00000000-0000-4000-8000-0000000000a1'],
+  'L11 P1: PA reads only active Organization Admin memberships (no blanket read of other members)');
 
 -- 3. Org admin of A (active) ---------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-0000000000a1", "role": "authenticated"}', true);

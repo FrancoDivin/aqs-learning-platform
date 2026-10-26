@@ -1,5 +1,10 @@
+-- STATUS (27 October 2026): promoted from the review drafts to the test suite on branch
+-- feature/first-release. "DRAFT" wording below refers to its review history.
 -- =============================================================================
--- Tests for migration 0004 (invitations). Run with: npx supabase test db
+-- Tests for migration 0004 (invitations), as updated for draft migration 0006
+-- (D33 identity fixture; P15 Platform Admin visibility). DRAFT COPY: replaces
+-- supabase/tests/database/030_invitations.test.sql only when 0006 is approved.
+-- Run with: npx supabase test db
 --
 -- Identity is simulated the way the Supabase Data API does it (SET ROLE plus
 -- request.jwt.claims, read by Supabase's own auth.uid()). People, organizations
@@ -30,7 +35,20 @@ begin
   end loop;
 end $$;
 
-select plan(87);
+-- P12 fixture helper (test-only, rolled back): records an ACCEPTED org_admin invitation
+-- for a person who already holds org_admin, so the organization may be activated under
+-- the P12 draft (recommended answer to Q-P12-1: only accepted invitations count). It runs
+-- with the test owner's rights and bypasses the invitation functions on purpose; the
+-- real acceptance path is tested in 030, 035 and 045.
+create function pg_temp.p12_accept(p_org uuid, p_admin uuid) returns void language sql security definer as $p12$
+  insert into public.invitations (org_id, email, role, token_hash, status, invited_by, accepted_by, accepted_at)
+  select p_org, p.email, 'org_admin', sha256(convert_to('p12-fixture-' || p_org::text || p_admin::text, 'UTF8')),
+         'accepted', p_admin, p_admin, now()   -- recorded as sent by the admin, so no Platform Admin routinely sees it (P15)
+    from public.profiles p where p.id = p_admin;
+$p12$;
+grant execute on function pg_temp.p12_accept(uuid, uuid) to authenticated;
+
+select plan(88);
 
 insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-4000-8000-0000000000a0', 'pa@example.test', '{}'),
@@ -49,17 +67,30 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-4000-8000-0000000000d9', 'invitee.five@example.test', '{}');
 select private.grant_platform_admin('00000000-0000-4000-8000-0000000000a0', 'AQS Owner (test)', 'Platform admin for invitation tests');
 
+-- 0006 (D33): every test person signs in with a verified Google Workspace identity
+-- whose hd claim equals their email domain. Synthetic data shaped by assumptions A1-A2
+-- in the 0006 draft; the identity rules themselves are tested in 035.
+insert into auth.identities (provider_id, user_id, identity_data, provider)
+select 'google-' || u.id::text, u.id,
+       jsonb_build_object('email', lower(u.email), 'email_verified', true, 'hd', split_part(lower(u.email), '@', 2)),
+       'google'
+  from auth.users u
+ where lower(u.email) like '%@example.test';
+
 -- Organizations and existing memberships (through the 0003 functions, as PA) -----------
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-0000000000a0", "role": "authenticated"}', true);
 select set_config('aqs_test.org_a', public.create_organization('Org A', 'org-a')::text, true);
 select set_config('aqs_test.org_b', public.create_organization('Org B', 'org-b')::text, true);
 select set_config('aqs_test.org_d', public.create_organization('Org D', 'org-d')::text, true);
-select public.set_organization_status(current_setting('aqs_test.org_a')::uuid, 'active');
-select public.set_organization_status(current_setting('aqs_test.org_b')::uuid, 'active');
 select public.grant_org_role(current_setting('aqs_test.org_a')::uuid, '00000000-0000-4000-8000-0000000000a1', 'org_admin');
 select public.grant_org_role(current_setting('aqs_test.org_d')::uuid, '00000000-0000-4000-8000-0000000000a1', 'org_admin');
 select public.grant_org_role(current_setting('aqs_test.org_b')::uuid, '00000000-0000-4000-8000-0000000000b1', 'org_admin');
+-- P12: activation follows an accepted Organization Admin invitation (moved here from above).
+select pg_temp.p12_accept(current_setting('aqs_test.org_a')::uuid, '00000000-0000-4000-8000-0000000000a1');
+select pg_temp.p12_accept(current_setting('aqs_test.org_b')::uuid, '00000000-0000-4000-8000-0000000000b1');
+select public.set_organization_status(current_setting('aqs_test.org_a')::uuid, 'active');
+select public.set_organization_status(current_setting('aqs_test.org_b')::uuid, 'active');
 select public.grant_org_role(current_setting('aqs_test.org_a')::uuid, '00000000-0000-4000-8000-0000000000a2', 'instructor');
 select public.grant_org_role(current_setting('aqs_test.org_a')::uuid, '00000000-0000-4000-8000-0000000000a3', 'learner');
 select public.grant_org_role(current_setting('aqs_test.org_a')::uuid, '00000000-0000-4000-8000-0000000000d4', 'learner');
@@ -137,20 +168,21 @@ select throws_ok($$ select public.create_invitation(current_setting('aqs_test.or
 
 -- 3. Who can see invitations ------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-0000000000a1", "role": "authenticated"}', true);
-select is((select count(*)::int from public.invitations where org_id = current_setting('aqs_test.org_a')::uuid), 7,
-  'an org admin sees all invitations of their organization (including the Platform Admin''s org_admin invitation)');
+select is((select count(*)::int from public.invitations where org_id = current_setting('aqs_test.org_a')::uuid), 8,
+  'an org admin sees all invitations of their organization (including the Platform Admin''s org_admin invitation; 7 + the P12 fixture invitation)');
 select is_empty($$ select 1 from public.invitations where org_id = current_setting('aqs_test.org_b')::uuid $$, 'an org admin sees no invitations of another organization');
 select throws_ok($$ select token_hash from public.invitations $$, '42501', null, 'an org admin cannot read token hashes');
 select throws_ok($$ select * from public.invitations $$, '42501', null, 'SELECT * fails because token_hash is not readable (clients must name columns)');
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-0000000000b1", "role": "authenticated"}', true);
-select is((select count(*)::int from public.invitations where org_id = current_setting('aqs_test.org_b')::uuid), 2, 'B''s org admin sees B''s invitations');
+select is((select count(*)::int from public.invitations where org_id = current_setting('aqs_test.org_b')::uuid), 3, 'B''s org admin sees B''s invitations (2 + the P12 fixture invitation)');
 select is_empty($$ select 1 from public.invitations where org_id = current_setting('aqs_test.org_a')::uuid $$, 'B''s org admin sees none of A''s invitations');
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-0000000000a2", "role": "authenticated"}', true);
 select is_empty($$ select 1 from public.invitations $$, 'an instructor sees no invitations');
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-0000000000d1", "role": "authenticated"}', true);
 select is_empty($$ select 1 from public.invitations $$, 'an invitee cannot read the invitations table');
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-0000000000a0", "role": "authenticated"}', true);
-select is((select count(*)::int from public.invitations), 11, 'a Platform Admin sees all invitations (A: 7, B: 2, D: 2)');
+select is((select count(*)::int from public.invitations), 3,
+  'P15: a Platform Admin reads only pending Organization Admin invitations and the invitations they sent (3 of 11; 040 covers the rule in detail)');
 
 -- 4. Preview -------------------------------------------------------------------------------
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-0000000000d1", "role": "authenticated"}', true);
@@ -159,15 +191,20 @@ select results_eq($$ select organization_name, role::text, email_matches from pu
 select is_empty($$ select * from public.preview_invitation('token-unknown-0123456789abcdefghijklmnopq') $$, 'an unknown token previews nothing');
 select is_empty($$ select * from public.preview_invitation('short') $$, 'a malformed token previews nothing');
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-0000000000c1", "role": "authenticated"}', true);
-select results_eq($$ select email_matches from public.preview_invitation('token-inv1-0123456789abcdefghijklmnopqrstuv') $$,
-  $$ values (false) $$, 'someone else holding the link is told the email does not match');
+select is_empty($$ select * from public.preview_invitation('token-inv1-0123456789abcdefghijklmnopqrstuv') $$,
+  'a signed-in user whose email does not match gets no preview row (no organization name, role or expiry)');
+select is((select count(*)::int from public.preview_invitation('token-inv1-0123456789abcdefghijklmnopqrstuv') where organization_name = 'Org A'), 0,
+  'the organization name is not disclosed to a mismatched user');
 
 -- 5. Acceptance ---------------------------------------------------------------------------
 -- Wrong recipient
 select throws_ok($$ select public.accept_invitation('token-inv1-0123456789abcdefghijklmnopqrstuv') $$, '42501', null,
   'a different signed-in person cannot accept the invitation');
+-- The failed attempt must leave the invitation open. Checked as the real invitee, because
+-- a mismatched user now gets no preview row at all (see section 4).
+select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-0000000000d1", "role": "authenticated"}', true);
 select results_eq($$ select email_matches from public.preview_invitation('token-inv1-0123456789abcdefghijklmnopqrstuv') $$,
-  $$ values (false) $$, 'the failed attempt left the invitation open (it still previews, so it is still pending)');
+  $$ values (true) $$, 'the failed attempt left the invitation open (the invitee still previews it, so it is still pending)');
 -- Correct recipient
 select set_config('request.jwt.claims', '{"sub": "00000000-0000-4000-8000-0000000000d1", "role": "authenticated"}', true);
 select lives_ok($$ select public.accept_invitation('token-inv1-0123456789abcdefghijklmnopqrstuv') $$, 'the invitee accepts their invitation');
