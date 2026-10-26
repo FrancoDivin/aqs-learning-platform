@@ -91,6 +91,7 @@ select set_config('t.v1', public.add_lesson(pg_temp.id('co_m'), 'V1', 'video')::
 select set_config('t.r2', public.add_lesson(pg_temp.id('co_m'), 'R2', 'reading')::text, true);
 select public.set_lesson_body(pg_temp.id('r1'), 'R1 text'), public.set_lesson_body(pg_temp.id('v1'), 'V1 notes'),
        public.set_lesson_body(pg_temp.id('r2'), 'R2 text');
+select public.set_lesson_video_upload(pg_temp.id('v1'), 'v1.mp4', 'video/mp4', 1000);   -- 0010 fixture
 select public.request_course_publication(pg_temp.id('co'));
 
 select set_config('t.cp', public.create_course(pg_temp.id('org_a'), 'Public course', 'public-course')::text, true);

@@ -11,7 +11,8 @@
 --   * auth.uid(), auth.role(), auth.jwt() with Supabase's definitions
 --   * Supabase's default privileges in public (ALL to anon, authenticated,
 --     service_role), which migration 0001 deliberately revokes
--- What it does NOT reproduce: PostgREST, GoTrue, pg_graphql, Storage, realtime,
+-- What it does NOT reproduce: PostgREST, GoTrue, pg_graphql, the Storage API (only its two
+-- tables, see the end of this file), realtime,
 -- the exact Supabase role ownership model. Results from the sandbox are
 -- evidence about the SQL logic only, never a substitute for the local Supabase
 -- stack (D34, T11).
@@ -94,3 +95,40 @@ grant execute on function auth.uid(), auth.role(), auth.jwt() to anon, authentic
 -- Supabase puts `extensions` on the default search path (pgTAP, citext and
 -- pgcrypto functions are found there).
 alter database postgres set search_path to "$user", public, extensions;
+
+-- Storage stand-in (added 27 October 2026 for migration 0010): the two tables the AQS
+-- migration touches, with the columns Supabase Storage defines, RLS enabled as Supabase
+-- ships it, and the client grants Supabase sets. It does NOT reproduce the Storage API
+-- (uploads, signed URLs, size and type checks): those run only on a real stack.
+create schema storage;
+grant usage on schema storage to anon, authenticated, service_role;
+create table storage.buckets (
+  id text primary key,
+  name text not null unique,
+  owner uuid,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  public boolean default false,
+  avif_autodetection boolean default false,
+  file_size_limit bigint,
+  allowed_mime_types text[],
+  owner_id text
+);
+create table storage.objects (
+  id uuid primary key default gen_random_uuid(),
+  bucket_id text references storage.buckets (id),
+  name text,
+  owner uuid,
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  last_accessed_at timestamptz default now(),
+  metadata jsonb,
+  path_tokens text[] generated always as (string_to_array(name, '/')) stored,
+  version text,
+  owner_id text,
+  user_metadata jsonb,
+  unique (bucket_id, name)
+);
+alter table storage.buckets enable row level security;
+alter table storage.objects enable row level security;
+grant all on storage.buckets, storage.objects to anon, authenticated, service_role;

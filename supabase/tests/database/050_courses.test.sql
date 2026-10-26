@@ -165,6 +165,8 @@ select lives_ok($$
   'staff add lessons');
 select lives_ok($$ select public.set_lesson_body(pg_temp.id('l1'), 'Body of reading one'), public.set_lesson_body(pg_temp.id('l3'), 'Body two') $$,
   'staff write lesson text');
+-- 0010 fixture: a video lesson needs a video before publication (synthetic object path).
+select public.set_lesson_video_upload(pg_temp.id('l2'), 'intro.mp4', 'video/mp4', 1000);
 select results_eq($$ select title, position from public.course_modules where course_id = pg_temp.id('ca') order by position $$,
   $$ values ('Module 1', 0), ('Module 2', 1) $$, 'modules are appended in order');
 select throws_ok($$ select public.reorder_course_modules(pg_temp.id('ca'), array[pg_temp.id('m2')]) $$,
@@ -233,8 +235,8 @@ select throws_ok($$ select public.add_course_staff(pg_temp.id('cp'), '00000000-0
 select pg_temp.act_as('00000000-0000-4000-8000-000000000715');
 select is_empty($$ select 1 from public.courses where id = pg_temp.id('ca') $$, 'a learner cannot see a draft course');
 select pg_temp.act_as('00000000-0000-4000-8000-000000000711');
-select is((select count(*)::int from public.lesson_contents where course_id = pg_temp.id('ca')), 2,
-  'an org admin reads the draft''s course and content');
+select is((select count(*)::int from public.lesson_contents where course_id = pg_temp.id('ca')), 3,
+  'an org admin reads the draft''s course and content (3 with the 0010 video fixture row)');
 select pg_temp.act_as('00000000-0000-4000-8000-000000000702');
 select is_empty($$ select 1 from public.courses where id = pg_temp.id('ca') $$,
   'a Platform Admin does not see an organization''s draft that is not waiting for approval');
@@ -331,6 +333,7 @@ select set_config('t.pl2', public.add_lesson(pg_temp.id('pm'), 'Full lesson', 'r
 select set_config('t.pl3', public.add_lesson(pg_temp.id('pm'), 'Video', 'video')::text, true);
 select public.set_lesson_body(pg_temp.id('pl1'), 'Preview text');
 select public.set_lesson_body(pg_temp.id('pl2'), 'Members-only text');
+select public.set_lesson_video_upload(pg_temp.id('pl3'), 'clip.mp4', 'video/mp4', 1000);   -- 0010 fixture
 select throws_ok($$ select public.request_lesson_preview(pg_temp.id('pl3')) $$,
   '22023', null, 'previews are text only (L3)');
 select throws_ok($$ select public.request_lesson_preview(pg_temp.id('l1')) $$,
