@@ -23,18 +23,27 @@ function UnavailableItem({ children }: { children: ReactNode }) {
   )
 }
 
-export default function SignInPage() {
-  const noticeId = useId()
+type SignInViewProps = {
+  /** Shown above the heading: the demo disclosure, or a live error. */
+  notice?: ReactNode
+  onContinue?: () => void
+  busy?: boolean
+  /** Footer: legal links (live) or unavailable placeholders (demo). */
+  footer?: ReactNode
+}
 
+/** The approved sign-in layout, shared by the demo page and the live page. */
+export function SignInView({ notice, onContinue, busy = false, footer }: SignInViewProps) {
+  const noticeId = useId()
   return (
     <AuthLayout
       illustration={<div className={styles.placeholder}>Hero photo placeholder (pending approved asset)</div>}
     >
-      <div className={styles.notice}>
-        <Banner tone="info">
-          <span id={noticeId}>{DEMO_NOTICE}</span>
-        </Banner>
-      </div>
+      {notice ? (
+        <div className={styles.notice} id={noticeId}>
+          {notice}
+        </div>
+      ) : null}
 
       {/* The narrow-screen design uses "Welcome back" (mobile frame, 390 px); desktop keeps "Welcome". */}
       <h1 className={cx('text-h2', styles.heading)}>
@@ -45,21 +54,41 @@ export default function SignInPage() {
         Sign in to continue your courses and pick up right where you left off.
       </p>
 
-      <Button variant="neutral" fullWidth aria-describedby={noticeId}>
-        Continue with Google
+      <Button
+        variant="neutral"
+        fullWidth
+        aria-describedby={notice ? noticeId : undefined}
+        onClick={onContinue}
+        disabled={busy}
+      >
+        {busy ? 'Opening Google…' : 'Continue with Google'}
       </Button>
 
       <p className={cx('text-caption', styles.note)}>New here? Signing in with Google creates your learner account.</p>
 
-      <div className={styles.footer}>
-        <p className={styles.footerRow}>
-          <UnavailableItem>Privacy Policy</UnavailableItem>
-          <UnavailableItem>Terms</UnavailableItem>
-        </p>
-        <p className={cx('text-caption', styles.footerRow)}>
-          Want to teach? <UnavailableItem>Learn about teaching.</UnavailableItem>
-        </p>
-      </div>
+      {footer ?? (
+        <div className={styles.footer}>
+          <p className={styles.footerRow}>
+            <UnavailableItem>Privacy Policy</UnavailableItem>
+            <UnavailableItem>Terms</UnavailableItem>
+          </p>
+          <p className={cx('text-caption', styles.footerRow)}>
+            Want to teach? <UnavailableItem>Learn about teaching.</UnavailableItem>
+          </p>
+        </div>
+      )}
     </AuthLayout>
+  )
+}
+
+export default function SignInPage() {
+  return (
+    <SignInView
+      notice={
+        <Banner tone="info">
+          <span>{DEMO_NOTICE}</span>
+        </Banner>
+      }
+    />
   )
 }

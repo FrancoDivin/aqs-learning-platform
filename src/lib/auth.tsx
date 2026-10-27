@@ -35,11 +35,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       loading,
       authAvailable,
-      signInWithGoogle: async () => {
+      signInWithGoogle: async (options) => {
         if (!supabase) return { error: NOT_CONFIGURED_MESSAGE }
-        // No redirectTo is passed, so Auth uses the configured site URL. The callback path
-        // is decided with the sign-in UI in a later phase, together with the allow-list entry.
-        const { error } = await supabase.auth.signInWithOAuth({ provider: 'google' })
+        // Without redirectTo, Auth uses the configured site URL. The live sign-in page passes
+        // <site>/auth/callback, which must be on the project's redirect allow-list.
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: options?.redirectTo ? { redirectTo: options.redirectTo } : undefined,
+        })
         return { error: error ? error.message : null }
       },
       signOut: async () => {

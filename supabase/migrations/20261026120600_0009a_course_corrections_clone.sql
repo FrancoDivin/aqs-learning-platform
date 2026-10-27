@@ -461,8 +461,8 @@ $$;
 create function public.course_corrections(p_course uuid)
 returns table (id uuid, target public.correction_target, target_id uuid, old_text text, new_text text,
                reason public.correction_reason, note text, status public.correction_status, reverts_id uuid,
-               reverted_by_id uuid, proposed_by_name text, proposed_at timestamptz, decided_by_name text,
-               decided_at timestamptz, decline_reason text)
+               reverted_by_id uuid, proposed_by_name text, proposed_by_me boolean, proposed_at timestamptz,
+               decided_by_name text, decided_at timestamptz, decline_reason text)
 language plpgsql
 stable
 security definer
@@ -480,7 +480,7 @@ begin
   end if;
   return query
     select c.id, c.target, c.target_id, c.old_text, c.new_text, c.reason, c.note, c.status, c.reverts_id,
-           c.reverted_by_id, pp.full_name, c.proposed_at, pd.full_name, c.decided_at, c.decline_reason
+           c.reverted_by_id, pp.full_name, c.proposed_by = v_uid, c.proposed_at, pd.full_name, c.decided_at, c.decline_reason
       from private.course_corrections c
       join public.profiles pp on pp.id = c.proposed_by
       left join public.profiles pd on pd.id = c.decided_by

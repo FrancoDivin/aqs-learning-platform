@@ -9,6 +9,9 @@ type RoleShellProps = {
   /** The person shown in the header. For previews this is sample data only. */
   user: CurrentUser
   banner?: ReactNode
+  /** Live pages only (see AppShell). */
+  onSignOut?: () => void
+  workspaceExtra?: ReactNode
   children: ReactNode
 }
 
@@ -17,7 +20,7 @@ type RoleShellProps = {
  * focus handling and header behave the same for every role. Header actions stay
  * unavailable until their behaviour exists.
  */
-export function RoleShell({ shell, user, banner, children }: RoleShellProps) {
+export function RoleShell({ shell, user, banner, onSignOut, workspaceExtra, children }: RoleShellProps) {
   return (
     <AppShell
       navItems={shell.navItems}
@@ -26,6 +29,8 @@ export function RoleShell({ shell, user, banner, children }: RoleShellProps) {
       helpTitle={shell.helpTitle}
       unavailableActions
       banner={banner}
+      onSignOut={onSignOut}
+      workspaceExtra={workspaceExtra}
     >
       {children}
     </AppShell>

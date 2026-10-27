@@ -9,7 +9,18 @@ import styles from './NoticePages.module.css'
  * public navigation, so it is reached through the sign-in journey only.
  */
 
-function NoticeFrame({ title, children, action }: { title: string; children: ReactNode; action: ReactNode }) {
+/** The shared notice layout. Live pages pass `sample={false}` to drop the preview note. */
+export function NoticeFrame({
+  title,
+  children,
+  action,
+  sample = true,
+}: {
+  title: string
+  children: ReactNode
+  action: ReactNode
+  sample?: boolean
+}) {
   return (
     <main id="main-content" className={styles.page}>
       <div className={styles.wrap}>
@@ -20,7 +31,7 @@ function NoticeFrame({ title, children, action }: { title: string; children: Rea
           {children}
           <div className={styles.actions}>{action}</div>
         </Card>
-        <p className={styles.muted}>Development preview with sample content.</p>
+        {sample ? <p className={styles.muted}>Development preview with sample content.</p> : null}
       </div>
     </main>
   )

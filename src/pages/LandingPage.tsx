@@ -6,6 +6,7 @@ import { Badge, ButtonLink, Card, Icon } from '../components/ui'
 import { cx } from '../lib/cx'
 import { publicHeaderNav } from '../lib/public-navigation'
 import styles from './LandingPage.module.css'
+import { LIVE_MODE } from '../live/mode'
 
 /*
  * Public landing page: one page, built from frame 1 of the approved updated design
@@ -158,7 +159,13 @@ export function LandingPage() {
               design but are hidden until Google sign-in and a demo-request flow exist.
             */}
             <div className={styles.heroActions}>
-              <ButtonLink to="#courses" iconEnd="arrowRight">
+              {LIVE_MODE ? (
+                // Live mode has Google sign-in, so the design's sign-in action appears (the demo request does not).
+                <ButtonLink to="/sign-in" variant="neutral">
+                  Continue with Google
+                </ButtonLink>
+              ) : null}
+              <ButtonLink to={LIVE_MODE ? '/catalog' : '#courses'} iconEnd="arrowRight">
                 Browse courses
               </ButtonLink>
             </div>

@@ -1,10 +1,11 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
-import { Button, Icon } from '../ui'
+import { Button, ButtonLink, Icon } from '../ui'
 import type { NavItem } from './types'
 import { Wordmark } from './Wordmark'
 import { PUBLIC_FOOTER_COLUMNS, publicHeaderNav } from '../../lib/public-navigation'
 import styles from './PublicLayout.module.css'
+import { LIVE_MODE } from '../../live/mode'
 
 // Navigation labels from the Landing design. Courses and For Organizations link to sections of the
 // landing page, because their own routes are not built yet. Destinations that are not available are
@@ -23,6 +24,9 @@ type PublicLayoutProps = {
   /** id of the <main> element (target of the "Skip to content" link). */
   mainId?: string
 }
+
+// Live mode (Supabase configured) has real Google sign-in; the previews keep both actions unavailable.
+const SIGN_IN_AVAILABLE = LIVE_MODE
 
 export function PublicLayout({
   children,
@@ -130,15 +134,28 @@ export function PublicLayout({
             </ul>
           </nav>
           <div className={styles.actions}>
-            {/* Sign-in is not built yet (D11, D15), so both actions are shown as unavailable. */}
-            <span className={`${styles.signIn} ${styles.unavailable}`} aria-disabled="true">
-              Sign in
-              <span className="visually-hidden"> (not available yet)</span>
-            </span>
-            <Button disabled className={styles.cta}>
-              Get started
-              <span className="visually-hidden"> (not available yet)</span>
-            </Button>
+            {SIGN_IN_AVAILABLE ? (
+              <>
+                <Link to="/sign-in" className={styles.signIn}>
+                  Sign in
+                </Link>
+                <ButtonLink to="/sign-in" className={styles.cta}>
+                  Get started
+                </ButtonLink>
+              </>
+            ) : (
+              <>
+                {/* Previews without sign-in (D11, D15): both actions are shown as unavailable. */}
+                <span className={`${styles.signIn} ${styles.unavailable}`} aria-disabled="true">
+                  Sign in
+                  <span className="visually-hidden"> (not available yet)</span>
+                </span>
+                <Button disabled className={styles.cta}>
+                  Get started
+                  <span className="visually-hidden"> (not available yet)</span>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>

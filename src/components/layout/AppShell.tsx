@@ -26,6 +26,10 @@ type AppShellProps = {
    * (dimmed, not clickable) until their behaviour exists. Default false.
    */
   unavailableActions?: boolean
+  /** Live pages: signs the person out. When given, "Sign out" works even if other actions are unavailable. */
+  onSignOut?: () => void
+  /** Live pages: a control after the workspace title, e.g. the workspace switcher. */
+  workspaceExtra?: ReactNode
   children: ReactNode
   mainId?: string
 }
@@ -42,6 +46,8 @@ export function AppShell({
   helpTitle = 'Here to help you learn',
   banner,
   unavailableActions = false,
+  onSignOut,
+  workspaceExtra,
   children,
   mainId = 'main-content',
 }: AppShellProps) {
@@ -180,7 +186,12 @@ export function AppShell({
         </div>
 
         <div className={styles.sidebarBottom}>
-          <button type="button" className={styles.signOut} disabled={unavailableActions}>
+          <button
+            type="button"
+            className={styles.signOut}
+            disabled={onSignOut ? false : unavailableActions}
+            onClick={onSignOut}
+          >
             <Icon name="logOut" size={20} />
             Sign out
           </button>
@@ -209,6 +220,7 @@ export function AppShell({
               {workspace.subtitle ? <p className={styles.workspaceSubtitle}>{workspace.subtitle}</p> : null}
             </div>
           ) : null}
+          {workspaceExtra}
 
           {searchPlaceholder ? (
             <form className={styles.search} role="search" onSubmit={(event) => event.preventDefault()}>

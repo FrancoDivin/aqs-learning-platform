@@ -2,6 +2,8 @@ import { lazy, Suspense } from 'react'
 import { BrowserRouter, Route, Routes } from 'react-router'
 import { LandingPage } from './pages/LandingPage'
 import { NotFound } from './pages/NotFound'
+import { LIVE_MODE } from './live/mode'
+import { LiveApp } from './live/LiveApp'
 
 /*
  * The design-system preview is a development tool, not a product page.
@@ -108,6 +110,13 @@ const LessonPage = import.meta.env.DEV ? lazy(() => import('./pages/LessonPage')
   const ContactPage = import.meta.env.DEV ? lazy(() => import('./pages/ContactPage')) : null
 
 export default function App() {
+  if (LIVE_MODE) {
+    return (
+      <BrowserRouter>
+        <LiveApp />
+      </BrowserRouter>
+    )
+  }
   return (
     <BrowserRouter>
       <Routes>

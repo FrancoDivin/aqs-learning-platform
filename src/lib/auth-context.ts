@@ -17,7 +17,8 @@ export interface AuthContextValue {
   loading: boolean
   /** False when VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY is missing. */
   authAvailable: boolean
-  signInWithGoogle: () => Promise<AuthActionResult>
+  /** `redirectTo` must be on the Auth redirect allow-list (live sign-in passes /auth/callback). */
+  signInWithGoogle: (options?: { redirectTo?: string }) => Promise<AuthActionResult>
   signOut: () => Promise<AuthActionResult>
 }
 
