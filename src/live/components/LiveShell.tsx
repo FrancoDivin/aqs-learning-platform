@@ -22,8 +22,9 @@ export function LiveShell({ shell, banner, children }: { shell: ShellDefinition;
       user={{ name: person?.fullName || person?.email || '', roleLabel: shell.roleLabel }}
       banner={banner}
       onSignOut={async () => {
-        await signOut()
+        // Leave the protected page first, so its guard does not send the person to sign-in.
         navigate('/', { replace: true })
+        await signOut()
       }}
       workspaceExtra={<WorkspaceSwitcher workspaces={workspaces} currentTo={current?.to ?? ''} />}
     >

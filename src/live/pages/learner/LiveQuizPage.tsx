@@ -104,7 +104,10 @@ function QuizFlow({ data, user, onFinished }: { data: QuizData; user: { name: st
     const result = view.result
     const score = result?.score ?? status.bestScore ?? 0
     const passed = result?.passed ?? status.passed
-    const canRetake = status.attemptsLeft > 0 && (!status.passed || quiz.retakeAfterPass)
+    // Right after an attempt the result is newer than the status, which reloads in the background.
+    const passedEver = status.passed || (result?.passed ?? false)
+    const attemptsLeft = result ? Math.min(status.attemptsLeft, quiz.maxAttempts - result.attemptNumber) : status.attemptsLeft
+    const canRetake = attemptsLeft > 0 && (!passedEver || quiz.retakeAfterPass)
     return (
       <FocusLayout back={back} title={title} progress={{ label: 'Quiz complete', value: 100 }} user={user}>
         <div className={styles.content}>
@@ -125,7 +128,7 @@ function QuizFlow({ data, user, onFinished }: { data: QuizData; user: { name: st
             </p>
             {result ? null : <p className={styles.attempts}>Best score of {status.attemptsUsed} attempt(s)</p>}
             {!passed || quiz.retakeAfterPass ? (
-              <p className={styles.attempts}>Attempts remaining: {status.attemptsLeft}</p>
+              <p className={styles.attempts}>Attempts remaining: {attemptsLeft}</p>
             ) : null}
 
             <div className={styles.resultActions}>
