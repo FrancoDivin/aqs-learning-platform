@@ -15,17 +15,16 @@ Single source for "where are we and what is next". Update at every task boundary
 | 2 Nov, 08:51 SAST | Revoked U3 instructor A invitation | Platform Admin | — |
 Invitations expire 9 November 2026. Links exist only in the owner's built-in-browser tab (sessionStorage).
 
-Deployed Edge Functions: `invitations` v1 and `media-url` v1 from commit `4375371` (pre-hardening). Hardened code is commit `ade1050` (not deployed; OD2).
+Deployed Edge Functions (2 Nov, ~19:25 SAST, OD2): `invitations` v4 `e406fe97…` and `media-url` v4 `a8c22992…`, both from `ade1050`, `verify_jwt` false. Rollback = redeploy the `4375371` files. Deno type-check not run.
 
 ## Open defects
-- DF1 staging functions are pre-hardening (500 for bad tokens, legacy keys) — fix = OD2 redeploy.
+- DF1 fixed on staging 2 Nov (OD2): bad tokens now 401. O-A6-2 (media-url body checked before session, 400) remains; harmless.
 - DF2 D33 `hd` claim location unverified with a real Workspace account — A8 Stage 1, step 5.
 - DF3 Q-07-12 staff account IDs readable on course rows — M2 migration (D38 #7).
 - DF4 platform courses default to "assigned" — M2 guard (D38 #13).
 - DF5 no cleanup of orphaned private files — before real data (D38 #9).
 
 ## Gated actions (need explicit owner approval)
-- OD2: deploy hardened functions (evidence package: `claude/od2-…` in the Claude Project).
 - A8 Stage 1 (checklist revision 3).
 - Any migration, hosted configuration, secret or deploy.
 
@@ -36,7 +35,7 @@ See the latest milestone task list in this file's "M1 tasks" section.
 1. [done] Record D38 (`aacab88`).
 2. [done] CLAUDE.md and this handoff.
 3. [done] Reconcile stale documentation (`0dd215e`). The recovery runbook named in the 1 November handover is not in this repository; its correction stays open until located.
-4. [done, awaiting approval] OD2 evidence package (Claude Project: `claude/od2-edge-function-redeploy-evidence-2026-11-02.md`). Deployed functions are version 3, same bundle as the 2 November deploy (content = `4375371`). Staging tokens are ES256.
+4. [done] OD2 deployed and verified (Claude Project: `claude/od2-deployment-result-2026-11-02.md`); evidence package (Claude Project: `claude/od2-edge-function-redeploy-evidence-2026-11-02.md`). Deployed functions are version 3, same bundle as the 2 November deploy (content = `4375371`). Staging tokens are ES256.
 5. [done] T4 on staging: GraphQL refused for signed-out and signed-in callers (406 PGRST106; only `public` exposed).
 6. A8 Stage 1 → after owner approval only.
 7. A8 Stage 2 (invitation permission matrix), suspension, removal, role change, support lookup → after Stage 1 and OD2.
