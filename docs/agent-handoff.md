@@ -6,9 +6,11 @@ Single source for "where are we and what is next". Update at every task boundary
 - **M1 complete** (Claude Project `claude/m1-milestone-report-2026-11-02.md`).
 - **M2 complete** (owner, 3 Nov 00:12): implemented and verified for organization-course workflows (Claude Project `claude/m2-implementation-report-2026-11-03.md`). DF10, DF11 fixed. Recorded limitations: DF3 stays open until 0014 is applied and verified; platform-course publishing and corrections unverified on staging (no second Platform Admin, OD5); Figma comparison partial (design reference inaccessible). None blocks M3.
 - **M3 complete** (owner, 3 Nov 00:48; Claude Project `claude/m3-implementation-report-2026-11-03.md`). Verified on staging: enrolment, assignment, completion, quizzes, media, archived (L13) and suspended (P11) workflows. Implemented and tested locally only, not yet verified on staging: I1, I2, I7 and the D38 #10 display. Migration 0016 prepared and tested, not applied, so the suspended-organization course-title display is unavailable on staging. Tests: database 911/911, functions 10/10, unit 4/4, live 32/32, preview 310/310.
-- **M4 — Administration and reporting: implementation prompt done** (Claude Project `claude/m4-implementation-report-2026-11-03.md`). Staging: every role sees exactly its permitted admin/report data (P7, G1, G2, G3, L11, P19); audit trail matches all staging operations (read-only, counts-only query). I3 (overdue on Learners page) built and tested locally. Open owner decision: P23 wording (proposal in the report). Next: M4 completion prompt.
+- **M4 complete** (owner, 3 Nov 01:10; Claude Project `claude/m4-implementation-report-2026-11-03.md`). Staging evidence preserved; I3 built and tested locally. Limitations: G3's full multi-member staging scenario untested (database tests cover the rule); Org Admin audit screen outside the first release; I3 not on staging until the branch is pushed. P23 wording approved and implemented (landing page, layout unchanged).
+- **M5 — Integration, quality and release readiness: in progress** (implementation prompt = owner message 3 Nov 01:10).
 - Branch `feature/first-release`, local commits ahead of origin (owner pushes; never push). Last pushed: `4375371`.
-- Sandbox evidence on the local tree: pgTAP 897/897 (with 0014 and 0015), functions 10/10, lint and build pass, e2e live 27/27, e2e preview 310/310 (browser build 1243 used in place of 1248).
+- M4 local run (3 Nov): lint and build pass, functions 10/10, unit 4/4, e2e live 33/33, e2e preview 310/310; database 911/911 (no database change in M4).
+- Earlier sandbox evidence on the local tree: pgTAP 897/897 (with 0014 and 0015), functions 10/10, lint and build pass, e2e live 27/27, e2e preview 310/310 (browser build 1243 used in place of 1248).
 
 ## Staging state (synthetic data, OD15 log)
 | When (SAST) | Operation | By | Reversible by |
@@ -86,7 +88,7 @@ Deployed Edge Functions (2 Nov, ~19:25 SAST, OD2): `invitations` v4 `e406fe97…
 - Any other migration, hosted configuration, secret or deploy.
 
 ## Next action
-M4. Owner-authorized items carried forward (not blockers): push the branch; apply 0014 and 0016 to staging; add `- run: npm run test:unit` to the protected `.github/workflows/ci.yml`; second staging Platform Admin (OD5) and `design-reference` access when practical.
+M5. Owner-authorized items carried forward (not blockers): push the branch; apply 0014 and 0016 to staging; add `- run: npm run test:unit` to the protected `.github/workflows/ci.yml`; second staging Platform Admin (OD5) and `design-reference` access when practical.
 
 ## M1 tasks
 1. [done] Record D38 (`aacab88`).
