@@ -157,11 +157,11 @@ max_indexes = 5
 enabled = true
 # The base URL of your website. Used as an allow-list for redirects and for constructing URLs used
 # in emails.
-site_url = "http://127.0.0.1:3000"
+site_url = "http://localhost:5173"
 # The public URL that Auth serves on. Defaults to the API external URL with `/auth/v1` appended.
 # external_url = ""
 # A list of *exact* URLs that auth providers are permitted to redirect to post authentication.
-additional_redirect_urls = ["https://127.0.0.1:3000"]
+additional_redirect_urls = ["http://localhost:5173/auth/callback**"]
 # How long tokens are valid for, in seconds. Defaults to 3600 (1 hour), maximum 604,800 (1 week).
 jwt_expiry = 3600
 # JWT issuer URL. If not set, defaults to auth.external_url.
@@ -219,7 +219,7 @@ web3 = 30
 
 [auth.email]
 # Allow/disallow new user signups via email to your project.
-enable_signup = true
+enable_signup = false
 # If enabled, a user will be required to confirm any email change on both the old, and new email
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
@@ -335,6 +335,17 @@ skip_nonce_check = false
 # If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
 email_optional = false
 
+[auth.external.google]
+enabled = true
+# Value comes from the SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID environment variable.
+client_id = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID)"
+# Value comes from the SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET environment variable. Never commit the value.
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
+# Keep disabled. Enable only if a controlled local test shows Google sign-in fails without it.
+skip_nonce_check = false
+# If enabled, it will allow the user to successfully authenticate when the provider does not return an email address.
+email_optional = false
+
 # Allow Solana wallet holders to sign in to your project via the Sign in with Solana (SIWS, EIP-4361) standard.
 # You can configure "web3" rate limit in the [auth.rate_limit] section and set up [auth.captcha] if self-hosting.
 [auth.web3.solana]
@@ -385,6 +396,15 @@ deno_version = 2
 
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
+
+# AQS Edge Functions (T6). The platform's built-in JWT check understands only the legacy
+# keys, so it is turned off and each function verifies the caller's session in code
+# (supabase/functions/_shared/http.ts, callerClient) before doing any work.
+[functions.invitations]
+verify_jwt = false
+
+[functions.media-url]
+verify_jwt = false
 
 [analytics]
 enabled = true
