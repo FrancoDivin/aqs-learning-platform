@@ -71,7 +71,11 @@ function editorTables(course: ReturnType<typeof publishedCourse>, roles: Array<'
   }
 }
 
+/** Q-07-12: the editor reads creator/proposer IDs through course_people (none needed here). */
+const peopleRpc = { course_people: () => ({ json: [] }) }
+
 const assignRpc = {
+  ...peopleRpc,
   organization_members: () => ({ json: [] }),
   course_learners: () => ({ json: [] }),
 }
@@ -117,7 +121,7 @@ test('a Platform Admin who also holds the organization role sees Archive on the 
 test('a Platform Admin without the organization role is not offered Archive on an organization course', async ({ page }) => {
   await signIn(page)
   const course = publishedCourse({ id: ORG_COURSE, ownerType: 'organization', orgId: ORG.id, staff: [USER.id] })
-  await mockSupabase(page, { tables: editorTables(course, ['instructor'], true) })
+  await mockSupabase(page, { tables: editorTables(course, ['instructor'], true), rpc: peopleRpc })
   // Organization route: the Platform Admin is course staff there, but not its Organization Admin.
   await page.goto(`/o/abc/teach/courses/${ORG_COURSE}`)
   await expect(page.getByRole('heading', { level: 1, name: /Safety basics/ })).toBeVisible()
@@ -132,7 +136,7 @@ test('a Platform Admin without the organization role is not offered Archive on a
 test('an Organization Admin is not offered Archive on a published platform course', async ({ page }) => {
   await signIn(page)
   const course = publishedCourse({ id: PLATFORM_COURSE, ownerType: 'platform', orgId: null, staff: [] })
-  await mockSupabase(page, { tables: editorTables(course, ['org_admin']) })
+  await mockSupabase(page, { tables: editorTables(course, ['org_admin']), rpc: peopleRpc })
   await page.goto(`/o/abc/teach/courses/${PLATFORM_COURSE}`)
   await expect(page.getByRole('heading', { level: 1, name: /Safety basics/ })).toBeVisible()
   await expect(page.getByText('Published', { exact: true })).toBeVisible()
@@ -142,7 +146,7 @@ test('an Organization Admin is not offered Archive on a published platform cours
 test("an Organization Admin is not offered Archive on an organization course that belongs to another organization", async ({ page }) => {
   await signIn(page)
   const course = publishedCourse({ id: ORG_COURSE, ownerType: 'organization', orgId: OTHER_ORG_ID, staff: [USER.id] })
-  await mockSupabase(page, { tables: editorTables(course, ['org_admin']) })
+  await mockSupabase(page, { tables: editorTables(course, ['org_admin']), rpc: peopleRpc })
   await page.goto(`/o/abc/teach/courses/${ORG_COURSE}`)
   await expect(page.getByRole('heading', { level: 1, name: /Safety basics/ })).toBeVisible()
   await expect(page.getByText('Published', { exact: true })).toBeVisible()

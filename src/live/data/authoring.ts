@@ -29,10 +29,37 @@ type OrgCourseRow = {
   status: CourseStatus
   visibility: OrgCourse['visibility']
   publication_requested_at: string | null
-  publication_requested_by: string | null
   published_at: string | null
   course_staff: Array<{ user_id: string }> | null
   course_modules: Array<{ lessons: Array<{ id: string }> | null }> | null
+}
+
+type CoursePeopleRow = {
+  course_id: string
+  created_by: string
+  publication_requested_by: string | null
+  published_by: string | null
+  archived_by: string | null
+}
+
+/**
+ * Q-07-12 (D38): the account IDs of a course's creator and proposer are not readable from the
+ * courses table by ordinary users. Staff, the owning organization's admins and Platform Admins
+ * read them through public.course_people; anyone else gets no row.
+ */
+async function coursePeople(ids: string[]): Promise<Map<string, CoursePeopleRow>> {
+  if (ids.length === 0) return new Map()
+  const { data, error } = await client().rpc('course_people', { p_courses: ids })
+  if (error?.code === 'PGRST202') {
+    // Transition only: a database without migration 0014 has no course_people yet, and still
+    // lets the caller read these columns directly. Remove once 0014 is applied everywhere.
+    const legacy = await query<Array<Omit<CoursePeopleRow, 'course_id'> & { id: string }>>((db) =>
+      db.from('courses').select('id, created_by, publication_requested_by, published_by, archived_by').in('id', ids),
+    )
+    return new Map(legacy.map((r) => [r.id, { ...r, course_id: r.id }]))
+  }
+  if (error) throw toAppError(error)
+  return new Map(((data ?? []) as CoursePeopleRow[]).map((r) => [r.course_id, r]))
 }
 
 /** Courses of an organization (or platform courses when orgId is null) the caller may see. */
@@ -40,10 +67,11 @@ export async function listOrgCourses(orgId: string | null): Promise<OrgCourse[]>
   const rows = await query<OrgCourseRow[]>((db) => {
     const q = db
       .from('courses')
-      .select('id, title, slug, status, visibility, publication_requested_at, publication_requested_by, published_at, course_staff(user_id), course_modules(lessons(id))')
+      .select('id, title, slug, status, visibility, publication_requested_at, published_at, course_staff(user_id), course_modules(lessons(id))')
       .order('updated_at', { ascending: false })
     return orgId ? q.eq('org_id', orgId) : q.is('org_id', null)
   })
+  const people = await coursePeople(rows.filter((r) => r.publication_requested_at).map((r) => r.id))
   return rows.map((r) => ({
     id: r.id,
     title: r.title,
@@ -51,7 +79,7 @@ export async function listOrgCourses(orgId: string | null): Promise<OrgCourse[]>
     status: r.status,
     visibility: r.visibility,
     publicationRequestedAt: r.publication_requested_at,
-    publicationRequestedBy: r.publication_requested_by,
+    publicationRequestedBy: people.get(r.id)?.publication_requested_by ?? null,
     publishedAt: r.published_at,
     staffIds: (r.course_staff ?? []).map((s) => s.user_id),
     lessonCount: (r.course_modules ?? []).reduce((n, m) => n + (m.lessons?.length ?? 0), 0),
@@ -92,7 +120,8 @@ export interface AuthoringCourse {
   enrollmentPolicy: 'open' | 'assigned'
   publicationRequestedAt: string | null
   publicationRequestedBy: string | null
-  createdBy: string
+  /** Null when the caller may not read it (Q-07-12). */
+  createdBy: string | null
   modules: AuthoringModule[]
   staff: Array<{ userId: string }>
 }
@@ -109,8 +138,6 @@ type AuthoringRow = {
   visibility: AuthoringCourse['visibility']
   enrollment_policy: AuthoringCourse['enrollmentPolicy']
   publication_requested_at: string | null
-  publication_requested_by: string | null
-  created_by: string
   course_staff: Array<{ user_id: string }> | null
   course_modules: Array<{
     id: string
@@ -141,12 +168,13 @@ export async function getAuthoringCourse(courseId: string): Promise<AuthoringCou
     db
       .from('courses')
       .select(
-        'id, org_id, owner_type, title, slug, summary, thumbnail_path, status, visibility, enrollment_policy, publication_requested_at, publication_requested_by, created_by, course_staff(user_id), course_modules(id, title, position, lessons(id, title, type, position, is_preview, preview_requested_at, lesson_contents(body, video_path, youtube_id), lesson_resources(id, file_name, content_type, size_bytes, downloadable, storage_path), quizzes(id)))',
+        'id, org_id, owner_type, title, slug, summary, thumbnail_path, status, visibility, enrollment_policy, publication_requested_at, course_staff(user_id), course_modules(id, title, position, lessons(id, title, type, position, is_preview, preview_requested_at, lesson_contents(body, video_path, youtube_id), lesson_resources(id, file_name, content_type, size_bytes, downloadable, storage_path), quizzes(id)))',
       )
       .eq('id', courseId)
       .maybeSingle(),
   )
   if (!row) return null
+  const people = (await coursePeople([row.id])).get(row.id)
   return {
     id: row.id,
     orgId: row.org_id,
@@ -159,8 +187,8 @@ export async function getAuthoringCourse(courseId: string): Promise<AuthoringCou
     visibility: row.visibility,
     enrollmentPolicy: row.enrollment_policy,
     publicationRequestedAt: row.publication_requested_at,
-    publicationRequestedBy: row.publication_requested_by,
-    createdBy: row.created_by,
+    publicationRequestedBy: people?.publication_requested_by ?? null,
+    createdBy: people?.created_by ?? null,
     staff: (row.course_staff ?? []).map((s) => ({ userId: s.user_id })),
     modules: (row.course_modules ?? [])
       .map((m) => ({

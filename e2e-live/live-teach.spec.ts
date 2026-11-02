@@ -28,6 +28,10 @@ test('an instructor edits a draft and proposes it; the course then locks', async
       enrollments: () => ({ json: [] }),
     },
     rpc: {
+      // Q-07-12: the proposer's ID comes from course_people, not from the courses row.
+      course_people: () => ({
+        json: [{ course_id: COURSE_ID, created_by: USER.id, publication_requested_by: state.requested ? USER.id : null, published_by: null, archived_by: null }],
+      }),
       add_course_module: ({ body }) => {
         expect(body).toEqual({ p_course: COURSE_ID, p_title: 'Week two' })
         return { json: 'm2' }
@@ -61,3 +65,21 @@ test('an instructor edits a draft and proposes it; the course then locks', async
   // P22: the proposer is never offered approval.
   await expect(page.getByRole('button', { name: 'Approve and publish' })).toHaveCount(0)
 })
+
+test('before migration 0014 the editor still knows the proposer (transition fallback)', async ({ page }) => {
+  await signIn(page)
+  await mockSupabase(page, {
+    tables: {
+      ...sessionTables([{ id: 'mem1', org_id: ORG.id, status: 'active', membership_roles: [{ role: 'instructor' }], organizations: ORG }]),
+      courses: () => ({ json: [draft(true)] }),
+      enrollments: () => ({ json: [] }),
+    },
+    rpc: {
+      course_people: () => ({ status: 404, json: { code: 'PGRST202', message: 'Could not find the function public.course_people' } }),
+    },
+  })
+  await page.goto(`/o/abc/teach/courses/${COURSE_ID}`)
+  await expect(page.getByText('Awaiting approval', { exact: true })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Withdraw the request' })).toBeVisible()
+})
+
