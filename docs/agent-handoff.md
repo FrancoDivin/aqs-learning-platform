@@ -2,8 +2,8 @@
 
 Single source for "where are we and what is next". Update at every task boundary. Decisions live in `docs/decisions.md`; milestone history in `docs/progress-report.md`.
 
-## Current position (2 November 2026, late evening)
-- Milestone: **M1 — Platform foundations and identity** (approved 2 November 2026). Staging identity and permission testing done except the U2 (Workspace) steps, which wait on migration 0015 (DF8).
+## Current position (2 November 2026, ~23:50 SAST)
+- Milestone: **M1 — Platform foundations and identity** (approved 2 November 2026). **M1 staging identity and permission testing complete.** Migration 0015 applied to staging (owner approval 23:32). Remaining before M1 is fully closed on staging: owner push (DF7, DF9 code fixes reach staging) and the separate 0014 approval (DF3). Next: M2.
 - Branch `feature/first-release`, local commits ahead of origin (owner pushes; never push). Last pushed: `4375371`.
 - Sandbox evidence on the local tree: pgTAP 897/897 (with 0014 and 0015), functions 10/10, lint and build pass, e2e live 27/27, e2e preview 310/310 (browser build 1243 used in place of 1248).
 
