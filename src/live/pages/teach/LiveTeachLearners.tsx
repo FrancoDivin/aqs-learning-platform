@@ -16,7 +16,13 @@ import { loadTeachCourses } from './teach-data'
  * Learners at /o/:orgSlug/teach/learners: per course, each learner's progress (P8, G2) and
  * quiz results (P9). Course staff see names, never email addresses (G2); Organization Admins
  * see their organization's members only (G1).
+ * I3: an assignment past its due date and not completed is marked Overdue and counted. Only
+ * assigned enrolments carry a due date, so public learners are never counted.
  */
+
+function isOverdueRow(r: { status: string; due_at: string | null }, now: number): boolean {
+  return r.status !== 'completed' && !!r.due_at && new Date(r.due_at).getTime() < now
+}
 
 type LearnerRow = {
   user_id: string
@@ -72,7 +78,7 @@ function CourseLearners({ courseId }: { courseId: string }) {
     const [learners, course] = await Promise.all([rpc<LearnerRow[]>('course_learners', { p_course: courseId }), getAuthoringCourse(courseId)])
     const quizzes = (course?.modules ?? []).flatMap((m) => m.lessons).filter((l) => l.quizId)
     const results = await Promise.all(quizzes.map(async (l) => ({ lesson: l.title, rows: await rpc<ResultRow[]>('quiz_results', { p_quiz: l.quizId }) })))
-    return { learners, results }
+    return { learners, results, now: Date.now() }
   }, courseId)
 
   const columns: Array<TableColumn<LearnerRow>> = [
@@ -93,7 +99,14 @@ function CourseLearners({ courseId }: { courseId: string }) {
     {
       key: 'status',
       header: 'Status',
-      render: (r) => (r.status === 'completed' ? <Badge tone="success">Completed {formatDate(r.completed_at)}</Badge> : <Badge>In progress</Badge>),
+      render: (r) =>
+        r.status === 'completed' ? (
+          <Badge tone="success">Completed {formatDate(r.completed_at)}</Badge>
+        ) : data.state === 'ready' && isOverdueRow(r, data.data.now) ? (
+          <Badge tone="danger">Overdue</Badge>
+        ) : (
+          <Badge>In progress</Badge>
+        ),
     },
   ]
   const resultColumns: Array<TableColumn<ResultRow>> = [
@@ -106,11 +119,18 @@ function CourseLearners({ courseId }: { courseId: string }) {
 
   return (
     <Loaded resource={data} label="Loading learners">
-      {({ learners, results }) => (
+      {({ learners, results, now }) => {
+        const overdue = learners.filter((r) => isOverdueRow(r, now)).length
+        return (
         <div style={{ display: 'grid', gap: 24 }}>
           <Card padding="none" as="section" aria-label="Enrolled learners">
             <div style={{ padding: 24 }}>
-              <CardHeader title="Enrolled learners" subtitle={`${learners.length} learners`} headingLevel="h2" size="md" />
+              <CardHeader
+                title="Enrolled learners"
+                subtitle={`${learners.length} learners${overdue > 0 ? ` · ${overdue} overdue` : ''}`}
+                headingLevel="h2"
+                size="md"
+              />
             </div>
             <Table caption="Enrolled learners" columns={columns} rows={learners} getRowKey={(r) => r.user_id} emptyMessage="No one is enrolled yet." />
           </Card>
@@ -123,7 +143,8 @@ function CourseLearners({ courseId }: { courseId: string }) {
             </Card>
           ))}
         </div>
-      )}
+        )
+      }}
     </Loaded>
   )
 }
