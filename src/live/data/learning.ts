@@ -1,4 +1,4 @@
-import { callFunction, query, rpc } from '../api'
+import { callFunction, client, query, rpc, toAppError } from '../api'
 
 /*
  * Learner data: catalog, course outline, enrolment, lessons, files and progress. Every query
@@ -246,4 +246,22 @@ export function publicThumbnailUrl(thumbnailPath: string | null): string | null 
   if (!thumbnailPath || !thumbnailPath.startsWith('course-thumbnails/')) return null
   const base = import.meta.env.VITE_SUPABASE_URL as string | undefined
   return base ? `${base}/storage/v1/object/public/${thumbnailPath}` : null
+}
+
+/**
+ * D38 #10 (Q-08-1): titles of the caller's own enrolled courses, readable even while the
+ * course's organization is suspended (P11 hides everything else). Own enrolments only.
+ * Before migration 0016 the function does not exist; the list is then empty and such
+ * courses stay hidden as before.
+ */
+export async function myEnrolledCourseTitles(): Promise<Map<string, { title: string; orgActive: boolean }>> {
+  const { data, error } = await client().rpc('my_enrolled_course_titles')
+  if (error?.code === 'PGRST202') return new Map() // Transition only: remove once 0016 is applied everywhere.
+  if (error) throw toAppError(error)
+  return new Map(
+    ((data ?? []) as Array<{ course_id: string; title: string; org_is_active: boolean }>).map((r) => [
+      r.course_id,
+      { title: r.title, orgActive: r.org_is_active },
+    ]),
+  )
 }

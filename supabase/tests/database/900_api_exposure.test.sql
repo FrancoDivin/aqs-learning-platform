@@ -215,6 +215,7 @@ select set_eq(
             ('public.complete_lesson(uuid)'),
             ('public.course_learners(uuid)'),
             ('public.course_people(uuid[])'),  -- 0014 (Q-07-12)
+            ('public.my_enrolled_course_titles()'),  -- 0016 (D38 #10, Q-08-1)
             ('authz.can_view_learner_record(uuid, uuid)'),
             ('public.set_quiz_settings(uuid, integer, integer, boolean, quiz_reveal_policy)'),
             ('public.add_quiz_question(uuid, text, quiz_question_type)'),
@@ -305,6 +306,7 @@ select set_eq(
             ('public.complete_lesson(uuid)'),
             ('public.course_learners(uuid)'),
             ('public.course_people(uuid[])'),  -- 0014 (Q-07-12)
+            ('public.my_enrolled_course_titles()'),  -- 0016 (D38 #10, Q-08-1)
             ('authz.can_view_learner_record(uuid, uuid)'),
             ('public.set_quiz_settings(uuid, integer, integer, boolean, quiz_reveal_policy)'),
             ('public.add_quiz_question(uuid, text, quiz_question_type)'),

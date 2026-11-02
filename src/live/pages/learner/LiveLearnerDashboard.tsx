@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
-import { Badge, ButtonLink, EmptyState, ProgressBar, StatCard, Tabs, type TabItem } from '../../../components/ui'
+import { Link } from 'react-router'
+import { Badge, Banner, ButtonLink, EmptyState, ProgressBar, StatCard, Tabs, type TabItem } from '../../../components/ui'
 import { cx } from '../../../lib/cx'
 import styles from '../../../pages/LearnerDashboardPage.module.css'
 import { ErrorBanner, LoadingBlock } from '../../components/States'
@@ -48,6 +49,14 @@ export default function LiveLearnerDashboard() {
 
       {overview.state === 'loading' ? <LoadingBlock label="Loading your dashboard" rows={4} /> : null}
       {overview.state === 'error' ? <ErrorBanner error={overview.error} onRetry={overview.reload} /> : null}
+      {overview.state === 'ready' && overview.data.unavailable.length > 0 ? (
+        <Banner tone="info">
+          {overview.data.unavailable.length === 1
+            ? `${overview.data.unavailable[0].title} is not available right now. `
+            : `${overview.data.unavailable.length} of your courses are not available right now. `}
+          Your records are kept. <Link to="/my-courses">See My courses</Link>
+        </Banner>
+      ) : null}
       {overview.state === 'ready' ? (
         <DashboardBody
           enrolled={overview.data.enrolled}
