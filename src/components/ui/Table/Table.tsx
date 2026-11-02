@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { cx } from '../../../lib/cx'
 import styles from './Table.module.css'
 
@@ -36,12 +36,31 @@ export function Table<Row>({
   emptyMessage = 'Nothing to show yet.',
   footer,
 }: TableProps<Row>) {
+  // WCAG 2.1.1 / axe scrollable-region-focusable (M5): when the table is wider than its box
+  // (narrow screens), keyboard users must be able to reach and scroll it, so the scroll box
+  // becomes a focusable, labelled region. When it fits, it adds no extra tab stop.
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [scrolls, setScrolls] = useState(false)
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const check = () => setScrolls(el.scrollWidth > el.clientWidth + 1)
+    check()
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(check)
+    observer?.observe(el)
+    return () => observer?.disconnect()
+  }, [rows.length, columns.length])
+
   const alignClass = (align?: TableColumn<Row>['align']) =>
     align === 'right' ? styles.alignRight : align === 'center' ? styles.alignCenter : undefined
 
   return (
     <div>
-      <div className={styles.scroll}>
+      <div
+        ref={scrollRef}
+        className={styles.scroll}
+        {...(scrolls ? { tabIndex: 0, role: 'region', 'aria-label': `${caption} (scrolls sideways)` } : {})}
+      >
         <table className={styles.table}>
           <caption className={captionVisible ? styles.caption : 'visually-hidden'}>{caption}</caption>
           <thead>
