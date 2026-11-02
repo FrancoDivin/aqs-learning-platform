@@ -38,10 +38,15 @@ function store(token: string | null) {
   }
 }
 
-/** Take the token from #t=..., or from an older /invite/:token link, and clean the address bar. */
+/**
+ * Take the token from #t=..., or from an older /invite/:token link, and clean the address bar.
+ * A second invitation link opened in a tab that already shows /invite only changes the fragment,
+ * so the browser does not reload the page (DF9, found in A8 Stage 1): listen for that and take
+ * the new token.
+ */
 function useInviteToken(): string | null {
   const params = useParams()
-  const [token] = useState<string | null>(() => {
+  const [token, setToken] = useState<string | null>(() => {
     const fromHash = new URLSearchParams(window.location.hash.slice(1)).get('t')
     const found = fromHash ?? params.token ?? readStored()
     if (found) store(found)
@@ -50,6 +55,17 @@ function useInviteToken(): string | null {
   useEffect(() => {
     if (window.location.hash || params.token) window.history.replaceState(null, '', '/invite')
   }, [params.token])
+  useEffect(() => {
+    const onHash = () => {
+      const next = new URLSearchParams(window.location.hash.slice(1)).get('t')
+      if (!next) return
+      store(next)
+      setToken(next)
+      window.history.replaceState(null, '', '/invite')
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
+  }, [])
   return token
 }
 
@@ -57,6 +73,11 @@ type Preview = { organization_name: string; role: string; expires_at: string; em
 
 export default function LiveInvitePage() {
   const token = useInviteToken()
+  // A new token starts the flow afresh: no "joined" state or error carries over.
+  return <InviteFlow key={token ?? 'none'} token={token} />
+}
+
+function InviteFlow({ token }: { token: string | null }) {
   const { session, loading, signInWithGoogle, signOut } = useAuth()
   const { me } = useSession()
   const navigate = useNavigate()

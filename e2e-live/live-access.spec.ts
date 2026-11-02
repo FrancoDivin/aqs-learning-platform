@@ -58,6 +58,29 @@ test('the invitation token is taken from the fragment, hidden from the address b
   expect(mock.calls.some((c) => c.name === 'accept_invitation')).toBe(true)
 })
 
+test('a second invitation link opened in the same tab replaces the first (DF9)', async ({ page }) => {
+  const first = 'tok_' + 'a'.repeat(40)
+  const second = 'tok_' + 'b'.repeat(40)
+  await signIn(page)
+  await mockSupabase(page, {
+    tables: sessionTables(),
+    rpc: {
+      preview_invitation: ({ body }) => ({
+        json: [{ organization_name: (body as { p_token: string }).p_token === first ? 'ABC Corporation' : 'XYZ Holdings', role: 'learner', expires_at: '2099-01-01T00:00:00Z', email_matches: true }],
+      }),
+      accept_invitation: () => ({ json: 'mem1' }),
+    },
+  })
+  await page.goto(`/invite#t=${first}`)
+  await page.getByRole('button', { name: 'Accept invitation' }).click()
+  await expect(page.getByRole('heading', { name: "You've joined ABC Corporation" })).toBeVisible()
+  // Same document, new fragment: the browser does not reload the page.
+  await page.evaluate((t) => { window.location.hash = `t=${t}` }, second)
+  await expect(page.getByRole('heading', { name: 'Join XYZ Holdings' })).toBeVisible()
+  expect(page.url()).not.toContain(second)
+  expect(await page.evaluate(() => sessionStorage.getItem('aqs.invite-token'))).toBe(second)
+})
+
 test('an invitation for another address reveals nothing about it', async ({ page }) => {
   await signIn(page)
   await mockSupabase(page, { tables: sessionTables(), rpc: { preview_invitation: () => ({ json: [] }) } })
