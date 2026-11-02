@@ -40,7 +40,6 @@ select set_eq(
             ('organizations', 'authenticated', 'SELECT'),
             ('organization_memberships', 'authenticated', 'SELECT'),
             ('membership_roles', 'authenticated', 'SELECT'),
-            ('courses', 'authenticated', 'SELECT'),
             ('course_staff', 'authenticated', 'SELECT'),
             ('course_modules', 'authenticated', 'SELECT'),
             ('lessons', 'authenticated', 'SELECT'),
@@ -93,6 +92,22 @@ select set_eq(
             ('courses', 'visibility', 'anon', 'SELECT'),
             ('courses', 'enrollment_policy', 'anon', 'SELECT'),
             ('courses', 'published_at', 'anon', 'SELECT'),
+            ('courses', 'id', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
+            ('courses', 'owner_type', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
+            ('courses', 'org_id', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
+            ('courses', 'title', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
+            ('courses', 'slug', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
+            ('courses', 'summary', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
+            ('courses', 'thumbnail_path', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
+            ('courses', 'status', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
+            ('courses', 'visibility', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
+            ('courses', 'enrollment_policy', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
+            ('courses', 'org_is_active', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
+            ('courses', 'created_at', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
+            ('courses', 'updated_at', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
+            ('courses', 'publication_requested_at', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
+            ('courses', 'published_at', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
+            ('courses', 'archived_at', 'authenticated', 'SELECT'),  -- 0014 (Q-07-12)
             ('course_modules', 'id', 'anon', 'SELECT'),
             ('course_modules', 'course_id', 'anon', 'SELECT'),
             ('course_modules', 'position', 'anon', 'SELECT'),
@@ -199,6 +214,7 @@ select set_eq(
             ('public.assign_course(uuid, uuid, timestamp with time zone)'),
             ('public.complete_lesson(uuid)'),
             ('public.course_learners(uuid)'),
+            ('public.course_people(uuid[])'),  -- 0014 (Q-07-12)
             ('authz.can_view_learner_record(uuid, uuid)'),
             ('public.set_quiz_settings(uuid, integer, integer, boolean, quiz_reveal_policy)'),
             ('public.add_quiz_question(uuid, text, quiz_question_type)'),
@@ -288,6 +304,7 @@ select set_eq(
             ('public.assign_course(uuid, uuid, timestamp with time zone)'),
             ('public.complete_lesson(uuid)'),
             ('public.course_learners(uuid)'),
+            ('public.course_people(uuid[])'),  -- 0014 (Q-07-12)
             ('authz.can_view_learner_record(uuid, uuid)'),
             ('public.set_quiz_settings(uuid, integer, integer, boolean, quiz_reveal_policy)'),
             ('public.add_quiz_question(uuid, text, quiz_question_type)'),

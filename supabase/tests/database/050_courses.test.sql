@@ -295,7 +295,8 @@ select lives_ok($$ select public.update_course_details(pg_temp.id('ca'), 'Course
 select public.request_course_publication(pg_temp.id('ca'));
 select pg_temp.act_as('00000000-0000-4000-8000-000000000711');
 select lives_ok($$ select public.approve_course_publication(pg_temp.id('ca')) $$, 'an org admin approves an instructor''s course (L2)');
-select results_eq($$ select status::text, published_by::text, publication_requested_by::text from public.courses where id = pg_temp.id('ca') $$,
+select results_eq($$ select c.status::text, p.published_by::text, p.publication_requested_by::text from public.courses c
+                     join public.course_people(array[c.id]) p on p.course_id = c.id where c.id = pg_temp.id('ca') $$,
   $$ values ('published', '00000000-0000-4000-8000-000000000711', '00000000-0000-4000-8000-000000000713') $$,
   'the course is published, recording proposer and approver');
 
