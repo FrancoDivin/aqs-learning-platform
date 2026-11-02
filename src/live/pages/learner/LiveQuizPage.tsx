@@ -19,6 +19,7 @@ import {
   type ReviewRow,
 } from '../../data/quizzes'
 import { lessonHref, orderedLessons } from '../../learner-model'
+import { seededShuffle } from '../../shuffle'
 import { useSession } from '../../session-context'
 import { useAction, useResource } from '../../useResource'
 
@@ -202,7 +203,7 @@ function QuizFlow({ data, user, onFinished }: { data: QuizData; user: { name: st
           <fieldset className={styles.fieldset}>
             <legend className={cx('text-h3', styles.prompt)}>{question.prompt}</legend>
             <p className={styles.hint}>{question.type === 'single' ? 'Select one answer.' : 'Select all that apply.'}</p>
-            {question.options.map((option, optionIndex) => {
+            {seededShuffle(question.options, `${key}:${question.id}`).map((option, optionIndex) => {
               const isSelected = selected.includes(option.id)
               return (
                 <label key={option.id} className={cx(styles.option, isSelected && styles.optionSelected)}>

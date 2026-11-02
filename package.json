@@ -11,6 +11,7 @@
     "test:e2e": "playwright test",
     "test:e2e:live": "playwright test -c playwright.live.config.ts",
     "test:functions": "node --experimental-strip-types --test supabase/functions/_shared/core.test.mjs",
+    "test:unit": "node --experimental-strip-types --test tests/unit/*.test.mjs",
     "test:db": "bash scripts/db-sandbox/run.sh",
     "test:db:real-storage": "bash scripts/db-sandbox/run-real-storage.sh",
     "test:staging": "node tests/api/staging-checks.mjs",
