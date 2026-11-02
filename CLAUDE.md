@@ -22,3 +22,6 @@ React 19 + TypeScript + Vite (`src/`, live app in `src/live/`), Supabase (Postgr
 
 ## Evidence language
 Label results as repository, sandbox, staging or production evidence. "Reported" is never "verified".
+
+## Delivery rule (owner, 2 November 2026)
+Five milestones (M1–M5, unchanged), at most two owner-facing prompts each: an implementation prompt (Claude plans, decides routine matters, implements, fixes and verifies the whole milestone) and a completion prompt (remaining material issues, final verification, milestone report, then straight on to the next milestone). Internal tasks, defects, migrations, test stages and deployment activities are never turned into extra milestones or routine approval checkpoints. Stop for the owner only for a genuine product or business decision, an action outside existing authorization or touching a protected system, or a material blocker that cannot be solved safely in scope; meanwhile continue all other safe work. Actions that the hard rules above reserve for the owner (push, hosted migrations, config, deploys) are collected into one decision list in the milestone report rather than asked one by one.
