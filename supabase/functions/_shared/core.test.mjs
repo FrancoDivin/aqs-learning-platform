@@ -47,3 +47,32 @@ test('CORS answers only allowed origins', () => {
   assert.equal(core.corsHeaders('https://evil.test', 'https://aqs.example')['Access-Control-Allow-Origin'], undefined)
   assert.equal(core.corsHeaders('https://aqs.example', 'https://aqs.example, http://localhost:5173')['Access-Control-Allow-Origin'], 'https://aqs.example')
 })
+
+test('API keys: the current key dictionary wins, the legacy key is the fallback', () => {
+  const dict = JSON.stringify({ default: 'sb_secret_current', billing: 'sb_secret_other' })
+  assert.equal(core.resolveApiKey(dict, 'legacy-jwt'), 'sb_secret_current')
+  assert.equal(core.resolveApiKey(undefined, 'legacy-jwt'), 'legacy-jwt')
+  assert.equal(core.resolveApiKey('', 'legacy-jwt'), 'legacy-jwt')
+  assert.equal(core.resolveApiKey('not json', 'legacy-jwt'), 'legacy-jwt')
+  assert.equal(core.resolveApiKey(JSON.stringify({ other: 'x' }), 'legacy-jwt'), 'legacy-jwt')
+  assert.equal(core.resolveApiKey(JSON.stringify({ default: '' }), undefined), '')
+  assert.equal(core.resolveApiKey(undefined, undefined), '')
+})
+
+test('bearer token parsing', () => {
+  assert.equal(core.bearerToken('Bearer abc.def.ghi'), 'abc.def.ghi')
+  assert.equal(core.bearerToken('bearer abc'), null)
+  assert.equal(core.bearerToken('Bearer '), null)
+  assert.equal(core.bearerToken('Basic abc'), null)
+  assert.equal(core.bearerToken(null), null)
+})
+
+test('only a signed-in user session is accepted', () => {
+  assert.equal(core.isUserSession({ sub: '00000000-0000-4000-8000-000000000001', role: 'authenticated' }), true)
+  assert.equal(core.isUserSession({ role: 'anon' }), false)
+  assert.equal(core.isUserSession({ sub: 'x', role: 'anon' }), false)
+  assert.equal(core.isUserSession({ sub: 'x', role: 'service_role' }), false)
+  assert.equal(core.isUserSession({ sub: '', role: 'authenticated' }), false)
+  assert.equal(core.isUserSession(null), false)
+  assert.equal(core.isUserSession(undefined), false)
+})

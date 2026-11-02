@@ -4,14 +4,15 @@ import { callerClient, env, serve } from '../_shared/http.ts'
 /*
  * invitations (T6): creates an invitation token, stores only its SHA-256 through
  * create_invitation (called AS THE CALLER, so the database checks who may invite whom:
- * D6, D18, I2, I3), and emails the link. No service-role key is used.
+ * D6, D18, I2, I3), and emails the link. No secret or service-role key is used; the caller's
+ * session is verified before anything else (callerClient).
  *
  * POST { action: 'create', orgId, email, role } | { action: 'resend', invitationId }
  *   -> { invitationId, emailSent, link }  (link is returned only when no email was sent,
  *      so the inviter can pass it on; it is never stored or logged)
  */
 
-type Db = ReturnType<typeof callerClient>
+type Db = Awaited<ReturnType<typeof callerClient>>
 
 async function create(db: Db, orgId: string, email: string, role: OrgRole) {
   const token = newInvitationToken()
@@ -49,7 +50,7 @@ async function create(db: Db, orgId: string, email: string, role: OrgRole) {
 }
 
 serve(async (req, body) => {
-  const db = callerClient(req)
+  const db = await callerClient(req)
   if (body.action === 'create') {
     if (!isUuid(body.orgId)) throw new FunctionError('invalid', 'Unknown organization.')
     return create(db, body.orgId, normalizeEmail(body.email), parseRole(body.role))

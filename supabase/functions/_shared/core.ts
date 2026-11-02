@@ -106,6 +106,40 @@ export function fromDbError(error: { code?: string; message?: string } | null | 
   }
 }
 
+/**
+ * An API key from the function's environment. Hosted Supabase provides the current keys as a
+ * JSON dictionary (SUPABASE_PUBLISHABLE_KEYS / SUPABASE_SECRET_KEYS, key name "default") and
+ * the legacy JWT keys (SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY) only while they remain
+ * enabled (Supabase: until the end of 2026). Prefer the dictionary; fall back to the legacy key.
+ * Returns '' when neither is set, so the caller can refuse with "not configured".
+ */
+export function resolveApiKey(dictionary: string | undefined | null, legacy: string | undefined | null): string {
+  if (dictionary) {
+    try {
+      const key = (JSON.parse(dictionary) as Record<string, unknown> | null)?.default
+      if (typeof key === 'string' && key.length > 0) return key
+    } catch {
+      // malformed dictionary: fall through to the legacy key
+    }
+  }
+  return legacy ?? ''
+}
+
+/** The bearer token from an Authorization header, or null when there is none. */
+export function bearerToken(header: string | null | undefined): string | null {
+  const match = /^Bearer\s+(\S+)$/.exec(header ?? '')
+  return match ? match[1] : null
+}
+
+/**
+ * True only for a signed-in user's session: verified claims with a subject and the
+ * 'authenticated' role. The anon key, a publishable or secret key, and the service role are refused.
+ */
+export function isUserSession(claims: unknown): boolean {
+  const c = claims as { sub?: unknown; role?: unknown } | null | undefined
+  return !!c && typeof c.sub === 'string' && c.sub.length > 0 && c.role === 'authenticated'
+}
+
 /** CORS headers for an allowed origin (comma-separated ALLOWED_ORIGINS); none otherwise. */
 export function corsHeaders(origin: string | null, allowed: string): Record<string, string> {
   const list = allowed.split(',').map((o) => o.trim()).filter(Boolean)
