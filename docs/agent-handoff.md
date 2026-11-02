@@ -20,9 +20,10 @@ Deployed Edge Functions (2 Nov, ~19:25 SAST, OD2): `invitations` v4 `e406fe97…
 ## Open defects
 - DF1 fixed on staging 2 Nov (OD2): bad tokens now 401. O-A6-2 (media-url body checked before session, 400) remains; harmless.
 - DF2 D33 `hd` claim location unverified with a real Workspace account — A8 Stage 1, step 5.
-- DF3 Q-07-12 staff account IDs readable on course rows — M2 migration (D38 #7).
+- DF3 Q-07-12 staff account IDs readable on course rows — migration 0014 prepared and sandbox-tested (`5bbfced`, pgTAP 881/881); app reads through `course_people` with a pre-0014 fallback (`debc166`). **Not applied to staging — needs owner approval.**
 - DF4 platform courses default to "assigned" — M2 guard (D38 #13).
 - DF5 no cleanup of orphaned private files — before real data (D38 #9).
+- DF7 fixed in code (`cd65913`): invitation sign-in now asks Google for its account chooser. Found in Stage 1 (Google silently reused the Platform Admin). Reaches staging only after the owner pushes (Render auto-deploy).
 
 ## Gated actions (need explicit owner approval)
 - A8 Stage 1 (checklist revision 3).
@@ -37,5 +38,5 @@ See the latest milestone task list in this file's "M1 tasks" section.
 3. [done] Reconcile stale documentation (`0dd215e`). The recovery runbook named in the 1 November handover is not in this repository; its correction stays open until located.
 4. [done] OD2 deployed and verified (Claude Project: `claude/od2-deployment-result-2026-11-02.md`); evidence package (Claude Project: `claude/od2-edge-function-redeploy-evidence-2026-11-02.md`). Deployed functions are version 3, same bundle as the 2 November deploy (content = `4375371`). Staging tokens are ES256.
 5. [done] T4 on staging: GraphQL refused for signed-out and signed-in callers (406 PGRST106; only `public` exposed).
-6. A8 Stage 1 → after owner approval only.
+6. A8 Stage 1 (approved 2 Nov 19:22 as part of M1). Step 1 attempt: PA was signed out and Google silently signed the PA back in (DF7); nothing written. Waiting for the owner to sign out of Google in the built-in browser (or push), then sign in as U1.
 7. A8 Stage 2 (invitation permission matrix), suspension, removal, role change, support lookup → after Stage 1 and OD2.
