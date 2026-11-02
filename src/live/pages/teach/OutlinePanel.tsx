@@ -59,7 +59,7 @@ export function OutlinePanel({
       <ol className={base.moduleList}>
         {course.modules.map((module, moduleIndex) => (
           <li key={module.id}>
-            <div className={styles.lessonRow}>
+            <div className={styles.moduleRow}>
               <div className={base.moduleButton} style={{ cursor: 'default' }}>
                 <span>{module.title}</span>
                 <span className={base.moduleMeta}>{countOf(module.lessons.length, 'lesson')}</span>

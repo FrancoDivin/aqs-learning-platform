@@ -43,6 +43,21 @@
   min-width: 0;
 }
 
+/* Module header: the title and lesson count keep the full width of the approved outline
+   column (I1, 260-320 px); the reorder, rename and delete controls sit on their own line. */
+.moduleRow {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.moduleRow > :first-child {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
 .iconButton {
   display: inline-grid;
   place-items: center;
@@ -112,4 +127,8 @@
   object-fit: cover;
   border-radius: var(--radius-sm);
   background: var(--color-surface-muted);
+}
+
+.moduleRow > :first-child > :last-child {
+  white-space: nowrap;
 }
