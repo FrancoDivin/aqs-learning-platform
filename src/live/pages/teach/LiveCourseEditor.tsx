@@ -44,6 +44,7 @@ export default function LiveCourseEditor() {
           course={data.data}
           userId={userId ?? ''}
           isOrgAdmin={!!org?.roles.includes('org_admin')}
+          orgId={org?.id ?? null}
           isPlatformAdmin={person.isPlatformAdmin}
           teachBase={org ? `/o/${org.slug}/teach` : '/admin'}
           onChanged={data.reload}
@@ -57,6 +58,7 @@ function Editor({
   course,
   userId,
   isOrgAdmin,
+  orgId,
   isPlatformAdmin,
   teachBase,
   onChanged,
@@ -64,6 +66,7 @@ function Editor({
   course: AuthoringCourse
   userId: string
   isOrgAdmin: boolean
+  orgId: string | null
   isPlatformAdmin: boolean
   teachBase: string
   onChanged: () => void
@@ -78,6 +81,11 @@ function Editor({
   const canApprove = platform ? isPlatformAdmin : isOrgAdmin || isPlatformAdmin
   // Q-P4-1: who may decide corrections (never Platform Admins for organization courses, L11 P3).
   const canDecideCorrections = platform ? isPlatformAdmin : isOrgAdmin
+  // Q-07-10: organization courses are archived only by an Organization Admin of the owning
+  // organization. A Platform Admin does not qualify merely by being a Platform Admin; they
+  // qualify only if they independently hold Organization Admin there. Platform courses are
+  // archived by Platform Admins.
+  const canArchive = platform ? isPlatformAdmin : isOrgAdmin && orgId !== null && orgId === course.orgId
   const status = courseStatus(course)
   const coursesPath = platform ? '/admin/courses' : `${teachBase}/courses`
 
@@ -124,7 +132,7 @@ function Editor({
       ) : null}
 
       <div className={styles.panelGrid}>
-        <PublicationPanel course={course} userId={userId} isStaff={isStaff} canApprove={canApprove} teachBase={teachBase} onChanged={onChanged} />
+        <PublicationPanel course={course} userId={userId} isStaff={isStaff} canApprove={canApprove} canArchive={canArchive} teachBase={teachBase} onChanged={onChanged} />
         <DetailsPanel key={`${course.title}:${course.summary}:${course.visibility}:${course.enrollmentPolicy}`} course={course} editable={editable} onChanged={onChanged} />
         {!platform ? <StaffPanel course={course} isOrgAdmin={isOrgAdmin} editable={course.status === 'draft'} onChanged={onChanged} /> : null}
         {course.status === 'published' && !platform && isOrgAdmin ? <AssignPanel course={course} /> : null}

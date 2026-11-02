@@ -188,13 +188,15 @@ export function StaffPanel({
 /**
  * Publication and lifecycle (L2, P1, P22, Q-07-3, P5): staff propose; another approver
  * approves or declines; previews are approved with it (P2); published courses can be cloned
- * into a new draft or archived.
+ * into a new draft or archived (Q-07-10: by the owning organization's Organization Admins,
+ * or Platform Admins for platform courses).
  */
 export function PublicationPanel({
   course,
   userId,
   isStaff,
   canApprove,
+  canArchive,
   teachBase,
   onChanged,
 }: {
@@ -202,6 +204,7 @@ export function PublicationPanel({
   userId: string
   isStaff: boolean
   canApprove: boolean
+  canArchive: boolean
   teachBase: string
   onChanged: () => void
 }) {
@@ -304,7 +307,7 @@ export function PublicationPanel({
           </form>
         ) : null}
 
-        {course.status === 'published' && canApprove ? (
+        {course.status === 'published' && canArchive ? (
           <div className={styles.stack}>
             <TextField id="archive-reason" label="Reason for archiving" value={reason} maxLength={1000} onChange={(e) => setReason(e.target.value)} />
             <div>
