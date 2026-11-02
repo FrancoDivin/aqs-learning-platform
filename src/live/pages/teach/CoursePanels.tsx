@@ -220,6 +220,9 @@ export function PublicationPanel({
   const clone = useAction(() => authoring.clone(course.id, cloneTitle.trim(), slugify(cloneTitle)))
   const pending = course.status === 'draft' && course.publicationRequestedAt !== null
   const proposer = course.publicationRequestedBy === userId
+  // Q-08-7 (D38 #13): nobody can assign a platform course (Q-08-4), so a platform course with
+  // the "assigned" policy could be published but never joined. Ask staff to open it first.
+  const unjoinable = course.ownerType === 'platform' && course.enrollmentPolicy === 'assigned'
   const previewLessons = course.modules.flatMap((m) => m.lessons).filter((l) => l.previewRequested && !l.isPreview)
 
   return (
@@ -242,7 +245,12 @@ export function PublicationPanel({
       <div className={styles.stack}>
         {course.status === 'draft' && !pending && isStaff ? (
           <div>
-            <Button onClick={() => run.run(() => authoring.requestPublication(course.id), 'Proposed for publication.')} loading={run.busy}>
+            {unjoinable ? (
+              <Banner tone="warning">
+                Platform courses can't be assigned to learners, so nobody could join this course. In Course details, set "How learners join" to "Anyone signed in can enroll", save, then propose it.
+              </Banner>
+            ) : null}
+            <Button onClick={() => run.run(() => authoring.requestPublication(course.id), 'Proposed for publication.')} loading={run.busy} disabled={unjoinable}>
               Propose for publication
             </Button>
             <p className={styles.muted}>Another approver publishes it; you can't approve your own course (P22).</p>
