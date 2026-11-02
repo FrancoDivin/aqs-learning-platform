@@ -1,5 +1,7 @@
-import { client, query, rpc, toAppError } from '../api'
+import { AppError, client, query, rpc, toAppError } from '../api'
 import type { LessonType } from './learning'
+
+const MAX_RESOURCE_BYTES = 100 * 1024 * 1024
 
 /*
  * Course authoring (P3, T5): every change is a checked database function; uploads go to the
@@ -251,6 +253,9 @@ export const authoring = {
   setBody: (lessonId: string, body: string) => rpc('set_lesson_body', { p_lesson: lessonId, p_body: body }),
 
   async addResource(lessonId: string, file: File, downloadable: boolean) {
+    // Same limits as lesson_resources (0007: 1 byte to 100 MB); say so before anything is stored.
+    if (file.size === 0) throw new AppError('invalid', 'This file is empty. Choose another file.')
+    if (file.size > MAX_RESOURCE_BYTES) throw new AppError('invalid', 'Files can be at most 100 MB. Choose a smaller file.')
     const rows = await rpc<Array<{ id: string; storage_path: string }>>('add_lesson_resource', {
       p_lesson: lessonId,
       p_file_name: file.name,

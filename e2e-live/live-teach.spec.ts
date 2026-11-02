@@ -83,3 +83,23 @@ test('before migration 0014 the editor still knows the proposer (transition fall
   await expect(page.getByRole('button', { name: 'Withdraw the request' })).toBeVisible()
 })
 
+
+test('an empty or oversized material file is refused with a clear message before anything is stored', async ({ page }) => {
+  await signIn(page)
+  const mock = await mockSupabase(page, {
+    tables: {
+      ...sessionTables([{ id: 'mem1', org_id: ORG.id, status: 'active', membership_roles: [{ role: 'instructor' }], organizations: ORG }]),
+      courses: () => ({ json: [draft(false)] }),
+      enrollments: () => ({ json: [] }),
+    },
+    rpc: {
+      course_people: () => ({ json: [{ course_id: COURSE_ID, created_by: USER.id, publication_requested_by: null, published_by: null, archived_by: null }] }),
+      add_lesson_resource: () => ({ json: [{ id: 'r1', storage_path: 'x' }] }),
+    },
+  })
+  await page.goto(`/o/abc/teach/courses/${COURSE_ID}`)
+  await expect(page.getByRole('heading', { level: 1, name: /Safety basics/ })).toBeVisible()
+  await page.getByRole('region', { name: 'Upload materials' }).locator('input[type=file]').setInputFiles({ name: 'empty.pdf', mimeType: 'application/pdf', buffer: Buffer.alloc(0) })
+  await expect(page.getByText('This file is empty. Choose another file.')).toBeVisible()
+  expect(mock.calls.some((c) => c.name === 'add_lesson_resource')).toBe(false)
+})
