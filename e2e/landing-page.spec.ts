@@ -116,3 +116,23 @@ test.describe('landing page at mobile width', () => {
     expect(overflows).toBe(false)
   })
 })
+
+test('P23: approved wording; certificates and messaging are labelled "Coming later" in the same layout', async ({ page }) => {
+  await page.goto('/')
+  await expect(page.getByRole('heading', { level: 3, name: 'Learn and track your progress' })).toBeVisible()
+  await expect(page.getByText("Complete lessons and quizzes and see how far you've come.", { exact: true })).toBeVisible()
+  await expect(page.getByText('Learn and earn a certificate')).toHaveCount(0)
+  await expect(page.getByText('Complete lessons and earn your certificate.')).toHaveCount(0)
+
+  const features = page.getByRole('list').filter({ has: page.getByRole('heading', { name: 'Certificates' }) })
+  const card = (title: string) => features.getByRole('listitem').filter({ has: page.getByRole('heading', { name: title, exact: true }) })
+  await expect(features.getByRole('listitem')).toHaveCount(4)
+  await expect(card('Certificates').getByText('Coming later', { exact: true })).toBeVisible()
+  await expect(card('Certificates').getByText('Certificates for completed courses are coming in a later release.', { exact: true })).toBeVisible()
+  await expect(card('Messaging with instructors').getByText('Coming later', { exact: true })).toBeVisible()
+  await expect(card('Messaging with instructors').getByText('Messaging with instructors is coming in a later release.', { exact: true })).toBeVisible()
+  await expect(card('Progress tracking').getByText('Coming later')).toHaveCount(0)
+  await expect(card('Quizzes').getByText('Coming later')).toHaveCount(0)
+  await expect(page.getByText('Earn a certificate when you complete a course.')).toHaveCount(0)
+  await expect(page.getByText('Ask questions and get guidance from your instructor.')).toHaveCount(0)
+})

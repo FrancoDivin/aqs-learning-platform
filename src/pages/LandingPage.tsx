@@ -94,14 +94,16 @@ const HERO_PILLS = ['For learners', 'For organizations']
 const STEPS = [
   { title: 'Sign in', text: 'Sign in with Google and learn from any device.' },
   { title: 'Choose a course', text: 'Choose a practical course that fits your goals.' },
-  { title: 'Learn and earn a certificate', text: 'Complete lessons and earn your certificate.' },
+  { title: 'Learn and track your progress', text: "Complete lessons and quizzes and see how far you've come." },
 ]
 
-const SUPPORT_FEATURES = [
+/* P23 (owner-approved wording, 3 November 2026): features outside the first release (P21) carry a
+   "Coming later" label; the approved layout is unchanged. */
+const SUPPORT_FEATURES: Array<{ title: string; text: string; comingLater?: boolean }> = [
   { title: 'Progress tracking', text: 'Track your progress and pick up where you left off.' },
   { title: 'Quizzes', text: 'Reinforce key concepts with short knowledge checks.' },
-  { title: 'Certificates', text: 'Earn a certificate when you complete a course.' },
-  { title: 'Messaging with instructors', text: 'Ask questions and get guidance from your instructor.' },
+  { title: 'Certificates', text: 'Certificates for completed courses are coming in a later release.', comingLater: true },
+  { title: 'Messaging with instructors', text: 'Messaging with instructors is coming in a later release.', comingLater: true },
 ]
 
 /** Partner logos are not confirmed. These are labelled placeholders, not endorsements. */
@@ -244,6 +246,7 @@ export function LandingPage() {
               <li key={feature.title}>
                 <Card className={styles.infoCard}>
                   <h3 className={styles.infoTitle}>{feature.title}</h3>
+                  {feature.comingLater ? <Badge>Coming later</Badge> : null}
                   <p className={styles.infoText}>{feature.text}</p>
                 </Card>
               </li>
