@@ -851,6 +851,31 @@ No approval decision has changed. D1 colours, D24 unavailable navigation and the
 
 **Next steps, each needing separate owner approval (D34, T2):** the read-only database checks, backup and restore test; any reset; committing migration 0005.
 
+## D36 — First Platform Admin on staging
+
+*Recorded 27 October 2026 from the owner's report. Staging only: Supabase project `aqs-staging` (ref `txpaszokduxewyojrnmq`), synthetic data. Relates to D18-B; D18's text is unchanged. No account email or user ID is recorded here.*
+
+**Confirmed in conversation (27 October 2026): owner-approved staging procedure**
+- For staging, the owner-controlled procedure that D18-B requires is `docs/staging-runbook.md` §6: the account signs in once with Google, which creates its profile; the owner then runs `private.grant_platform_admin(user_id, operator, reason)` in the staging project's SQL editor.
+- The procedure is defined in migration 0002. Only `postgres` can run it, it grants Platform Admin to the one account given, and each grant is recorded in `private.platform_admin_audit` (D18-B: who, whom, when, why).
+- This approval covers staging only. Production's first Platform Admin needs its own owner-approved step when production is set up.
+
+**Reported by the owner (27 October 2026), not independently verified**
+- Google sign-in works locally against `aqs-staging`.
+- Before the grant, the intended account's Auth user ID matched its `profiles.id`, and `public.platform_admins` had zero rows.
+- The owner ran `private.grant_platform_admin(...)` in staging.
+- The app now recognizes the intended account as a Platform Admin.
+
+**Not established by this entry**
+- Production readiness. Production is a separate, owner-approved launch with its own project, Auth settings and first Platform Admin.
+- Independent checks of the resulting `public.platform_admins` row and its `private.platform_admin_audit` entry, and of the stored Google identity (`docs/staging-runbook.md` §3, step 4).
+- The second Platform Admin (P1), invitations, organization isolation and the staging API checks (`docs/staging-runbook.md` §6–7).
+
+## D37 — Public instructor names and course archiving (owner decisions, 31 October 2026)
+
+- **Q-07-6 (refines P6):** public course pages show the display names of current course staff who hold the Instructor role only. Organization Admins and Platform Admins are not shown because of course-management permissions. Platform-course eligibility is unchanged (Q-07-1 as built in 0007: an Instructor in a draft or active organization).
+- **Q-07-10 (refines P5):** an organization's course is archived only by an Organization Admin of that organization. Being a Platform Admin alone does not permit it (consistent with L11); a Platform Admin may archive only if they independently hold the Organization Admin role in the owning organization. Platform courses are archived by Platform Admins.
+
 ## Amendment index
 
 The older entries listed here keep their original text. This index records how later entries relate to them.
@@ -893,6 +918,7 @@ The older entries listed here keep their original text. This index records how l
 | D30 | D32, D34 | D30's open items: 1 by L6 (D32: every lesson is required, so no requirement setting) and P8; 2 by P8; 3 by P9; 4 by P5 (requirements cannot change after publication); 5 by L5 (D32: optional due dates on assigned courses, D7). Certificates stay deferred. D30's text is unchanged. |
 | D31 | D32, D34 | D31's open list is settled by D32 and D34 (see D32, "Effect on D31's open list"). Domain verification and admission are deferred (P14); D31's rules apply when they are built. D31's text is unchanged. |
 | Owner confirmations — 22 October 2026 | D33, D34 | "Invitation email verification": the mechanism is D33, planned for migration 0006 (not yet written, applied or tested; blocked until Google sign-in evidence exists and its tests have run). "Platform Admin invitation visibility": production visibility is settled by P15 (D34): pending Organization Admin invitations in any organization and invitations the Platform Admin sent, plus the audited support lookup. The 22 October wording is unchanged. |
+| D18 | D36 | For staging only, D36 records the owner-approved procedure for the initial Platform Admin (D18-B's open note: "still to be written down") and the owner's report of the first grant on 27 October 2026. Production's procedure remains open. D18's text is unchanged. |
 
 ### Owner confirmations — 22 October 2026
 
