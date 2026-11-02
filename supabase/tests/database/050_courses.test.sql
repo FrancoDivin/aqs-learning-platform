@@ -460,7 +460,7 @@ select lives_ok($$ select public.approve_course_publication(pg_temp.id('cp')) $$
 reset role;
 set local role anon;
 select results_eq($$ select display_name from public.course_instructor_names where course_id = pg_temp.id('cp') order by 1 $$,
-  $$ values ('Ben Instructor'), ('Pat One') $$, 'the platform course lists its current staff names (P6)');
+  $$ values ('Ben Instructor') $$, 'the platform course lists its current Instructors only, not the Platform Admin who created it (P6, Q-07-6)');
 reset role;
 
 -- Archiving (P5) ------------------------------------------------------------------------------

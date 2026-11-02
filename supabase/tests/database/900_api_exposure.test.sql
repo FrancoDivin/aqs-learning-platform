@@ -27,7 +27,15 @@ select set_eq(
        cross join (values ('anon'), ('authenticated')) r(rol)
        cross join (values ('SELECT'), ('INSERT'), ('UPDATE'), ('DELETE'), ('TRUNCATE'), ('REFERENCES'), ('TRIGGER')) p(priv)
       where c.relnamespace = 'public'::regnamespace and c.relkind in ('r', 'v', 'm', 'f', 'p')
-        and has_table_privilege(r.rol, c.oid, p.priv) $$,
+        and has_table_privilege(r.rol, c.oid, p.priv)
+        and not exists (
+              select 1
+                from pg_depend d
+                join pg_extension e on e.oid = d.refobjid
+               where d.classid = 'pg_class'::regclass
+                 and d.objid = c.oid
+                 and d.deptype = 'e'
+            ) $$,
   $$ values ('profiles', 'authenticated', 'SELECT'),
             ('organizations', 'authenticated', 'SELECT'),
             ('organization_memberships', 'authenticated', 'SELECT'),
@@ -122,7 +130,15 @@ select is_empty(
 select is_empty(
   $$ select p.oid::regprocedure::text from pg_proc p
       where p.pronamespace in ('public'::regnamespace, 'private'::regnamespace, 'authz'::regnamespace)
-        and has_function_privilege('anon', p.oid, 'EXECUTE') $$,
+        and has_function_privilege('anon', p.oid, 'EXECUTE')
+        and not exists (
+              select 1
+                from pg_depend d
+                join pg_extension e on e.oid = d.refobjid
+               where d.classid = 'pg_proc'::regclass
+                 and d.objid = p.oid
+                 and d.deptype = 'e'
+            ) $$,
   'anon can execute no function in public, private or authz');
 
 -- 6. Exactly these functions are executable by authenticated ---------------------
@@ -130,7 +146,15 @@ select set_eq(
   $$ select n.nspname || '.' || p.proname || '(' || oidvectortypes(p.proargtypes) || ')'
        from pg_proc p join pg_namespace n on n.oid = p.pronamespace
       where n.nspname in ('public', 'private', 'authz')
-        and has_function_privilege('authenticated', p.oid, 'EXECUTE') $$,
+        and has_function_privilege('authenticated', p.oid, 'EXECUTE')
+        and not exists (
+              select 1
+                from pg_depend d
+                join pg_extension e on e.oid = d.refobjid
+               where d.classid = 'pg_proc'::regclass
+                 and d.objid = p.oid
+                 and d.deptype = 'e'
+            ) $$,
   $$ values ('public.create_organization(text, text)'),
             ('public.set_organization_status(uuid, organization_status)'),
             ('public.grant_org_role(uuid, uuid, org_role)'),

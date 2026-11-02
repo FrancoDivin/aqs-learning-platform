@@ -103,7 +103,7 @@ check('invitee sees no invitation rows over REST', ok2xx(r) && r.json.length ===
 
 // Preview and acceptance ------------------------------------------------------------
 r = await rpc('preview_invitation', outsider.token, { p_token: token });
-check('someone else holding the link sees email_matches = false', ok2xx(r) && r.json.length === 1 && r.json[0].email_matches === false, brief(r));
+check('someone else holding the link gets no preview row (no organization name, role or expiry)', ok2xx(r) && Array.isArray(r.json) && r.json.length === 0, brief(r));
 r = await rpc('accept_invitation', outsider.token, { p_token: token });
 check('someone else cannot accept the invitation over /rpc', !ok2xx(r), brief(r));
 r = await rpc('accept_invitation', null, { p_token: token });

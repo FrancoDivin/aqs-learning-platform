@@ -46,7 +46,11 @@ create function pg_temp.upload(p_bucket text, p_name text) returns void language
   insert into storage.objects (bucket_id, name, owner_id) values (p_bucket, p_name, auth.uid()::text);
 $$;
 grant execute on function pg_temp.upload(text, text) to anon, authenticated;
+-- Deletes as the Storage API does: Supabase Storage blocks direct SQL deletes (its protect_delete
+-- trigger) unless storage.allow_delete_query is 'true', which the API sets for its own deletes.
+-- The RLS delete policy still decides which rows go.
 create function pg_temp.del(p_name text) returns int language sql as $$
+  select set_config('storage.allow_delete_query', 'true', true);
   with d as (delete from storage.objects where name = p_name returning 1) select count(*)::int from d;
 $$;
 grant execute on function pg_temp.del(text) to authenticated;
