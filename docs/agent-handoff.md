@@ -2,9 +2,10 @@
 
 Single source for "where are we and what is next". Update at every task boundary. Decisions live in `docs/decisions.md`; milestone history in `docs/progress-report.md`.
 
-## Current position (3 November 2026, ~00:15 SAST)
-- **M1 complete** (report: Claude Project `claude/m1-milestone-report-2026-11-02.md`).
-- **M2 — Course management and publishing: implementation prompt done** (owner delivery rule, CLAUDE.md). Staging workflows verified for org courses; see "M2 staging results" below. Waiting for the M2 completion prompt with the owner decision list (push; 0014; OD5 second Platform Admin; design-reference folder access).
+## Current position (3 November 2026, ~00:20 SAST)
+- **M1 complete** (Claude Project `claude/m1-milestone-report-2026-11-02.md`).
+- **M2 complete** (owner, 3 Nov 00:12): implemented and verified for organization-course workflows (Claude Project `claude/m2-implementation-report-2026-11-03.md`). DF10, DF11 fixed. Recorded limitations: DF3 stays open until 0014 is applied and verified; platform-course publishing and corrections unverified on staging (no second Platform Admin, OD5); Figma comparison partial (design reference inaccessible). None blocks M3.
+- **M3 — Learner experience and assessments: in progress** (implementation prompt = owner message 3 Nov 00:12).
 - Branch `feature/first-release`, local commits ahead of origin (owner pushes; never push). Last pushed: `4375371`.
 - Sandbox evidence on the local tree: pgTAP 897/897 (with 0014 and 0015), functions 10/10, lint and build pass, e2e live 27/27, e2e preview 310/310 (browser build 1243 used in place of 1248).
 
@@ -64,7 +65,7 @@ Deployed Edge Functions (2 Nov, ~19:25 SAST, OD2): `invitations` v4 `e406fe97…
 - Any other migration, hosted configuration, secret or deploy.
 
 ## Next action
-M2 completion prompt: owner decision list (push DF7/DF9/DF10/DF11; apply 0014; OD5 second staging Platform Admin for platform-course publishing; connect `design-reference` for the full design comparison — the auto-permission check refused the folder request). Then M3.
+M3. Owner-gated items carried forward (not blocking): push (DF7, DF9, DF10, DF11 to staging); apply 0014 (DF3); OD5 second staging Platform Admin; `design-reference` folder access.
 
 ## M1 tasks
 1. [done] Record D38 (`aacab88`).
