@@ -35,8 +35,8 @@ See the latest milestone task list in this file's "M1 tasks" section.
 ## M1 tasks
 1. [done] Record D38 (`aacab88`).
 2. [done] CLAUDE.md and this handoff.
-3. Reconcile stale documentation (progress report header, runbook upstream note and character encoding).
-4. OD2 evidence package → stop for owner approval.
-5. Read-only staging checks that need no approval (GraphQL off for anonymous callers).
+3. [done] Reconcile stale documentation (`0dd215e`). The recovery runbook named in the 1 November handover is not in this repository; its correction stays open until located.
+4. [done, awaiting approval] OD2 evidence package (Claude Project: `claude/od2-edge-function-redeploy-evidence-2026-11-02.md`). Deployed functions are version 3, same bundle as the 2 November deploy (content = `4375371`). Staging tokens are ES256.
+5. [done] T4 on staging: GraphQL refused for signed-out and signed-in callers (406 PGRST106; only `public` exposed).
 6. A8 Stage 1 → after owner approval only.
 7. A8 Stage 2 (invitation permission matrix), suspension, removal, role change, support lookup → after Stage 1 and OD2.
