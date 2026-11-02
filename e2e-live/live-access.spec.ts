@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { mockSupabase, sessionTables, signIn } from './mock-supabase.js'
+import { API, mockSupabase, sessionTables, signIn } from './mock-supabase.js'
 
 const ORG = { id: '00000000-0000-4000-8000-0000000000b1', name: 'ABC Corporation', slug: 'abc', status: 'active' }
 
@@ -104,4 +104,17 @@ test('a Platform Admin sees the P19 report and nothing about learners', async ({
   await expect(page).toHaveURL('/admin')
   await expect(page.getByRole('cell', { name: 'ABC Corporation', exact: true })).toBeVisible()
   await expect(page.getByText('40').first()).toBeVisible()
+})
+
+test('invitation sign-in asks Google for its account chooser, so a different account can be picked', async ({ page }) => {
+  await mockSupabase(page)
+  let authorizeUrl = ''
+  await page.route(`${API}/auth/v1/authorize**`, (route) => {
+    authorizeUrl = route.request().url()
+    return route.fulfill({ status: 200, contentType: 'text/plain', body: 'ok' })
+  })
+  await page.goto(`/invite#t=${'z'.repeat(43)}`)
+  await page.getByRole('button', { name: 'Continue with Google' }).click()
+  await expect.poll(() => authorizeUrl).toContain('provider=google')
+  expect(new URL(authorizeUrl).searchParams.get('prompt')).toBe('select_account')
 })

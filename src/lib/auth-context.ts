@@ -17,8 +17,12 @@ export interface AuthContextValue {
   loading: boolean
   /** False when VITE_SUPABASE_URL or VITE_SUPABASE_PUBLISHABLE_KEY is missing. */
   authAvailable: boolean
-  /** `redirectTo` must be on the Auth redirect allow-list (live sign-in passes /auth/callback). */
-  signInWithGoogle: (options?: { redirectTo?: string }) => Promise<AuthActionResult>
+  /**
+   * `redirectTo` must be on the Auth redirect allow-list (live sign-in passes /auth/callback).
+   * `selectAccount` asks Google to show its account chooser instead of reusing the account
+   * already signed in to Google in this browser (needed when switching to an invited address).
+   */
+  signInWithGoogle: (options?: { redirectTo?: string; selectAccount?: boolean }) => Promise<AuthActionResult>
   signOut: () => Promise<AuthActionResult>
 }
 

@@ -41,7 +41,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // <site>/auth/callback, which must be on the project's redirect allow-list.
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
-          options: options?.redirectTo ? { redirectTo: options.redirectTo } : undefined,
+          options:
+            options?.redirectTo || options?.selectAccount
+              ? {
+                  ...(options.redirectTo ? { redirectTo: options.redirectTo } : {}),
+                  ...(options.selectAccount ? { queryParams: { prompt: 'select_account' } } : {}),
+                }
+              : undefined,
         })
         return { error: error ? error.message : null }
       },

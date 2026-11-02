@@ -69,7 +69,7 @@ export default function LiveInvitePage() {
   const [openedAt] = useState(() => Date.now())
   const email = me.state === 'ready' && me.data ? me.data.email : session?.user.email ?? ''
 
-  const signIn = () => signInWithGoogle({ redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/invite')}` })
+  const signIn = () => signInWithGoogle({ redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent('/invite')}`, selectAccount: true })
 
   let content: ReactNode
   if (!token) {
