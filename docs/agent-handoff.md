@@ -5,7 +5,7 @@ Single source for "where are we and what is next". Update at every task boundary
 ## Current position (3 November 2026, ~00:20 SAST)
 - **M1 complete** (Claude Project `claude/m1-milestone-report-2026-11-02.md`).
 - **M2 complete** (owner, 3 Nov 00:12): implemented and verified for organization-course workflows (Claude Project `claude/m2-implementation-report-2026-11-03.md`). DF10, DF11 fixed. Recorded limitations: DF3 stays open until 0014 is applied and verified; platform-course publishing and corrections unverified on staging (no second Platform Admin, OD5); Figma comparison partial (design reference inaccessible). None blocks M3.
-- **M3 — Learner experience and assessments: in progress** (implementation prompt = owner message 3 Nov 00:12).
+- **M3 — Learner experience and assessments: implementation prompt done** (owner message 3 Nov 00:12). Staging learner and assessment workflows verified (see "M3 staging results"); I1, I2, I7 and D38 #10 implemented and tested locally; migration 0016 prepared, not applied. Next: M3 completion prompt.
 - Branch `feature/first-release`, local commits ahead of origin (owner pushes; never push). Last pushed: `4375371`.
 - Sandbox evidence on the local tree: pgTAP 897/897 (with 0014 and 0015), functions 10/10, lint and build pass, e2e live 27/27, e2e preview 310/310 (browser build 1243 used in place of 1248).
 
@@ -30,6 +30,18 @@ Single source for "where are we and what is next". Update at every task boundary
 | 2 Nov, ~23:50 | Final read-back; one P15 lookup per org, case ref `M1-TEST-002` (audited) | Platform Admin | — |
 | 2–3 Nov, ~23:55–00:10 | M2 course workflows in Org B (all synthetic, "ZZ M2 …"): courses C1 public/open (published → corrected → reverted → archived), C2 org-only (declined), C3 by U3 (approved by Platform Admin), clones "v2" (of published C1) and "Clone of Archived"; small PNG thumbnail, 1 text resource, 1 tiny MP4 uploaded to C1 paths issued by the database; one platform course draft "ZZ M2 Platform Course" (requested then withdrawn) | U2, U3, PA | Archive (published); drafts stay drafts |
 Now: both orgs active, no pending invitations. Org A: U1 org_admin, U2 learner. Org B: U3 org_admin+learner, U2 instructor. Org B courses: C1 archived, C3 published (org-only), C2 + 2 clones drafts. Platform: 1 draft.
+
+## M3 staging results (3 Nov ~00:25–00:45 SAST, real sessions, application functions only)
+Staging log (synthetic, OD15): U2 built and proposed "ZZ M3 Learner Course" C4 (public/open; reading with 1 downloadable + 1 view-only text file, tiny MP4 video, 2-question quiz 70%/3 attempts/no retake after pass/reveal after final attempt); U3 approved it, assigned C3 (org-only) to self with a due date and C4 to self; U3 completed C3; U1 self-enrolled in C4, took 3 quiz attempts, completed it; U3 passed the C4 quiz; U3 archived C4; Platform Admin suspended then reactivated Org B.
+- Catalogue: published public C4 visible to an outsider; org-only C3 not.
+- Self-enrolment: open public course 200 (idempotent); org-only course 403. Before enrolment: no lesson text, no file URL (403), no completion (403).
+- Assignment (Q-08-4): org admin assigns to a learner of the org with a due date; duplicate, non-learner member (instructor) and outsider refused.
+- Completion (P8): lessons complete idempotently; a quiz lesson completes only by passing; all lessons done → enrolment completed with timestamp.
+- Quizzes: server grading (0%, 50% partial, 100%); same idempotency key → replay, no new attempt; unknown option → 400; answers hidden until final attempt (G6/G7), then 5 rows with keys and explanations; 4th attempt refused; retake after pass refused (G5); answer keys never readable.
+- Media (P16/L7a): enrolled learner gets 15-minute signed URLs (file content fetched; download flag set) for a downloadable file and the video; a non-downloadable file is refused to learners by design (L7a, page lists downloadable files only); outsider before enrolment and Platform Admin 403.
+- Archived (L13): enrolled learner keeps outline, text, file and answer review; completion and attempts refused; hidden from the public.
+- Suspended (P11): learner loses course record, outline, text and files; keeps own enrolment and progress rows; quiz summary refused (own attempt rows stay readable, pgTAP 070); reactivation restores. D38 #10 titles need 0016 (staging returns PGRST202; the app falls back).
+- G1/L11 P3: Org B admin sees only Org B members among C4 learners; Platform Admin sees no learner records, quiz results or files of org courses.
 
 ## M2 staging results (3 Nov, real sessions, application functions only)
 - Authoring (U2 instructor B): create, details, modules/lessons add/rename/reorder/delete, lesson text, quiz settings/questions/options/explanation — all 200/204. Create in Org A or as platform course → 403.
@@ -60,12 +72,12 @@ Deployed Edge Functions (2 Nov, ~19:25 SAST, OD2): `invitations` v4 `e406fe97…
 - DF9 (found 2 Nov): opening a second invitation link in a tab already showing `/invite` changed only the fragment, so the page kept the old invitation's state. Fixed in code (listens for `hashchange`; a new token restarts the flow), with a regression test that fails on the old page. Reaches staging after a push.
 
 ## Gated actions (need explicit owner approval)
-- Apply migration 0014 (DF3) to staging.
+- Apply migration 0014 (DF3) and 0016 (D38 #10) to staging.
 - Push (Render deploy of DF7 and DF9 fixes).
 - Any other migration, hosted configuration, secret or deploy.
 
 ## Next action
-M3. Owner-gated items carried forward (not blocking): push (DF7, DF9, DF10, DF11 to staging); apply 0014 (DF3); OD5 second staging Platform Admin; `design-reference` folder access.
+M3 completion prompt. Owner-gated items (not blocking): push (DF7, DF9, DF10, DF11 and the M3 learner features to staging); apply 0014 (DF3) and 0016 (D38 #10); OD5 second staging Platform Admin; `design-reference` folder access.
 
 ## M1 tasks
 1. [done] Record D38 (`aacab88`).
