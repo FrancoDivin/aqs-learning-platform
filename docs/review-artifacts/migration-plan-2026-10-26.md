@@ -5,6 +5,9 @@ has been applied to any database. Migrations 0001–0005 stay exactly as they ar
 or committed migrations are never edited. Adopting this order needs an amendment to D34,
 T1 (owner approval).
 
+**Later update (31 October 2026):** migration 0013 has since been promoted and tested; see
+the update at the end of this document. The table below is unchanged.
+
 ## Filenames
 
 Supabase applies migrations in filename (timestamp) order. Each timestamp below is later
@@ -25,6 +28,7 @@ same order**; the names after the underscore stay the same.
 | 11 | `…_0009_quizzes.sql` | not drafted | Needs Q-09-1 |
 | 12 | `…_0010_storage.sql` | not drafted | Needs Q-07-5, Q-07-8, Q-07-15, Q-10-1 |
 | 13 | `…_0011_platform_reports.sql` | not drafted | P19 |
+| 14 | `20261031120000_0013_public_instructors_and_archiving.sql` | `Q07-6_Q07-10/0013_public_instructors_and_archiving.DRAFT.sql` | Promoted and tested (PostgreSQL 16 sandbox); **not applied**; uncommitted (Q-07-6, Q-07-10, D37) |
 
 The draft file names in `docs/review-artifacts/` are deliberately different from the
 proposed migration names, so `supabase db reset` and `supabase test db` can never pick
@@ -71,3 +75,18 @@ This is not verification on Supabase (D34, T11).
 ## The alternative inside T1 as written
 
 Fold T4 and P12 into 0006. That needs no new names, but both would then wait for O1.
+
+## Update - 31 October 2026: migration 0013 promoted
+
+The proposal above is unchanged. One later migration now exists in `supabase/migrations/`:
+
+| File | Draft source | Status |
+|---|---|---|
+| `20261031120000_0013_public_instructors_and_archiving.sql` | `Q07-6_Q07-10/0013_public_instructors_and_archiving.DRAFT.sql` (kept for history) | Promoted and tested in the throwaway PostgreSQL 16 sandbox (17 files, 789 tests, all pass). **Not applied to any database**; uncommitted. Covers Q-07-6 and Q-07-10; recorded as D37. |
+
+- **Ordering:** the planned migration 0012 (revoking `service_role` on older tables) must use
+  a timestamp **earlier than `20261031120000`**, so it sorts and is applied before 0013. The
+  number 0012 stays free for it; 0013 is the next free number.
+- Tests: `supabase/tests/database/050_courses.test.sql` (one expectation changed, 6-line draft
+  header dropped) and the new `055_public_instructors_and_archiving.test.sql` (25 tests).
+- Applying 0013, like every migration here, still needs owner approval (D34, T1/T2/T11).
