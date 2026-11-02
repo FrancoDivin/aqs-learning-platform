@@ -244,3 +244,8 @@
 .addRow {
   margin-top: var(--space-16);
 }
+
+/* WCAG 1.4.3 (M5): muted text on the tinted quiz row; use the token for tinted fills. */
+.quizRow .lessonMeta {
+  color: var(--color-text-subtle);
+}

@@ -252,3 +252,8 @@
   font-weight: 600;
   color: var(--color-text);
 }
+/* WCAG 1.4.3 (M5): muted text falls to 4.34:1 on the selected/hovered lesson's tint; use the token for tinted fills. */
+.lessonButton:hover .lessonMeta,
+.lessonButton[aria-current='true'] .lessonMeta {
+  color: var(--color-text-subtle);
+}

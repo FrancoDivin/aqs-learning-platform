@@ -178,7 +178,8 @@
 }
 
 .summaryText {
-  color: var(--color-text-muted);
+  /* WCAG 1.4.3 (M5): inside the tinted .summary box muted text is 4.34:1; tinted-fill token. */
+  color: var(--color-text-subtle);
   font-size: var(--text-caption);
   line-height: var(--leading-caption);
 }

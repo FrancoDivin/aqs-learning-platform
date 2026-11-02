@@ -492,3 +492,15 @@
   margin: 0;
   color: var(--color-text-subtle);
 }
+
+/* WCAG 1.4.3 (M5): muted text falls to 4.37:1 on the open module's tint; use the token for tinted fills. */
+.moduleButton:hover .moduleMeta,
+.moduleOpen .moduleButton .moduleMeta {
+  color: var(--color-text-subtle);
+}
+
+/* WCAG 1.4.3 (M5): on the live course page the access note sits in the navy hero, where the
+   default slate text is 1.51:1. Use the hero's secondary-text colour (7.75:1 on navy). */
+.hero .accessNote {
+  color: var(--color-border-strong);
+}
