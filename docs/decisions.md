@@ -876,6 +876,45 @@ No approval decision has changed. D1 colours, D24 unavailable navigation and the
 - **Q-07-6 (refines P6):** public course pages show the display names of current course staff who hold the Instructor role only. Organization Admins and Platform Admins are not shown because of course-management permissions. Platform-course eligibility is unchanged (Q-07-1 as built in 0007: an Instructor in a draft or active organization).
 - **Q-07-10 (refines P5):** an organization's course is archived only by an Organization Admin of that organization. Being a Platform Admin alone does not permit it (consistent with L11); a Platform Admin may archive only if they independently hold the Organization Admin role in the owning organization. Platform courses are archived by Platform Admins.
 
+## D38 — Working defaults confirmed (owner decisions, 2 November 2026)
+
+*Recorded 2 November 2026 from the owner's approval of `claude/d38-working-defaults-decision-list-2026-11-02.md` (Claude Project). Source of the rules: `docs/review-artifacts/final-review-package-2026-10-26.md` §2 and `docs/progress-report.md` ("Working defaults"). Older entries keep their text. Evidence labels: **verified** = read in the migrations or code, or observed on staging, on 2 November 2026; **reported** = stated in the review package or progress report and not independently re-checked. A reported behaviour is approved as a working interpretation; it is not claimed as proven by a test.*
+
+**Confirmed in conversation (2 November 2026): interpretations of existing decisions**
+- Q-06-1 (D18, D33): acceptance and preview check the verified Google identity before revealing an invitation's status or expiry. *Verified (0006; staging, Stage 0).*
+- Q-06-3 (P15): a refused support lookup writes no audit row; a completed lookup writes exactly one. *Reported.*
+- Q-07-3 (P22, G4): a course is locked while its publication request is pending. *Reported.*
+- Q-07-7 (F4, P11): a draft organization's public course is not listed. *Reported.*
+- Q-07-9 (P2, P22): lesson-preview approval refuses both the preview requester and the course's publication proposer, and works only while a publication request is pending. *Verified (0007).*
+- Q-08-3 (F5): removing a member ends their assigned enrolment in that organization's courses. *Reported.*
+- Q-08-4 (L5, P10): assignment is to Learners of that organization only, for organization courses only; an existing enrolment is never replaced; a due date must be in the future. *Verified (0008).*
+- Q-P12-1 (P12): activation counts only an accepted Organization Admin invitation, not a directly granted role. *Verified (0005b).*
+
+**Confirmed in conversation (2 November 2026): technical choices**
+- Q-06-5 emails are trimmed and compared ignoring case (*reported*); Q-07-4 corrections are stored in a private table written only by functions (*reported*); Q-07-11 a proposer withdraws rather than declines their own request (*reported*); Q-07-14 removing the last staff member of a draft is allowed (*reported*); Q-07-16 corrections were built in migration 0009a (*verified*); Q-08-6 lesson completions are not audited row by row (*reported*); Q-P4-3 a correction against text that has since changed must be re-proposed (*reported*); Q-06-4 `private.platform_admin_audit.user_id` is the person granted on grant rows and the searching Platform Admin on lookup rows; no separate actor column in the first release (*verified*).
+
+**Confirmed in conversation (2 November 2026): product decisions**
+1. Q-06-2: support lookups accept a case reference of 1–100 characters and a reason of 1–1000, and return at most 50 rows, newest first. *Verified.*
+2. Q-06-6: no rate limit on support lookups in the first release; every completed lookup is audited and the audit log is reviewed periodically. *Reported.*
+3. Q-06-7: email addresses searched by Platform Admins remain in the append-only audit log; accepted for staging and included in the retention review (R4, F8) before real personal data.
+4. Q-07-2: a Platform Admin may approve an organization course's publication from its outline only, without lesson text (L11 P3); such an approval does not cover lesson text. *Reported.*
+5. Q-07-5: a video lesson uses a private Storage object, or an unlisted YouTube ID on public courses only, with the approver's "non-sensitive" attestation. *Reported.*
+6. Q-07-8 / Q-10-1: course titles 2–200 characters, other titles 1–200, file names 1–255, reasons 1–1000; course files 100 MB, video 500 MB (MP4, WebM), thumbnails 5 MB (PNG, JPEG, WebP). Supabase's Free plan caps every upload at 50 MB; the plan for real video is decided separately. The player requests a fresh 15-minute URL before expiry. *Verified (limits), reported (player refresh).*
+7. **Q-07-12 (changed from the implementation):** learners must not have broad read access to the account IDs of a course's creator, proposer, approver and archiver. These columns are to be restricted to staff and administrative functions in a migration during M2. The current full-table read grant (0007) is *verified* and is not accepted. Applying the migration needs separate owner approval.
+8. Q-07-13: public course pages do not show the owning organization's name. *Verified.*
+9. Q-07-15 / Q-10-2: deleting a file record does not delete its Storage object; staff remove objects while the course is a draft, and a scheduled cleanup is built before real personal data. Organization-only course thumbnails are kept in the private materials bucket; public courses use the public bucket; files are frozen once published. *Reported.*
+10. **Q-08-1 (changed from the implementation):** when an organization is suspended, its learners continue to see the titles of their own enrolled courses, alongside their own records (P11). To be implemented in M3; any migration needs separate owner approval.
+11. Q-08-2: Platform Admins who are staff of a platform course see that course's learners; L11 P3 applies to organization courses only. *Reported.*
+12. Q-08-5: no un-enrolment, withdrawal or due-date change in the first release. *Verified (no such functions).*
+13. Q-08-7: new courses default to the "assigned" enrolment policy; a public platform course must be set to "open" before publication. A usability guard is added in M2. *Verified (default).*
+14. Q-09-1: in G2, "answers as the quiz policy allows" means the reveal policy (G6, G7); instructors see answers only when the reveal policy allows it. *Reported.*
+15. Q-P4-1: corrections are proposed by course staff or Organization Admins and approved by another Organization Admin of that organization; platform-course corrections by another Platform Admin; Platform Admins never act on organization-course content. *Reported.*
+16. Q-P4-2: corrections may change course title, summary, lesson text, quiz prompts, options and explanations, never answer keys, settings or structure, within P4's limits (typo, formatting and broken-link fixes with an attestation; title and summary through the approver). *Reported.*
+17. Q-P4-4: cloning copies the outline, lesson text and quizzes, not files. *Reported.*
+18. Lesson text is plain text (paragraphs and automatically linked URLs); no HTML is rendered. *Reported.*
+
+**Not decided by this entry:** these are decisions, not authorization to apply migrations, change hosted configuration or deploy. The Q-07-12 and Q-08-1 changes are prepared and tested in an isolated database first and presented for separate approval. Q-06-8 (the real Google identity data shape) and Q-06-9 (the migration owner reading `auth.identities`) are verification items, not rules.
+
 ## Amendment index
 
 The older entries listed here keep their original text. This index records how later entries relate to them.
@@ -919,6 +958,8 @@ The older entries listed here keep their original text. This index records how l
 | D31 | D32, D34 | D31's open list is settled by D32 and D34 (see D32, "Effect on D31's open list"). Domain verification and admission are deferred (P14); D31's rules apply when they are built. D31's text is unchanged. |
 | Owner confirmations — 22 October 2026 | D33, D34 | "Invitation email verification": the mechanism is D33, planned for migration 0006 (not yet written, applied or tested; blocked until Google sign-in evidence exists and its tests have run). "Platform Admin invitation visibility": production visibility is settled by P15 (D34): pending Organization Admin invitations in any organization and invitations the Platform Admin sent, plus the audited support lookup. The 22 October wording is unchanged. |
 | D18 | D36 | For staging only, D36 records the owner-approved procedure for the initial Platform Admin (D18-B's open note: "still to be written down") and the owner's report of the first grant on 27 October 2026. Production's procedure remains open. D18's text is unchanged. |
+| D33, D34 (T1, P15), D35 | — | Status on 2 November 2026: migrations 0005a–0013 exist in the repository, pass the sandbox suite and were applied to staging (0012 and 0013 on 1 November 2026, reported in the A5 record). D33's and T1's "planned, not yet written" wording and D35's file facts describe 26 October 2026 and are kept unchanged. Real Google identity evidence on staging is recorded outside this file (A8). |
+| D19, D20, D32, D34, D37 | D38 | D38 confirms the working defaults built into migrations 0006–0011 and their review answers (Q-06…Q-10, Q-P4, Q-P12-1), with two changes (Q-07-12, Q-08-1) to be implemented in M2 and M3. Earlier entries' text is unchanged. |
 
 ### Owner confirmations — 22 October 2026
 
