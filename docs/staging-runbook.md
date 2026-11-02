@@ -1,7 +1,7 @@
-﻿# Staging runbook â€” AQS Learning Platform
+﻿# Staging runbook — AQS Learning Platform
 
 **Status (27 October 2026):** prepared, not executed. Every step that creates or changes a
-cloud resource waits for the owner's approval (blocking questions 1â€“5 in
+cloud resource waits for the owner's approval (blocking questions 1–5 in
 `docs/progress-report.md`). Staging uses **synthetic data only**; production is a separate,
 owner-approved launch.
 
@@ -18,8 +18,8 @@ The existing project `eeoofujuouquhnxkpffs` is **not** used and must not receive
 ## 1. Supabase project (owner approval: Q1)
 
 1. Verify the existing `aqs-staging` project identity and owner access; **do not** create a duplicate project. D36 reports an existing project/ref `txpaszokduxewyojrnmq`, but that report is owner-provided and is not independently verified.
-2. Note the project ref, the project URL and the **publishable** key (`sb_publishable_â€¦`,
-   Settings â†’ API Keys). Never copy a secret (`sb_secret_â€¦`) or service-role key anywhere
+2. Note the project ref, the project URL and the **publishable** key (`sb_publishable_…`,
+   Settings → API Keys). Never copy a secret (`sb_secret_…`) or service-role key anywhere
    outside Supabase. The app and the Edge Functions use the current publishable/secret keys;
    the legacy `anon`/`service_role` keys are not needed (Supabase retires them at the end of
    2026), and the functions fall back to them only if the new keys are absent.
@@ -67,7 +67,7 @@ Preserve the stop-and-record rule: if a migration stops with an error, stop, rec
 If a migration stops with an error, **stop and record it**; do not edit migrations on the fly.
 Two statements depend on hosted-only behaviour that the sandbox cannot reproduce:
 - `0005a` (`drop extension if exists pg_graphql`): if refused, turn GraphQL off in the
-  dashboard (Integrations â†’ GraphQL) and record it; T4 still requires it off.
+  dashboard (Integrations → GraphQL) and record it; T4 still requires it off.
 - `0010` creates policies on `storage.objects`, which Supabase's `supabase_storage_admin`
   owns; `postgres` may do this through Supabase's `supautils` policy grants. An error such as
   "must be owner of table objects" means a support question, not a workaround.
@@ -76,15 +76,15 @@ Verified before staging (sandbox, not hosted): all 15 canonical migrations and t
 
 ## 3. Auth (owner approval: Q3)
 
-1. Google Cloud console â†’ OAuth client (Web). Authorised redirect URI:
+1. Google Cloud console → OAuth client (Web). Authorised redirect URI:
    `https://<staging-ref>.supabase.co/auth/v1/callback`.
-2. Supabase â†’ Authentication â†’ Providers â†’ Google: paste the client ID and secret yourself.
+2. Supabase → Authentication → Providers → Google: paste the client ID and secret yourself.
    Use the configuration inputs `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` and `SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET`;
    set and verify them in approved staging/hosting configuration, but do not commit their values.
    Email sign-up stays off (D15).
-3. Authentication â†’ URL configuration:
+3. Authentication → URL configuration:
    - Site URL: `https://aqs-learning-staging.onrender.com`
-   - Redirect URLs (the app returns to `/auth/callback?next=â€¦`, so each entry ends in `**`,
+   - Redirect URLs (the app returns to `/auth/callback?next=…`, so each entry ends in `**`,
      Supabase's wildcard for "anything after this", including the query string):
      `https://aqs-learning-staging.onrender.com/auth/callback**`
      and, for local testing, `http://localhost:5173/auth/callback**`.
@@ -98,7 +98,7 @@ Verified before staging (sandbox, not hosted): all 15 canonical migrations and t
    - Check on the first sign-in: you must land on `/auth/callback` and then the page you came
      from. Landing on the bare site root instead means the entry did not match.
 4. **After the first Google sign-in (before any invitation is accepted):** check the stored
-   Google identity matches what 0006 relies on (A1â€“A3). In the SQL editor; it shows no email
+   Google identity matches what 0006 relies on (A1–A3). In the SQL editor; it shows no email
    addresses, only shapes:
 
    ```sql
@@ -125,7 +125,7 @@ Verified before staging (sandbox, not hosted): all 15 canonical migrations and t
 `supabase/config.toml` sets `verify_jwt = false` for both functions: the platform's built-in
 check understands only the legacy keys, so each function verifies the caller's session itself
 (signature, expiry, signed-in user) before doing anything. After deploying, confirm in the
-dashboard (Edge Functions â†’ each function â†’ Details) that "Verify JWT" is off.
+dashboard (Edge Functions → each function → Details) that "Verify JWT" is off.
 
 ```bash
 npx supabase secrets set SITE_URL=https://aqs-learning-staging.onrender.com \
@@ -142,14 +142,14 @@ Supabase; they are never set or stored by us.
 
 ## 5. Frontend on Render (owner approval: Q5)
 
-1. Push `feature/first-release` to GitHub only after owner Git authorization. The branch currently has no upstream configured; this runbook does not authorize or perform a push.
-2. Render â†’ New â†’ Blueprint â†’ this repository. Render reads `render.yaml`.
+1. Push `feature/first-release` to GitHub only after owner Git authorization. The branch tracks `origin/feature/first-release` (last owner-authorized push: `4375371`, 1 November 2026); this runbook does not authorize or perform a push.
+2. Render → New → Blueprint → this repository. Render reads `render.yaml`.
 3. Enter `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` (public values) when asked.
 
 ## 6. First Platform Admin (owner only, F6)
 
 1. Sign in once on staging with the owner's Google account (creates the profile).
-2. Supabase â†’ SQL editor:
+2. Supabase → SQL editor:
 
 ```sql
 select private.grant_platform_admin(
@@ -164,17 +164,17 @@ test account.
 
 Use test Google accounts only. Suggested walk-through (each step is a real check):
 
-1. Platform Admin: create organization "Demo Org A" â†’ invite an Organization Admin.
-2. Org Admin: accept the invitation (link or email) â†’ Platform Admin activates the org (P12).
+1. Platform Admin: create organization "Demo Org A" → invite an Organization Admin.
+2. Org Admin: accept the invitation (link or email) → Platform Admin activates the org (P12).
 3. Org Admin: invite an Instructor and two Learners; each accepts.
 4. Instructor: create a course with a reading lesson, a video (small MP4, under 50 MB on Free),
-   a file and a quiz â†’ propose for publication.
-5. Org Admin: approve and publish â†’ assign the course to a Learner with a due date.
+   a file and a quiz → propose for publication.
+5. Org Admin: approve and publish → assign the course to a Learner with a due date.
 6. Learner: open lessons, download the file, watch the video, take the quiz (fail, then pass).
 7. Instructor: Learners page shows progress and quiz results; Org Admin sees members only.
 8. Cross-tenant: create "Demo Org B" with its own admin; confirm B's admin cannot open A's
    course URLs or API rows (expect the no-access notice / empty results).
-9. Platform Admin: Reports shows counts only; suspend Org A â†’ its learner sees the
+9. Platform Admin: Reports shows counts only; suspend Org A → its learner sees the
    unavailable notice; reactivate.
 10. Run the staging API checks with the publishable key and the test accounts' access tokens
     (instructions at the top of the file; it never prints keys or tokens and refuses the

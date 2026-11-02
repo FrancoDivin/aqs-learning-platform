@@ -1,6 +1,6 @@
 # Progress report — first release
 
-Branch `feature/first-release` (local commits only; nothing pushed, applied or deployed).
+Branch `feature/first-release`. Status on 2 November 2026: pushed to `origin` up to `4375371` (1 November 2026, owner-authorized); later commits are local until the owner pushes. Staging `aqs-staging`: migrations 0001–0013 applied (0012 and 0013 on 1 November 2026); Edge Functions `invitations` and `media-url` deployed on 2 November 2026 from `4375371` (the hardened versions in `ade1050` are not yet deployed); Render static site live. The "NOT applied" status line in the header of migration 0013 describes 31 October 2026 and are left unchanged (applied migrations are never edited, T1). Current state and next actions: `docs/agent-handoff.md`.
 
 | Milestone | Commit | Result |
 |---|---|---|
@@ -9,7 +9,7 @@ Branch `feature/first-release` (local commits only; nothing pushed, applied or d
 | M3 0009a corrections/revert/clone, 0010 Storage and video, 0011 platform report | `a7ec266` | DB tests 764/764 |
 | M4 Live frontend on real data for all four roles; Edge Functions `invitations`, `media-url` | `c94ee2f` | lint, build, 310/310 preview e2e |
 | M5 Live-mode e2e (mocked API), CI workflow, Render blueprint, staging runbook | (this commit) | 17/17 live e2e, 7/7 function tests |
-| M6 Real-Storage validation (disposable, local/container, not hosted Supabase) | (uncommitted validation) | 74 Supabase Storage tenant migrations + 13 canonical AQS migrations applied; 764/764 pgTAP tests pass (16 files, 0 failures, 0 errors, exit code 0) |
+| M6 Real-Storage validation (disposable, local/container, not hosted Supabase) | runner committed in `33fa15e` | 74 Supabase Storage tenant migrations + 13 canonical AQS migrations applied; 764/764 pgTAP tests pass (16 files, 0 failures, 0 errors, exit code 0) |
 
 All database results before M6 were **simulated** (PostgreSQL 16 sandbox, not Supabase).
 M6 is a separate, later gate: it runs the canonical 13 migrations and the 764 pgTAP tests
