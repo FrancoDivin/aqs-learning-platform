@@ -61,3 +61,16 @@
 .action {
   justify-self: start;
 }
+
+/* I2 sort control (live My courses). */
+.controls {
+  max-width: 280px;
+  margin-bottom: var(--space-16);
+}
+
+/* D38 #10: courses not available right now (live My courses). */
+.unavailable {
+  display: grid;
+  gap: var(--space-16);
+  margin-top: var(--space-32);
+}
