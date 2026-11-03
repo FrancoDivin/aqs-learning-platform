@@ -35,7 +35,8 @@ M1–M5 are closed and deferred features stay deferred.
 
 **Ten owner-facing prompts, two per milestone, unchanged.** Prompt 1 is where the owner gives
 that milestone's decisions and any named authorisations. Prompt 2 is the completion report and
-verification. For CM2, CM3 and CM5, Prompt 1 also releases your work packages, and Prompt 2 is
+verification. For CM2, CM3 and CM5, Prompt 1 also releases your work packages (the one
+exception is the early CM5 runbook drafting described under CM5 in part 2), and Prompt 2 is
 Claude's verified report on your merged work. Your pull requests, reviews and fixes happen
 between the two prompts and never become extra prompts.
 
@@ -79,7 +80,9 @@ owner approves go-live in writing.
 
 Each package is one pull request (or a few small ones, each naming the package ID). Start a
 milestone's packages only after its Prompt 1 has released them and the decisions they depend
-on are recorded in `docs/decisions.md`.
+on are recorded in `docs/decisions.md`. The only exception is the safe, non-sensitive drafting
+of the CM5-1 to CM5-4 runbooks before the CM5 gate, under the conditions set out under CM5
+below.
 
 ### CM2 — Storage and Video (FR, PB)
 
@@ -179,7 +182,26 @@ unavailable features keep their approved wording. Development-only pages stay de
 ### CM5 — Production Preparation (approved preparation work only)
 
 **Gate before CM5 Prompt 1:** legal advice and approved texts for R1–R5, AQS-owned accounts,
-paid plans, the domain. Nothing in CM5 starts before the gate.
+paid plans, the domain.
+
+**What may start before the gate (safe, non-sensitive drafting only):** draft runbooks
+CM5-1 to CM5-4 as documentation in your fork, submitted through the normal pull-request
+workflow. These drafts:
+
+- use placeholders such as `<production-project-ref>`, `<domain>` and `<secret-name>`, never
+  real account identifiers, project references, URLs of production systems, secret values or
+  personal data;
+- describe steps without performing any of them, and contact no hosted system;
+- mark every step that depends on legal advice or an owner decision as **Pending: legal
+  advice** or **Pending: owner decision** (for example the breach-notification timeline in
+  `incident.md`) instead of filling it in;
+- are finalised, reviewed and verified only after the gate, inside CM5.
+
+**What stays blocked until the gate is met and the owner has given the applicable explicit
+approval:** CM5-5 (legal pages and age self-declaration), CM5-6 (deactivation and
+anonymisation), CM5-7 (production verification and synthetic-data removal scripts), any legal
+text, any production configuration, any migration, any real production action, and every other
+restricted activity in part 7. Early drafting authorises none of these.
 
 You prepare; nothing here touches production. Every production step (R-PROD) is performed
 only after the owner's step-by-step authorisation, by the owner or by Claude with the owner,
@@ -195,7 +217,7 @@ using your prepared material. Claude integrates and writes the acceptance report
 | CM5-6 | Deactivation and anonymisation (F8, R4) | the approved procedure as checked database functions in a new migration, pgTAP tests (including cross-organisation and audit rows), and `docs/runbooks/anonymisation.md` |
 | CM5-7 | Production verification and synthetic-data removal | `scripts/production-verification/` (read-only checks mirroring the staging checks) and a reviewed removal script for synthetic data; both run only under authorisation |
 
-**CM5 acceptance:** the twelve-row production blocker checklist (part 4) evidenced, UAT signed
+**CM5 acceptance:** the twelve-row production blocker checklist (part 7) evidenced, UAT signed
 off by AQS staff, and the owner's written go-live approval. Claude assembles the evidence and
 the report; you supply the prepared material and fix review findings.
 
@@ -223,7 +245,9 @@ changes go in a new migration with `create or replace`.
 
 **Dependencies between packages:** CM2-1 → CM2-2 → CM2-3 and CM2-4; CM2-3 → CM3-8; CM3-1 →
 CM3-8; CM2 merged → CM3 starts; CM3 merged → CM4 (Claude, feature freeze) → CM5. During CM4 you
-make no feature changes; you fix only findings Claude assigns to you in review.
+make no feature changes; you fix only findings Claude assigns to you in review. The early CM5-1
+to CM5-4 runbook drafting (part 2, under CM5) is documentation only and may continue at any time
+under its conditions; every other CM5 package waits for the CM5 gate and Prompt 1.
 
 ---
 
@@ -260,41 +284,96 @@ link the run.
 
 ## 5. Git workflow: fork, branches and pull requests
 
-**Upstream:** `github.com/owenganza01/aqs-learning-platform`.
-**Integration branch:** `integration` on upstream. It exists once the owner authorises
-package B in `docs/cm1-authorisation-packages.md` (push to a branch no Render service watches).
+**Upstream repository:** `https://github.com/owenganza01/aqs-learning-platform.git`.
+**Integration branch:** `integration` on upstream. It is the only base for your work and the
+only target of your pull requests. CM1 is on it at commit `9176499`
+(`917649990c9d31f68cb9d86ba74e9eaa0c5c6caf`, pushed by the owner on 3 November 2026).
 **Never target `feature/first-release`:** every commit on that branch deploys staging
 automatically. Claude promotes reviewed work from `integration` to `feature/first-release` only
 when the owner authorises that push and its deployment.
 
+**Always branch from `upstream/integration`.** Every CM2, CM3 and CM5 work branch is created
+from a freshly fetched `upstream/integration`, never from your fork's own branches, which can be
+out of date (a fork made earlier may still hold `feature/first-release` at `4375371`, without
+CM1).
+
 1. Fork upstream on GitHub with **all branches** (untick "Copy the master branch only").
-2. Clone your fork and add upstream:
-   ```bash
-   git clone https://github.com/<you>/aqs-learning-platform.git
-   cd aqs-learning-platform
-   git remote add upstream https://github.com/owenganza01/aqs-learning-platform.git
-   git fetch upstream
-   ```
-3. One branch per package, from the integration branch:
-   ```bash
-   git switch -c cm2/CM2-1-video-assets upstream/integration
-   ```
-4. Commit in small steps, Conventional Commits, explicit paths only:
-   `git add supabase/migrations/<file> supabase/tests/database/087_video_assets.test.sql`
-   (never `git add .` or `-A`). Never commit `.env*` files other than `.env.example`.
-5. Stay current: `git fetch upstream && git merge upstream/integration`. Push only to your
-   fork. Never force-push a branch that has an open pull request.
-6. Open the pull request **from your fork's branch into upstream `integration`**, using the
+
+2. Clone your fork. Run each command on its own line, replacing `<your-github-username>`:
+
+```bash
+git clone https://github.com/<your-github-username>/aqs-learning-platform.git
+cd aqs-learning-platform
+```
+
+3. Add the upstream repository and fetch it:
+
+```bash
+git remote add upstream https://github.com/owenganza01/aqs-learning-platform.git
+git fetch upstream
+```
+
+4. Check that you have the integration branch with CM1 on it. The first command must list
+   `upstream/integration`; the second must print a commit at or after `9176499`:
+
+```bash
+git branch -r
+git log --oneline -1 upstream/integration
+```
+
+5. Create each work branch from `upstream/integration` (one branch per package). For example:
+
+```bash
+git fetch upstream
+git switch -c cm2/CM2-1-video-assets upstream/integration
+```
+
+Name branches `cm2/<package-id>-<short-name>`, `cm3/...` or `cm5/...`. Before the CM5 gate, a
+`cm5/` branch may contain only the CM5-1 to CM5-4 runbook drafts allowed under CM5 in part 2:
+documentation with placeholders, nothing that is legal text, production configuration, a
+migration or a production action.
+
+6. Commit in small steps, Conventional Commits, explicit paths only, for example:
+
+```bash
+git add supabase/migrations/<file> supabase/tests/database/087_video_assets.test.sql
+git commit -m "feat(db): video assets model (CM2-1)"
+```
+
+Never `git add .` or `git add -A`. Never commit `.env*` files other than `.env.example`.
+
+7. Stay current with upstream while you work. Run each command on its own line:
+
+```bash
+git fetch upstream
+git merge upstream/integration
+git push origin cm2/CM2-1-video-assets
+```
+
+Push only to your fork (`origin`). Never push to `upstream`. Never force-push a branch that
+has an open pull request.
+
+8. Open the pull request **from your fork's branch into upstream `integration`**, using the
    template in `docs/pull-request-template.md` (paste it into the description; once the owner
    copies it to `.github/pull_request_template.md`, GitHub fills it in automatically). One
    package per pull request; draft pull requests are welcome for early direction.
-7. Claude reviews (read-only) for architecture consistency, security, isolation, design
+9. Claude reviews (read-only) for architecture consistency, security, isolation, design
    fidelity and evidence. You fix in new commits on the same branch.
-8. **Merging needs the owner's authorisation.** The owner merges in GitHub, or authorises
+10. **Merging needs the owner's authorisation.** The owner merges in GitHub, or authorises
    Claude to merge that named pull request. Merge commits, no squash, so the evidence trail
    stays. No one merges their own pull request without that authorisation.
-9. After a merge, sync your fork's `integration` from upstream before starting the next
-   package.
+11. After a merge, start the next package from a freshly fetched `upstream/integration`
+    (step 5). To keep your fork's own `integration` branch in step as well:
+
+```bash
+git fetch upstream
+git switch integration
+git merge --ff-only upstream/integration
+git push origin integration
+```
+
+If `git switch integration` says the branch does not exist, create it first with
+`git switch -c integration upstream/integration`.
 
 ---
 
