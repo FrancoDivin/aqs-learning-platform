@@ -47,20 +47,20 @@ organisation-only courses.
 | Which branch? | One branch per package from a freshly fetched `upstream/integration`, for example `cm2/CM2-1-video-review`. The root `AGENTS.md` in this repository states the same rule, and it supersedes any generic branch instruction from another `AGENTS.md` or tool default. If a local, untracked `AGENTS.md` blocks `git merge` or `git switch`, rename it (for example `AGENTS.local.md`) rather than overwrite the repository's file |
 | How do I run the database tests on Windows? | `scripts/db-sandbox/run.sh` needs Linux (or WSL2 Ubuntu), PostgreSQL 16, pgTAP and a non-root user. **For CM2-1, use CI as evidence:** enable GitHub Actions on your fork (Actions tab, "I understand my workflows…", one-time) and push your branch. The `database` job runs the full sandbox on Ubuntu 24.04 with PostgreSQL 16. Link that run in your pull request. Do **not** change `scripts/db-sandbox/*` inside CM2-1. Any runner improvement (for example a Windows or WSL helper) goes in its own pull request, reviewed separately |
 | Where is the specification? | `docs/cm2-implementation-package.md` (parts 1–9a) and `docs/decisions.md` D39. If a part is unclear or conflicts with D39, open a pull-request comment or an issue labelled `decision-needed`; do not guess |
-| What order, and when is CM2 done? | CM2-1 → CM2-2 → (CM2-3, CM2-4); CM2-5 any time. CM2 is done when every package is merged into `integration` and its acceptance criteria (package part 6) are evidenced in your milestone report (part 6 below) |
+| What order, and when is CM2 done? | CM2-1 → CM2-2 → (CM2-3, CM2-4); CM2-5 any time. CM2 is done when every package has a pull request into `integration` and its acceptance criteria (package part 6) are evidenced in your milestone report (part 6 below). Staging-only evidence is marked "pending owner action" |
 
-**Acknowledge the release before coding.** Open one GitHub issue in the upstream repository titled
-`CM2 readiness acknowledgement`, containing:
+**Check your starting point yourself, then start.** No acknowledgement or confirmation is
+needed: you work through CM2, CM3 and CM5 on your own. Record these facts at the top of your
+CM2 completion report:
 
 ```text
-Upstream integration commit: <output of: git rev-parse upstream/integration>
-Documents present (all 7 + AGENTS.md): <output of: git ls-tree --name-only upstream/integration -- AGENTS.md docs/cm2-implementation-package.md docs/decisions.md docs/developer-handoff.md docs/progress/cm2.md docs/video-provider-brief.md docs/agent-handoff.md docs/cm1-authorisation-packages.md>
-GitHub Actions enabled on my fork: yes/no
-Baseline on the unchanged commit: lint, build, test:unit, test:functions, test:e2e, test:e2e:live counts; database job link from CI
-I have read parts 0–7 of this handoff, D39 and the CM2 package, and understand the restrictions in part 7: yes
+Upstream integration commit: <output of: git rev-parse upstream/integration>   (must be 5ceb443 or later)
+Documents present: <output of: git ls-tree --name-only upstream/integration -- AGENTS.md docs/cm2-implementation-package.md docs/decisions.md docs/developer-handoff.md docs/progress/cm2.md docs/video-provider-brief.md docs/agent-handoff.md docs/cm1-authorisation-packages.md>   (all 8 must be listed)
+Baseline on the unchanged commit: lint, build, test:unit (9), test:functions (10), test:e2e (377), test:e2e:live (89); database job link from CI on your fork (990)
 ```
 
-Claude checks it against the repository and confirms before CM2-1 starts.
+If your baseline differs from those counts, find out why before changing code, and say so in
+the report.
 
 ---
 
@@ -151,7 +151,7 @@ In short:
 | CM2-5 | Cleanup activation runbook (documentation only) | `docs/cm2-cleanup-activation.md` (new): describes the future activation steps with verification and rollback; opens with a "Blocked" status line; uses `<retention period: pending owner decision>` placeholders; contains no migration, schedule, secret, code or deletion script (package part 9a) | D39 (deferred items), 0017 lifecycle in `docs/agent-handoff.md` |
 
 **Required behaviour and acceptance:** `docs/cm2-implementation-package.md`, parts 2 to 7.
-Claude verifies the acceptance criteria in part 6 at CM2 Prompt 2.
+You evidence the acceptance criteria in part 6 in your CM2 completion report (part 6 below).
 
 **CM2 dependencies:**
 - CM1 on `integration` (done);
@@ -407,20 +407,39 @@ If `git switch integration` says the branch does not exist, create it first with
   yourself; never work around a restriction.
 - **A conflict with an approved decision or design:** stop, describe it, recommend an option,
   wait.
-- **Milestone report (required at the end of CM2, CM3 and CM5):** open an issue
-  "CMx completion report" containing:
+- **Milestone report (required at the end of CM2, CM3 and CM5):** open an issue in the
+  upstream repository titled "CMx completion report" containing:
   - the requirements and deliverables completed, by package;
   - the files changed (pull request links);
   - the tests actually executed, with commands and counts, and CI run links;
   - for each acceptance criterion, the evidence that it is met;
   - outstanding issues, risks and dependencies;
   - work intentionally deferred.
-- **Progression (owner, 3 November 2026):** Claude verifies the report against the repository
-  and test evidence. If every criterion is met, Claude instructs you to start the next
-  milestone, without a separate owner approval: CM2 → CM3 → (CM4 by Claude) → CM5. Merges still
-  need the owner (part 5). A genuine blocker, an unresolved product decision, a security issue, a
-  legal dependency or an owner-authorised action stops only the affected work until it is
-  resolved.
+- **Progression (owner, 3 November 2026): you work autonomously to the end.**
+  - Order: CM2 → CM3 → CM5. You do not wait for Claude's or the owner's confirmation between
+    milestones. When a milestone's acceptance criteria are evidenced in its report, start the
+    next one.
+  - CM4 (security, accessibility and QA) belongs to Claude and is not yours. Make no feature
+    changes once CM3 is finished, other than what CM5 requires.
+  - If a pull request you depend on is not merged yet, branch the next package from your own
+    previous branch, and say so in the new pull request. Merges are done by the owner, at the
+    end or as the owner chooses (part 5).
+  - **Stop only the affected work** for a genuine blocker, an unresolved product decision, a
+    security issue, a legal dependency or a step that needs an owner-authorised action (part 7).
+    Record it in the report and continue with everything else.
+  - Acceptance evidence that needs staging (owner-authorised migrations, deployments, the AQS
+    channel URL or test video) is listed in your reports as "pending owner action", not as done.
+  - CM5 items behind the gate (CM5-5 to CM5-7) are reported as blocked unless the gate is met.
+- **Final report (when you have finished):** open one issue titled
+  "Developer milestones final report". It links the three milestone reports and gives, per
+  milestone:
+  - status;
+  - pull requests;
+  - test results with CI links;
+  - acceptance evidence;
+  - open issues, risks and pending owner actions.
+
+  This is the report the owner reads.
 - **Security finding:** report it privately to the owner (not in a public issue), with the
   affected files; do not include exploit details in public text.
 
