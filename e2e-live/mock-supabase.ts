@@ -15,6 +15,8 @@ export interface Mock {
   tables: Record<string, Handler>
   rpc: Record<string, Handler>
   functions: Record<string, Handler>
+  /** Storage uploads, keyed by bucket (POST /storage/v1/object/<bucket>/<path>). */
+  storage: Record<string, Handler>
   calls: Array<{ kind: string; name: string; body: unknown; url: string }>
 }
 
@@ -31,7 +33,7 @@ export async function signIn(page: Page) {
 }
 
 export async function mockSupabase(page: Page, partial: Partial<Omit<Mock, 'calls'>> = {}): Promise<Mock> {
-  const mock: Mock = { tables: {}, rpc: {}, functions: {}, calls: [], ...partial }
+  const mock: Mock = { tables: {}, rpc: {}, functions: {}, storage: {}, calls: [], ...partial }
   await page.route(`${API}/**`, async (route: Route) => {
     const request = route.request()
     const url = new URL(request.url())
@@ -49,6 +51,7 @@ export async function mockSupabase(page: Page, partial: Partial<Omit<Mock, 'call
     if (parts[0] === 'rest' && parts[2] === 'rpc') [kind, name] = ['rpc', parts[3]]
     else if (parts[0] === 'rest') [kind, name] = ['tables', parts[2]]
     else if (parts[0] === 'functions') [kind, name] = ['functions', parts[2]]
+    else if (parts[0] === 'storage' && parts[2] === 'object') [kind, name] = ['storage', parts[3]]
     else if (parts[0] === 'auth') {
       if (parts[2] === 'logout') return route.fulfill({ status: 204, headers: cors })
       if (parts[2] === 'user') return route.fulfill({ status: 200, headers: cors, json: { id: USER.id, email: USER.email } })

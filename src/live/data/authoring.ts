@@ -2,6 +2,15 @@ import { AppError, client, query, rpc, toAppError } from '../api'
 import type { LessonType } from './learning'
 
 const MAX_RESOURCE_BYTES = 100 * 1024 * 1024
+const MAX_VIDEO_BYTES = 500 * 1024 * 1024
+const MAX_THUMBNAIL_BYTES = 5 * 1024 * 1024
+const VIDEO_TYPES = ['video/mp4', 'video/webm']
+const THUMBNAIL_TYPES = ['image/png', 'image/jpeg', 'image/webp']
+/**
+ * Cache lifetime of uploaded objects, in seconds. Signed URLs live 15 minutes (D20, P16); a CDN
+ * that caches by URL must not keep serving a copy for longer than that (audit finding N4).
+ */
+export const UPLOAD_CACHE_SECONDS = 900
 
 /*
  * Course authoring (P3, T5): every change is a checked database function; uploads go to the
@@ -226,8 +235,55 @@ export async function getAuthoringCourse(courseId: string): Promise<AuthoringCou
 
 /** Upload a file to the exact path a course function issued (no overwrite). */
 async function upload(bucket: string, path: string, file: File): Promise<void> {
-  const { error } = await client().storage.from(bucket).upload(path, file, { contentType: file.type, upsert: false })
+  const { error } = await client()
+    .storage.from(bucket)
+    .upload(path, file, { contentType: file.type, upsert: false, cacheControl: String(UPLOAD_CACHE_SECONDS) })
   if (error) throw toAppError({ code: 'P0001', message: `AQS: the upload failed (${error.message})` })
+}
+
+/** Calls a function that only exists once migration 0018 is applied; `missing` before that. */
+async function rpcIfPresent<T>(fn: string, args: Record<string, unknown>): Promise<{ missing: true } | { missing: false; value: T }> {
+  const { data, error } = await client().rpc(fn, args)
+  if (error?.code === 'PGRST202') return { missing: true } // Transition only: remove once 0018 is applied everywhere.
+  if (error) throw toAppError(error)
+  return { missing: false, value: data as T }
+}
+
+function checkFile(file: File, types: string[], maxBytes: number, typeMessage: string, sizeMessage: string) {
+  if (file.size === 0) throw new AppError('invalid', 'This file is empty. Choose another file.')
+  if (!types.includes(file.type)) throw new AppError('invalid', typeMessage)
+  if (file.size > maxBytes) throw new AppError('invalid', sizeMessage)
+}
+
+/**
+ * Upload integrity (0018, audit finding N1): the database issues a pending path, the file is
+ * uploaded, and only then does the database point the lesson or course at it. If the upload
+ * fails, the pending path is cancelled and the lesson or course is exactly as it was.
+ */
+async function stagedUpload(
+  begin: () => Promise<{ missing: true } | { missing: false; value: string }>,
+  bucketAndPath: (issued: string) => { bucket: string; path: string },
+  file: File,
+  finish: (issued: string) => Promise<unknown>,
+): Promise<'done' | 'legacy'> {
+  const issued = await begin()
+  if (issued.missing) return 'legacy'
+  const { bucket, path } = bucketAndPath(issued.value)
+  // On any failure the pending record is cancelled; the lesson or course was never changed. A file
+  // that arrived but could not be confirmed is left for the orphaned-file cleanup (0017).
+  try {
+    await upload(bucket, path, file)
+    await finish(issued.value)
+  } catch (error) {
+    await rpc('cancel_pending_upload', { p_path: issued.value }).catch(() => undefined)
+    throw error
+  }
+  return 'done'
+}
+
+function splitFull(full: string): { bucket: string; path: string } {
+  const slash = full.indexOf('/')
+  return { bucket: full.slice(0, slash), path: full.slice(slash + 1) }
 }
 
 export const authoring = {
@@ -279,21 +335,45 @@ export const authoring = {
     await client().storage.from('course-files').remove([storagePath])
   },
 
-  async setThumbnail(courseId: string, file: File) {
+  async setThumbnail(courseId: string, file: File, hadThumbnail = true) {
+    checkFile(file, THUMBNAIL_TYPES, MAX_THUMBNAIL_BYTES, 'Thumbnails must be PNG, JPEG or WebP images.', 'Thumbnails can be at most 5 MB.')
+    const result = await stagedUpload(
+      () => rpcIfPresent<string>('begin_course_thumbnail_upload', { p_course: courseId, p_content_type: file.type }),
+      splitFull,
+      file,
+      (full) => rpc('finish_course_thumbnail_upload', { p_course: courseId, p_path: full }),
+    )
+    if (result === 'done') return
+    // Before 0018: the path is written first. On failure, undo it when there was no thumbnail before.
     const full = await rpc<string>('set_course_thumbnail', { p_course: courseId, p_content_type: file.type })
-    const slash = full.indexOf('/')
-    await upload(full.slice(0, slash), full.slice(slash + 1), file)
+    try {
+      const { bucket, path } = splitFull(full)
+      await upload(bucket, path, file)
+    } catch (error) {
+      if (!hadThumbnail) await rpc('clear_course_thumbnail', { p_course: courseId }).catch(() => undefined)
+      throw error
+    }
   },
   clearThumbnail: (courseId: string) => rpc('clear_course_thumbnail', { p_course: courseId }),
 
-  async uploadVideo(lessonId: string, file: File) {
-    const path = await rpc<string>('set_lesson_video_upload', {
-      p_lesson: lessonId,
-      p_file_name: file.name,
-      p_content_type: file.type,
-      p_size_bytes: file.size,
-    })
-    await upload('course-video', path, file)
+  async uploadVideo(lessonId: string, file: File, hadVideo = true) {
+    checkFile(file, VIDEO_TYPES, MAX_VIDEO_BYTES, 'Videos must be MP4 or WebM files.', 'Videos can be at most 500 MB. Choose a smaller file.')
+    const args = { p_lesson: lessonId, p_file_name: file.name, p_content_type: file.type, p_size_bytes: file.size }
+    const result = await stagedUpload(
+      () => rpcIfPresent<string>('begin_lesson_video_upload', args),
+      (path) => ({ bucket: 'course-video', path }),
+      file,
+      (path) => rpc('finish_lesson_video_upload', { p_lesson: lessonId, p_path: path }),
+    )
+    if (result === 'done') return
+    // Before 0018: the path is written first. On failure, undo it when the lesson had no video before.
+    const path = await rpc<string>('set_lesson_video_upload', args)
+    try {
+      await upload('course-video', path, file)
+    } catch (error) {
+      if (!hadVideo) await rpc('clear_lesson_video', { p_lesson: lessonId }).catch(() => undefined)
+      throw error
+    }
   },
   setYoutube: (lessonId: string, youtubeId: string, attest: boolean) =>
     rpc('set_lesson_youtube', { p_lesson: lessonId, p_youtube_id: youtubeId, p_attest_non_sensitive: attest }),

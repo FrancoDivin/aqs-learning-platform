@@ -94,7 +94,7 @@ export function DetailsPanel({ course, editable, onChanged }: { course: Authorin
               onChange={(event) => {
                 const file = event.target.files?.[0]
                 event.target.value = ''
-                if (file) void run.run(() => authoring.setThumbnail(course.id, file), 'Thumbnail uploaded.')
+                if (file) void run.run(() => authoring.setThumbnail(course.id, file, Boolean(course.thumbnailPath)), 'Thumbnail uploaded.')
               }}
             />
             {course.thumbnailPath ? (

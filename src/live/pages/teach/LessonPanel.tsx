@@ -125,7 +125,7 @@ export function LessonPanel({
                   onChange={(event) => {
                     const file = event.target.files?.[0]
                     event.target.value = ''
-                    if (file) void run.run(() => authoring.uploadVideo(lesson.id, file), 'Video uploaded.')
+                    if (file) void run.run(() => authoring.uploadVideo(lesson.id, file, Boolean(lesson.videoPath || lesson.youtubeId)), 'Video uploaded.')
                   }}
                 />
               </label>
