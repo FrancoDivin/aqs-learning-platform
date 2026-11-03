@@ -29,6 +29,11 @@ migrations 0001–0013 and 0015, functions `invitations` v4 and `media-url` v4).
 - **CM1 test results (local and sandbox):** database 990/990 (sandbox); unit 9/9; functions
   10/10; Deno check pass; lint, build, build check pass; e2e preview and live: see the CM1
   Prompt 1 report in the Claude Project.
+- **Work allocation (owner, 3 Nov):** CM2, CM3 and CM5 preparation by a human developer through
+  his fork and pull requests into `integration`; CM4 and CM5 integration and acceptance by
+  Claude. Handoff package: `docs/developer-handoff.md`, progress files `docs/progress/`, pull
+  request template `docs/pull-request-template.md`. The fork can sync only after package B
+  (or A) is authorised and pushed.
 - **Next:** CM1 Prompt 2 (completion report and verification) after the owner decides on the
   packages. 0014 only after package A is done and the new frontend is verified live.
 

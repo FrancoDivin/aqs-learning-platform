@@ -26,6 +26,7 @@ every read through row rules. Frontend route guards only shape what is shown.
 | Product and architecture decisions (authoritative) | `docs/decisions.md` |
 | Staging operations | `docs/staging-runbook.md` |
 | Pending restricted actions (owner authorisation) | `docs/cm1-authorisation-packages.md` |
+| Human developer: packages, ownership, Git workflow (CM2, CM3, CM5) | `docs/developer-handoff.md` |
 | Accessibility testing | `docs/accessibility-testing.md` |
 
 ## Local development

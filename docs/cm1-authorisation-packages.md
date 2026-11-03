@@ -19,7 +19,7 @@ restricted action and needs its own authorisation; none has been run on staging.
 | Package | Action | Depends on | Can be authorised at |
 | --- | --- | --- | --- |
 | A | Push `feature/first-release` **and** the resulting staging deployment | — | CM1 (now) |
-| B | Push to a review branch only (no deployment) | — (alternative to A) | CM1 (now) |
+| B | Push the `integration` branch (no deployment; developer fork sync and PR target) | — (with or instead of A) | CM1 (now) |
 | C | Pull request and merge into `master` | A or B | CM1 (now) |
 | D | Migration 0014 on staging | A done and the new frontend confirmed live | CM1 (now), performed only after A is verified |
 | E | Migration 0016 on staging | — | CM1 (now) |
@@ -49,16 +49,23 @@ restricted action and needs its own authorisation; none has been run on staging.
 - **Rollback:** in Render, redeploy `4375371` ("Rollback" on that deploy); the GitHub branch can
   stay ahead. No database change to undo.
 
-## B. Push to a review branch only (no deployment)
+## B. Push the `integration` branch (no deployment)
 
-- **Target:** a new branch `review/cm1` on GitHub (exact name confirmed when authorised).
-- **Effect:** the code is backed up and reviewable on GitHub; CI runs; **nothing deploys**: no
-  Render service watches that branch (verified).
-- **Command:** `git push origin feature/first-release:review/cm1`.
-- **Verification:** `git ls-remote` shows the branch at the local HEAD; Render deploy list
-  unchanged (`4375371` still live).
-- **Rollback:** delete the review branch (needs its own authorisation; nothing depends on it).
-- **Note:** with B only, D (0014) cannot proceed, because the new frontend is not live.
+- **Target:** a new branch `integration` on GitHub, at the local HEAD.
+- **Purpose:** the work is backed up and reviewable, the human developer's fork can be
+  synchronised from it, and it is the target of his pull requests (`docs/developer-handoff.md`).
+  It replaces the earlier `review/cm1` proposal.
+- **Effect:** CI runs; **nothing deploys**: no Render service watches that branch (verified 3 Nov
+  for every branch other than `feature/first-release`; re-checked immediately before pushing).
+- **Command:** `git push origin HEAD:refs/heads/integration` (new branch, no `--force`).
+- **Verification:** `git ls-remote origin integration` equals the local HEAD; the Render deploy
+  list is unchanged (`4375371` still live); CI result recorded.
+- **Rollback:** delete the branch (its own authorisation; nothing depends on it yet).
+- **Note:** B alone leaves staging on `4375371`, so D (0014) cannot proceed. A and B can be
+  authorised together: both point at the same commit.
+- **Later merges into `integration`** (the developer's pull requests): each is R-MERGE and needs
+  the owner's authorisation per pull request, or the owner merges in GitHub. Promoting
+  `integration` to `feature/first-release` is package A again (push plus staging deployment).
 
 ## C. Pull request and merge into `master`
 
@@ -161,3 +168,6 @@ unchanged):
 - **Verification (done locally, 3 Nov):** all three pass on HEAD; the build check fails, as it
   should, on a development-mode build and on a build with an injected secret pattern.
 - **Rollback:** remove the three lines.
+- **Also proposed (same protected folder):** copy `docs/pull-request-template.md` to
+  `.github/pull_request_template.md` so GitHub pre-fills the developer's pull requests. The
+  agent cannot write `.github/`.
