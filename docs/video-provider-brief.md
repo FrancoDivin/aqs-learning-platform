@@ -1,5 +1,9 @@
 # Video-provider decision brief (CM1, for the owner's decision at CM2 Prompt 1)
 
+> **Superseded by D39 (owner, 3 November 2026):** public-course video uses the AQS-owned
+> YouTube channel after AQS review; organisation-only video stays in private Supabase Storage.
+> No paid video provider is used. This brief is kept as a record only.
+
 **Prepared 3 November 2026. A decision brief, not a decision.** Prices were re-read on each
 provider's own pricing page on 3 November 2026 (links below). The monthly costs are
 **estimates** from those list prices and the assumptions stated; actual bills depend on real

@@ -8,15 +8,59 @@ acceptance criteria as Claude. Where this file and `docs/decisions.md` disagree,
 
 Read in this order before you write code:
 
-1. `CLAUDE.md` — the rules. Every hard rule there applies to you as it applies to Claude.
+1. `CLAUDE.md` — the rules. Every hard rule there applies to you as it applies to Claude. Part 0 below comes first for CM2.
 2. This file.
 3. `docs/agent-handoff.md` — current state of the code, staging and open defects.
 4. The parts of `docs/decisions.md` your package touches (each package below names them).
 5. `docs/cm1-authorisation-packages.md` — what is waiting for owner authorisation.
-6. `docs/video-provider-brief.md` (CM2), `docs/accessibility-testing.md` (CM3), `docs/staging-runbook.md` (CM5).
+6. `docs/cm2-implementation-package.md` and D39 (CM2), `docs/accessibility-testing.md` (CM3), `docs/staging-runbook.md` (CM5).
 
 The owner can also share the Claude Project audit document "AQS Comprehensive Audit and
 Production Readiness Report" (section 26 is the roadmap reproduced in part 1 below).
+
+---
+
+## 0. Start here: CM2 release (3 November 2026)
+
+**Authoritative source:** `https://github.com/owenganza01/aqs-learning-platform.git`, branch
+`integration`. The CM2 release commit is the one the owner announces with this release. Your
+starting point is that commit or a later one on `upstream/integration`, never an older fork
+branch. Your fork, made on 30 October, predates `integration` entirely.
+
+**The seven CM2 documents** must all be present in your clone at that commit:
+1. `docs/cm2-implementation-package.md`
+2. `docs/decisions.md` (D39)
+3. `docs/developer-handoff.md`
+4. `docs/progress/cm2.md`
+5. `docs/video-provider-brief.md` (marked superseded by D39)
+6. `docs/agent-handoff.md`
+7. `docs/cm1-authorisation-packages.md`
+
+D39 supersedes every Mux, Cloudflare or paid-provider recommendation. CM2 uses the AQS-owned
+YouTube channel for public courses, and private Storage with confirmed captions for
+organisation-only courses.
+
+**Answers to the setup questions**
+
+| Question | Answer |
+| --- | --- |
+| Which branch? | One branch per package from a freshly fetched `upstream/integration`, for example `cm2/CM2-1-video-review`. The root `AGENTS.md` in this repository states the same rule, and it supersedes any generic branch instruction from another `AGENTS.md` or tool default. If a local, untracked `AGENTS.md` blocks `git merge` or `git switch`, rename it (for example `AGENTS.local.md`) rather than overwrite the repository's file |
+| How do I run the database tests on Windows? | `scripts/db-sandbox/run.sh` needs Linux (or WSL2 Ubuntu), PostgreSQL 16, pgTAP and a non-root user. **For CM2-1, use CI as evidence:** enable GitHub Actions on your fork (Actions tab, "I understand my workflows…", one-time) and push your branch. The `database` job runs the full sandbox on Ubuntu 24.04 with PostgreSQL 16. Link that run in your pull request. Do **not** change `scripts/db-sandbox/*` inside CM2-1. Any runner improvement (for example a Windows or WSL helper) goes in its own pull request, reviewed separately |
+| Where is the specification? | `docs/cm2-implementation-package.md` (parts 1–9a) and `docs/decisions.md` D39. If a part is unclear or conflicts with D39, open a pull-request comment or an issue labelled `decision-needed`; do not guess |
+| What order, and when is CM2 done? | CM2-1 → CM2-2 → (CM2-3, CM2-4); CM2-5 any time. CM2 is done when every package is merged into `integration` and its acceptance criteria (package part 6) are evidenced in your milestone report (part 6 below) |
+
+**Acknowledge the release before coding.** Open one GitHub issue in the upstream repository titled
+`CM2 readiness acknowledgement`, containing:
+
+```text
+Upstream integration commit: <output of: git rev-parse upstream/integration>
+Documents present (all 7 + AGENTS.md): <output of: git ls-tree --name-only upstream/integration -- AGENTS.md docs/cm2-implementation-package.md docs/decisions.md docs/developer-handoff.md docs/progress/cm2.md docs/video-provider-brief.md docs/agent-handoff.md docs/cm1-authorisation-packages.md>
+GitHub Actions enabled on my fork: yes/no
+Baseline on the unchanged commit: lint, build, test:unit, test:functions, test:e2e, test:e2e:live counts; database job link from CI
+I have read parts 0–7 of this handoff, D39 and the CM2 package, and understand the restrictions in part 7: yes
+```
+
+Claude checks it against the repository and confirms before CM2-1 starts.
 
 ---
 
@@ -86,60 +130,35 @@ below.
 
 ### CM2 — Storage and Video (FR, PB)
 
-**Decisions needed at CM2 Prompt 1** (owner; see `docs/video-provider-brief.md`): video
-provider; provider account (AQS-owned); token lifetime (15 minutes with refresh, or a D20
-amendment); caption policy; playback analytics; storage plan. Until the provider is decided,
-only the provider-neutral parts of CM2-1 and CM2-2 may start.
+**Decisions:** `docs/decisions.md` D39 (owner, CM2 Prompt 1). **Specification:**
+`docs/cm2-implementation-package.md`. Read both before any CM2 package. Where this section and
+D39 differ, D39 wins.
 
-**Unchanged by CM2:** documents, thumbnails and downloads stay on Supabase Storage; unlisted
-YouTube stays for public, non-sensitive courses (P16); CM1's begin/finish upload rule (a failed
-upload never changes a lesson) stays for everything that remains on Supabase Storage.
+In short:
+- public courses use the AQS-owned YouTube channel (Unlisted) after a two-gate AQS review of a
+  file the instructor submits through AQS;
+- organisation-only courses keep private Supabase Storage video, now with required, confirmed
+  timed captions;
+- there is no paid video provider and no stored YouTube credential;
+- retention periods are deferred, so no deletion and no cleanup activation.
 
 | ID | Package | Files you own | Decisions to read |
 | --- | --- | --- | --- |
-| CM2-1 | Provider-neutral video model | new migration `supabase/migrations/<timestamp>_0019_video_assets.sql`; `supabase/tests/database/087_video_assets.test.sql`; `supabase/rollbacks/0019_video_assets.rollback.sql`; additions to `supabase/tests/database/900_api_exposure.test.sql` and `scripts/db-sandbox/rollback-check.sh` | D20, D21, P16, T1, T5, T8 |
-| CM2-2 | Video Edge Function and provider adapter | new `supabase/functions/video/` (name may change in review); new `supabase/functions/_shared/video-provider.ts` (interface + test adapter); unit tests; add the function to `check:functions` in `package.json`; `supabase/config.toml` entry with `verify_jwt = false` and in-function session checks like `media-url` | D20, D21, T6 |
-| CM2-3 | Resumable upload and status | `src/live/data/video.ts` (new); the video section of `src/live/pages/teach/LessonPanel.tsx`; `e2e-live/live-video-upload.spec.ts` (new); additions to `e2e-live/mock-supabase.ts` | G14, CM1 upload rule |
-| CM2-4 | Accessible player | the player in `src/live/pages/learner/LiveLessonPage.tsx` and a new `src/live/components/VideoPlayer/`; `e2e-live/live-video-player.spec.ts` (new) | D20, caption policy |
-| CM2-5 | Cleanup activation package (preparation only) | `docs/cm2-cleanup-activation.md` (new): the exact steps for deploying `storage-cleanup`, setting its secret, the dry run, the schedule and enabling deletion, each with verification and rollback | 0017 lifecycle: `docs/agent-handoff.md` (orphaned-file cleanup steps) and audit section 26 |
+| CM2-1 | Video review model | new `supabase/migrations/<timestamp>_0019_video_review.sql`; `supabase/tests/database/087_video_review.test.sql`; `supabase/rollbacks/0019_video_review.rollback.sql`; additions to `supabase/tests/database/900_api_exposure.test.sql` and `scripts/db-sandbox/rollback-check.sh` | D39, D20, D21, P5, P16, P22, L11 P3, T1, T5, T8 |
+| CM2-2 | Edge Functions | `supabase/functions/media-url/` (new kinds); new `supabase/functions/youtube-verify/`; unit tests; `check:functions` entry in `package.json`; `supabase/config.toml` entry with `verify_jwt = false` | D39, D20, T6 |
+| CM2-3 | Submission and review screens | `src/live/data/video.ts` (new); the video section of `src/live/pages/teach/LessonPanel.tsx`; new pages under `src/live/pages/admin/` for video reviews; the organisation caption confirmation; `tus-js-client` (dependency review in the pull request); `e2e-live/live-video-review.spec.ts` (new); additions to `e2e-live/mock-supabase.ts` | D39, G14, CM1 upload rule |
+| CM2-4 | Learner players | the player in `src/live/pages/learner/LiveLessonPage.tsx` and a new `src/live/components/VideoPlayer/`; `e2e-live/live-video-player.spec.ts` (new) | D39, D20, P8 |
+| CM2-5 | Cleanup activation runbook (documentation only) | `docs/cm2-cleanup-activation.md` (new): describes the future activation steps with verification and rollback; opens with a "Blocked" status line; uses `<retention period: pending owner decision>` placeholders; contains no migration, schedule, secret, code or deletion script (package part 9a) | D39 (deferred items), 0017 lifecycle in `docs/agent-handoff.md` |
 
-**Required behaviour**
+**Required behaviour and acceptance:** `docs/cm2-implementation-package.md`, parts 2 to 7.
+Claude verifies the acceptance criteria in part 6 at CM2 Prompt 2.
 
-- *CM2-1:* one `video_assets` record per lesson video (provider, provider asset id, status
-  `uploading | processing | ready | failed`, duration, caption state, who and when). No client
-  role reads or writes the table directly; access goes through checked functions with
-  `set search_path = ''`. Course staff of the owning organisation only. Publication refuses a
-  lesson whose video is missing or not `ready`: extend `request_course_publication` with
-  `create or replace`, starting from the **0018** body, keeping every existing message and its
-  order, and adding the new check last. Never edit migrations 0001–0018.
-- *CM2-2:* one function that (a) checks the caller's session and the database's `media_access`
-  rule before issuing an upload URL or a playback token, (b) receives the provider's readiness
-  webhook, verifies its signature, is idempotent, refuses unknown assets and never trusts ids
-  from the body without a database check. Tokens follow the approved lifetime. Provider keys
-  come from environment variables named in the pull request; none in the repository. The
-  provider receives only an internal asset id: never an organisation name, email or person name.
-- *CM2-3:* resumable upload with progress; visible states Uploading → Processing → Ready /
-  Failed with cause-specific errors (too large, wrong type, network, refused); a failed or
-  abandoned upload never changes what learners see.
-- *CM2-4:* speed control, retry, saved position, keyboard operation, captions as the approved
-  policy requires; a 20-minute video keeps playing across token refreshes.
-
-**CM2 acceptance criteria** (from the roadmap; Claude verifies at CM2 Prompt 2)
-
-- No lesson can be published with a missing or unready video.
-- Playback tokens expire and are refused across organisations.
-- Captions meet the approved caption policy. If the policy allows a published video without
-  accurate captions, the report records it as an accepted WCAG 1.2.2 (Level A) non-conformance.
-- An upload failure never changes a lesson.
-- Cleanup deletes only unreferenced objects past the grace period, with audit rows (staging
-  evidence after the authorised activation).
-- Staging evidence, only with authorised deployment: an interrupted large upload resumes;
-  adaptive playback on a throttled connection; a 20-minute video plays across refreshes;
-  cross-organisation playback is denied; observed costs.
-
-**CM2 dependencies:** CM1 merged into `integration`; the provider decision; a paid tier or
-provider account for files above 50 MB; 0018 applied to staging (owner authorisation) before
-any staging test of publication.
+**CM2 dependencies:**
+- CM1 on `integration` (done);
+- 0017 and 0018 applied to staging before 0019 (owner authorisations);
+- package H before your first CM2 pull request;
+- for staging tests: the owner's AQS channel URL and one Unlisted test video;
+- staging uploads are capped at 50 MB on the Free plan.
 
 ### CM3 — Product and Learner Experience (FR, PB)
 
@@ -325,7 +344,7 @@ git log --oneline -1 upstream/integration
 
 ```bash
 git fetch upstream
-git switch -c cm2/CM2-1-video-assets upstream/integration
+git switch -c cm2/CM2-1-video-review upstream/integration
 ```
 
 Name branches `cm2/<package-id>-<short-name>`, `cm3/...` or `cm5/...`. Before the CM5 gate, a
@@ -336,8 +355,8 @@ migration or a production action.
 6. Commit in small steps, Conventional Commits, explicit paths only, for example:
 
 ```bash
-git add supabase/migrations/<file> supabase/tests/database/087_video_assets.test.sql
-git commit -m "feat(db): video assets model (CM2-1)"
+git add supabase/migrations/<file> supabase/tests/database/087_video_review.test.sql
+git commit -m "feat(db): video review model (CM2-1)"
 ```
 
 Never `git add .` or `git add -A`. Never commit `.env*` files other than `.env.example`.
@@ -347,7 +366,7 @@ Never `git add .` or `git add -A`. Never commit `.env*` files other than `.env.e
 ```bash
 git fetch upstream
 git merge upstream/integration
-git push origin cm2/CM2-1-video-assets
+git push origin cm2/CM2-1-video-review
 ```
 
 Push only to your fork (`origin`). Never push to `upstream`. Never force-push a branch that
@@ -388,10 +407,20 @@ If `git switch integration` says the branch does not exist, create it first with
   yourself; never work around a restriction.
 - **A conflict with an approved decision or design:** stop, describe it, recommend an option,
   wait.
-- **Milestone handover:** when every released package of the milestone is merged into
-  `integration`, open an issue "CMx ready for Prompt 2" listing the merged pull requests and
-  any package not done. The owner then runs that milestone's Prompt 2 with Claude, who
-  verifies, integrates and reports.
+- **Milestone report (required at the end of CM2, CM3 and CM5):** open an issue
+  "CMx completion report" containing:
+  - the requirements and deliverables completed, by package;
+  - the files changed (pull request links);
+  - the tests actually executed, with commands and counts, and CI run links;
+  - for each acceptance criterion, the evidence that it is met;
+  - outstanding issues, risks and dependencies;
+  - work intentionally deferred.
+- **Progression (owner, 3 November 2026):** Claude verifies the report against the repository
+  and test evidence. If every criterion is met, Claude instructs you to start the next
+  milestone, without a separate owner approval: CM2 → CM3 → (CM4 by Claude) → CM5. Merges still
+  need the owner (part 5). A genuine blocker, an unresolved product decision, a security issue, a
+  legal dependency or an owner-authorised action stops only the affected work until it is
+  resolved.
 - **Security finding:** report it privately to the owner (not in a public issue), with the
   affected files; do not include exploit details in public text.
 
@@ -407,7 +436,7 @@ package. Do not ask for them and do not use any you come across.
 | Push to upstream, push to `feature/first-release` or `master`, merge any pull request, delete branches or rewrite shared history | Push to your fork; open a pull request into `integration`; the owner merges or authorises a merge |
 | Apply a migration to any hosted database; run `supabase link`, `supabase db push`, `supabase config push` or `supabase functions deploy` | Write the migration, test it in the sandbox, document it; the owner authorises, and Claude or the owner applies it |
 | Deploy anything (Render, Edge Functions, provider configuration) or trigger a deploy | Prepare a package: target, effect, commands, verification, rollback |
-| Change hosted configuration (Auth, Storage limits, schedules, plans, DNS, OAuth, provider dashboards) | Same: a package for the owner |
+| Change hosted configuration (Auth, Storage limits, schedules, plans, DNS, OAuth, YouTube channel or provider dashboards) | Same: a package for the owner |
 | Create, read, print, commit or share secrets, tokens, keys, invitation links or personal data | Name environment variables only; use fakes in tests |
 | Access protected systems: the Supabase project `eeoofujuouquhnxkpffs`, the owner's local containers and volumes (`supabase_db_aqs-platform`, `aqs-postgres`, `aqs-migration-rehearsal-20261029`), or any database other than the throwaway sandbox | The sandbox (`npm run test:db`) |
 | Edit `.github/workflows/ci.yml` or `render.yaml` | Propose the diff in the pull request |

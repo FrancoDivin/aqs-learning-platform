@@ -19,7 +19,7 @@ restricted action and needs its own authorisation; none has been run on staging.
 | Package | Action | Depends on | Can be authorised at |
 | --- | --- | --- | --- |
 | A | Push `feature/first-release` **and** the resulting staging deployment | — | CM1 (now) |
-| B | Push the `integration` branch (no deployment; developer fork sync and PR target) | — (with or instead of A) | CM1 (now) |
+| B | Push the `integration` branch (no deployment; developer fork sync and PR target) | — (with or instead of A) | **Done** (owner, 3 Nov: `9176499`, then `b3d9bec`) |
 | C | Pull request and merge into `master` | A or B | CM1 (now) |
 | D | Migration 0014 on staging | A done and the new frontend confirmed live | CM1 (now), performed only after A is verified |
 | E | Migration 0016 on staging | — | CM1 (now) |

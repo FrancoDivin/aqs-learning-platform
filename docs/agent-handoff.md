@@ -4,8 +4,9 @@ Single source for "where are we and what is next". Update at every task boundary
 
 ## Current position: completion programme, CM1 Prompt 1 done locally (3 November 2026)
 The owner approved the completion programme CM1–CM5 (ten prompts; rules in `CLAUDE.md`).
-CM1 Prompt 1 (Integration and Critical Fixes) is implemented and committed **locally only**.
-Nothing was pushed, merged, deployed or applied; staging is unchanged (frontend `4375371`,
+CM1 is complete (CM1 Prompt 2, 3 November 2026) and published on GitHub `integration`
+(`9176499`, handoff corrections `b3d9bec`, pushed by the owner). Nothing was merged, deployed or
+applied; staging is unchanged (frontend `4375371`,
 migrations 0001–0013 and 0015, functions `invitations` v4 and `media-url` v4).
 
 - **N1/N2 upload integrity:** migration **0018** (`20261103160000_0018_upload_integrity.sql`,
@@ -34,8 +35,12 @@ migrations 0001–0013 and 0015, functions `invitations` v4 and `media-url` v4).
   Claude. Handoff package: `docs/developer-handoff.md`, progress files `docs/progress/`, pull
   request template `docs/pull-request-template.md`. The fork can sync only after package B
   (or A) is authorised and pushed.
-- **Next:** CM1 Prompt 2 (completion report and verification) after the owner decides on the
-  packages. 0014 only after package A is done and the new frontend is verified live.
+- **CM2 (3 November 2026):** decisions recorded in D39 (YouTube channel after two-gate AQS
+  review for public courses; organisation-only video in Storage with confirmed captions;
+  retention periods deferred). Specification `docs/cm2-implementation-package.md`; packages
+  released to the human developer (`docs/progress/cm2.md`).
+- **Next:** CM2 implementation by the developer; owner authorisations F → check → G and H;
+  then CM2 Prompt 2. 0014 only after package A is done and the new frontend is verified live.
 
 ## Earlier position: M5 final (3 November 2026, ~02:30 SAST) — release candidate, M5 complete
 - **All five milestones complete.** M1 Identity, M2 Courses, M3 Learners, M4 Administration and reporting: complete and approved (reports in the Claude Project: `claude/m1-milestone-report-2026-11-02.md`, `claude/m2-implementation-report-2026-11-03.md`, `claude/m3-implementation-report-2026-11-03.md`, `claude/m4-implementation-report-2026-11-03.md`). **M5 complete for implementation and release-readiness assessment** (owner, 3 Nov; `claude/m5-release-readiness-report-2026-11-03.md`, approved subject to its limitations and production blockers). **No further milestone or implementation phase is planned.**
