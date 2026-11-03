@@ -2,15 +2,62 @@
 
 Single source for "where are we and what is next". Update at every task boundary. Decisions live in `docs/decisions.md`; milestone history in `docs/progress-report.md`.
 
-## Current position (3 November 2026, ~00:20 SAST)
-- **M1 complete** (Claude Project `claude/m1-milestone-report-2026-11-02.md`).
-- **M2 complete** (owner, 3 Nov 00:12): implemented and verified for organization-course workflows (Claude Project `claude/m2-implementation-report-2026-11-03.md`). DF10, DF11 fixed. Recorded limitations: DF3 stays open until 0014 is applied and verified; platform-course publishing and corrections unverified on staging (no second Platform Admin, OD5); Figma comparison partial (design reference inaccessible). None blocks M3.
-- **M3 complete** (owner, 3 Nov 00:48; Claude Project `claude/m3-implementation-report-2026-11-03.md`). Verified on staging: enrolment, assignment, completion, quizzes, media, archived (L13) and suspended (P11) workflows. Implemented and tested locally only, not yet verified on staging: I1, I2, I7 and the D38 #10 display. Migration 0016 prepared and tested, not applied, so the suspended-organization course-title display is unavailable on staging. Tests: database 911/911, functions 10/10, unit 4/4, live 32/32, preview 310/310.
-- **M4 complete** (owner, 3 Nov 01:10; Claude Project `claude/m4-implementation-report-2026-11-03.md`). Staging evidence preserved; I3 built and tested locally. Limitations: G3's full multi-member staging scenario untested (database tests cover the rule); Org Admin audit screen outside the first release; I3 not on staging until the branch is pushed. P23 wording approved and implemented (landing page, layout unchanged).
-- **M5 — Integration, quality and release readiness: implementation prompt done** (Claude Project `claude/m5-release-readiness-report-2026-11-03.md`). Verdict: functionally complete and verified for staging with synthetic data; not production-ready until release blockers RB1–RB8 (owner/legal/deployment) are resolved. M5 fixes: DF12 (contrast on tinted fills and the navy course hero), DF13 (keyboard access to sideways-scrolling tables). axe (WCAG 2.x A/AA): 0 violations on 33 preview routes and 25 live screens at 1440 and 390 px; no horizontal overflow. Staging security re-check (signed out, read-only) clean; advisor baseline unchanged; secrets scan of 35 unpushed commits clean.
-- Branch `feature/first-release`, local commits ahead of origin (owner pushes; never push). Last pushed: `4375371`.
-- M4 local run (3 Nov): lint and build pass, functions 10/10, unit 4/4, e2e live 33/33, e2e preview 310/310; database 911/911 (no database change in M4).
-- Earlier sandbox evidence on the local tree: pgTAP 897/897 (with 0014 and 0015), functions 10/10, lint and build pass, e2e live 27/27, e2e preview 310/310 (browser build 1243 used in place of 1248).
+## Final position (3 November 2026, ~02:30 SAST) — release candidate, M5 complete
+- **All five milestones complete.** M1 Identity, M2 Courses, M3 Learners, M4 Administration and reporting: complete and approved (reports in the Claude Project: `claude/m1-milestone-report-2026-11-02.md`, `claude/m2-implementation-report-2026-11-03.md`, `claude/m3-implementation-report-2026-11-03.md`, `claude/m4-implementation-report-2026-11-03.md`). **M5 complete for implementation and release-readiness assessment** (owner, 3 Nov; `claude/m5-release-readiness-report-2026-11-03.md`, approved subject to its limitations and production blockers). **No further milestone or implementation phase is planned.**
+- **Status:** staging release candidate with synthetic data. **Not production-ready and not approved for real personal data** until RB1–RB8 below are resolved.
+- Final M5 items (owner instruction, 3 Nov): landing heading changed to "From sign-in to completion." (layout unchanged); axe-core accessibility checks added to the e2e suites so CI runs them (`docs/accessibility-testing.md`, manual checks kept); orphaned-file cleanup **prepared only** (migration 0017 + Edge Function `storage-cleanup`, not applied, deployed or scheduled); DF3 kept open.
+- Evidence labels used everywhere: **staging** = observed on `aqs-staging` with real Google sessions; **sandbox** = throwaway PostgreSQL 16 + pgTAP (simulated Supabase, not hosted); **local** = local build, Playwright with design-preview data or a mocked Supabase API. Local and sandbox results are not evidence about the hosted database.
+
+### Branch and commits
+- Branch `feature/first-release`. Last pushed (and deployed to staging): `4375371`. All later commits are **local only** — 42 commits ahead of `4375371` after the final M5 commits (this handoff is the last). Nothing pushed, merged or deployed by the agent. Untracked by owner decision: `.claude/`, `docs/archive/`.
+- Staging runs: frontend `4375371`; Edge Functions `invitations` v4 and `media-url` v4 from `ade1050`; migrations 0001–0013 and 0015. **Not on staging:** 0014, 0016, 0017, `storage-cleanup`, and every local commit after `4375371` (DF7, DF9–DF13, I1–I3, I7, D38 #10/#13 UI, P23, the heading change).
+
+### Final test results (3 Nov, after the final M5 items)
+| Suite | Result | Kind |
+|---|---|---|
+| Database (pgTAP, incl. 085 cleanup 37 tests and the updated 900 allow-list) | 948/948 | sandbox |
+| Edge Function helpers (`npm run test:functions`) | 10/10 | local |
+| Unit (`npm run test:unit`, incl. 5 cleanup safety tests) | 9/9 | local |
+| e2e preview (`npm run test:e2e`, incl. 66 axe checks) | 377/377 | local |
+| e2e live, mocked API (`npm run test:e2e:live`, incl. 50 axe checks) | 83/83 | local |
+| Lint, build | pass | local |
+No staging writes, migrations or deploys were made for the final M5 items; two read-only catalog queries on staging (role and privilege attributes of `postgres`/`service_role` on `storage.objects` and the course tables) informed the 0017 privilege design. M5 assessment evidence (kept): staging signed-out re-check clean (GraphQL 406, tables 401, privileged functions 404/401, Edge Functions 401); Supabase advisor baseline unchanged; secrets scan of the unpushed commits clean (repeated for the final commits).
+Earlier milestone runs (kept for the record): M5 assessment — database 911/911, functions 10/10, unit 4/4, live 33/33, preview 311/311; M4 — database 911/911, live 33/33, preview 310/310; M1 — pgTAP 897/897.
+
+### Outstanding owner-authorized actions (none done by the agent)
+1. **Push** `feature/first-release` (Render auto-deploys the frontend to staging), then re-run the M5 smoke checks on staging for the local-only fixes.
+2. **Apply migration 0014** (DF3) to staging, then verify: a signed-in user of another organization can no longer read `created_by`/`published_by`; course pages still show instructor names (`course_people`).
+3. **Apply migration 0016** (D38 #10) to staging, then verify the suspended-organization course titles on a learner dashboard.
+4. **CI:** add `- run: npm run test:unit` to the protected `.github/workflows/ci.yml` (web job, after `test:functions`). The agent cannot write that file. The new accessibility checks already run in CI through the existing e2e steps.
+5. **Second Platform Admin** on staging and in production (OD5/RB6; F6 owner-run SQL), then verify platform-course publishing and corrections.
+6. **Design reference access** (`design-reference` folder or Figma link) if a frame-by-frame design comparison is wanted.
+7. **Orphaned-file cleanup** (RB5), in this order, each step only when authorized: apply 0017; deploy `storage-cleanup`; set `CLEANUP_SECRET` (32+ random characters) as a function secret; run a **dry run** and review the list and `private.storage_cleanup_audit`; schedule it (for example daily with pg_cron + pg_net, sending the secret in `x-cleanup-secret`; the secret must be kept in Vault, not in SQL text); only then set `CLEANUP_DELETE_ENABLED=true` and send `{"mode":"delete"}`. Optional `CLEANUP_MAX_PER_RUN` (default 100, max 500).
+8. Invitations created for the M1 tests expire 9 November 2026; nothing to do unless they are needed.
+
+### Production blockers (from the M5 report; all owner, legal or deployment items)
+| # | Blocker | Owner action |
+|---|---|---|
+| RB1 | Legal and privacy gate R1–R5: legal advice, wording of the privacy notice and terms, age confirmation, anonymization procedure, Data Security Document | Owner + legal |
+| RB2 | Production environment: AQS-owned accounts (B1), paid tier with backups (B2), production Supabase and Render projects, Auth URLs, secrets, Edge Function deploy | Owner |
+| RB3 | Apply 0014 (closes **DF3**) and 0016 to the production database (and staging first) | Owner authorization |
+| RB4 | Push the branch; deploy the reviewed frontend and functions | Owner authorization |
+| RB5 | Orphaned-file cleanup running (D38 #9) — **prepared** (0017 + `storage-cleanup`), needs apply, deploy, dry run, schedule, then deletion enabled | Owner authorization |
+| RB6 | Second Platform Admin in production (P1 needs two for platform courses) | Owner (F6 SQL) |
+| RB7 | Invitation email provider, or a confirmed copy-link process (OD4) | Owner decision |
+| RB8 | Production storage limits: plan upgrade or lower limits (Free plan caps uploads at 50 MB, Q-10-1) | Owner decision |
+
+### Path from staging release candidate to a legally approved production release
+1. **Staging catch-up:** push; apply 0014 and 0016 to staging; verify DF3 closed and the D38 #10 display; add the CI `test:unit` line; confirm CI is green (including the accessibility checks).
+2. **Cleanup on staging:** apply 0017, deploy `storage-cleanup`, set its secret, dry run, review, schedule, enable deletion, confirm the audit rows.
+3. **Manual accessibility pass** (`docs/accessibility-testing.md`): screen reader, keyboard, 768 px, zoom. Fix anything found.
+4. **Legal and privacy gate (RB1):** legal review of data processing, privacy notice and terms, age confirmation, anonymization (F8/R4) and the Data Security Document; record the approval in `docs/decisions.md`.
+5. **Owner decisions:** RB7 (email provider or copy-link), RB8 (storage plan/limits), second Platform Admin (RB6).
+6. **Production environment (RB2):** AQS-owned Supabase and Render accounts on a paid tier with backups; new project; apply migrations 0001–0017 in order; Google sign-in and Auth URLs; secrets; deploy `invitations`, `media-url`, `storage-cleanup`; deploy the frontend; create two Platform Admins with the F6 procedure.
+7. **Production verification with synthetic accounts:** repeat the M1–M5 staging checks (isolation, signed-out access, storage, Edge Functions 401 without a session, advisor baseline, cleanup dry run), then remove or suspend the synthetic data.
+8. **Go-live approval:** the owner records the legal approval and the release decision; only then are real organizations and personal data admitted.
+
+### Known limitations carried (from the M5 report, updated)
+1–3, 4–7, 9, 12, 13 of the M5 report stand. Changed: #6 cleanup now **prepared, not active**; #8 CI `test:unit` still an owner action; #10 accessibility checks **now automated in CI** (manual pass still outstanding); #11 heading **resolved** ("From sign-in to completion."). Also: `npm audit` reports moderate advisories in development-only lint tooling (eslint/minimatch), present before this work; the axe dependency adds none. The `storage-cleanup` entry file is not Deno type-checked (no Deno locally); its rules module is type-checked and unit-tested.
 
 ## Staging state (synthetic data, OD15 log)
 | When (SAST) | Operation | By | Reversible by |
@@ -72,26 +119,24 @@ Deployed Edge Functions (2 Nov, ~19:25 SAST, OD2): `invitations` v4 `e406fe97…
 ## Open defects
 - DF1 fixed on staging 2 Nov (OD2): bad tokens now 401. O-A6-2 (media-url body checked before session, 400) remains; harmless.
 - DF2 closed by DF8: the real Workspace claim location is now known.
-- DF3 Q-07-12 staff account IDs readable on course rows — migration 0014 prepared and sandbox-tested (`5bbfced`); app reads through `course_people` with a pre-0014 fallback (`debc166`). **Not applied to staging — needs owner approval.**
+- **DF3 — OUTSTANDING PRIVACY DEFECT.** Q-07-12: staff account IDs (`created_by`, `published_by`) of public courses are readable by signed-in users of other organizations (confirmed on staging, M2). Migration 0014 prepared and sandbox-tested (`5bbfced`); app reads through `course_people` with a pre-0014 fallback (`debc166`). **Stays open until 0014 is applied and verified** on staging and production (RB3). Not approved for real personal data while open.
 - DF4 platform courses default to "assigned" — guard done (`d6a2502`, Q-08-7).
-- DF5 no cleanup of orphaned private files — before real data (D38 #9).
+- DF5 no cleanup of orphaned private files — before real data (D38 #9). **Prepared (3 Nov), not active:** migration 0017 and Edge Function `storage-cleanup` (dry run by default, 24-hour minimum grace, per-run cap, re-check before each delete, append-only audit). Open until applied, deployed, scheduled and verified (RB5).
 - DF7 fixed in code (`cd65913`): invitation sign-in asks Google for its account chooser. Reaches staging only after the owner pushes (Render auto-deploy). Staging tests used a page-side workaround (adds `prompt=select_account` before the redirect).
 - **DF8 (found 2 Nov, Stage 1 step 5)**: a real Google Workspace sign-in (U2, alustudent.com) stores `hd` under `identity_data.custom_claims.hd`, not at the top level. 0006 read only the top level, so every Workspace invitee is refused (preview empty, accept 42501), contrary to D33. U2: `email_verified` = boolean true; top-level `hd` absent; `custom_claims.hd` = `alustudent.com`. Fix: migration 0015 (`8efbf55`) reads either location, refuses non-string values and refuses two values that disagree (this also closes a gap where a top-level hd could mask a different nested one). pgTAP 036: 6/16 fail without 0015, 16/16 with; full suite 897/897. **Fixed on staging 2 Nov ~23:35** (0015 applied); U2 passes the gate and accepted both invitations.
 - I3 (M4): Learners page marks and counts overdue assignments (members only; public learners have no due dates). e2e test.
 - DF12 (M5): WCAG contrast — muted text on tinted fills (course outline, course builder, quiz builder, quiz summary) and the access note in the navy course hero (1.51:1). Fixed with existing tokens.
 - DF13 (M5): tables that scroll sideways on phones could not be reached by keyboard. Table scroll box becomes a focusable, labelled region only when it scrolls.
-- Open wording question (M5): landing heading "From sign-in to certificate." still mentions certificates (not covered by P23).
+- Landing heading (M5): changed to "From sign-in to completion." on owner instruction (3 Nov); layout unchanged.
 - DF10 (M2): an empty or >100 MB material file reached the database and came back as a generic error. Fixed in the data layer with a clear message before anything is stored; regression test.
 - DF11 (M2, design check): at 1440 px the course outline column (I1: 260–320 px) squeezed module titles to one word per line beside four controls. Fixed: module controls on their own line; column width unchanged.
 - DF9 (found 2 Nov): opening a second invitation link in a tab already showing `/invite` changed only the fragment, so the page kept the old invitation's state. Fixed in code (listens for `hashchange`; a new token restarts the flow), with a regression test that fails on the old page. Reaches staging after a push.
 
 ## Gated actions (need explicit owner approval)
-- Apply migration 0014 (DF3) and 0016 (D38 #10) to staging.
-- Push (Render deploy of DF7 and DF9 fixes).
-- Any other migration, hosted configuration, secret or deploy.
+- See "Outstanding owner-authorized actions" above. Any migration, push, deploy, hosted configuration or secret change needs explicit owner authorization.
 
 ## Next action
-M5. Owner-authorized items carried forward (not blockers): push the branch; apply 0014 and 0016 to staging; add `- run: npm run test:unit` to the protected `.github/workflows/ci.yml`; second staging Platform Admin (OD5) and `design-reference` access when practical.
+None by the agent. Owner actions and production blockers are listed above.
 
 ## M1 tasks
 1. [done] Record D38 (`aacab88`).
