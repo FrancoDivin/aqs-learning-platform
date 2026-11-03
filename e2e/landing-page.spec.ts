@@ -20,7 +20,7 @@ test.describe('landing page single-page content', () => {
     await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1)
     // Limited to <main>: the footer has its own h2 column headings
     const sectionHeadings = await page.getByRole('main').getByRole('heading', { level: 2 }).allTextContents()
-    expect(sectionHeadings).toEqual([COURSES_HEADING, 'From sign-in to certificate.', 'Support at every step.'])
+    expect(sectionHeadings).toEqual([COURSES_HEADING, 'From sign-in to completion.', 'Support at every step.'])
 
     // Frame 2 copy must not appear on this page
     await expect(page.getByText('Build stronger teams through learning.', { exact: true })).toHaveCount(0)

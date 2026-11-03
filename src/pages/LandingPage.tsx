@@ -218,7 +218,7 @@ export function LandingPage() {
         <div className={styles.container}>
           <p className="eyebrow">How it works</p>
           <h2 className={cx('text-h2', styles.sectionHeading)} id="steps-heading">
-            From sign-in to certificate.
+            From sign-in to completion.
           </h2>
           <ol className={styles.steps}>
             {STEPS.map((step, index) => (
