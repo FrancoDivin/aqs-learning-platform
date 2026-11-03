@@ -216,6 +216,11 @@ select set_eq(
             ('public.course_learners(uuid)'),
             ('public.course_people(uuid[])'),  -- 0014 (Q-07-12)
             ('public.my_enrolled_course_titles()'),  -- 0016 (D38 #10, Q-08-1)
+            ('public.begin_lesson_video_upload(uuid, text, text, bigint)'),  -- 0018 (N1)
+            ('public.finish_lesson_video_upload(uuid, text)'),  -- 0018 (N1)
+            ('public.begin_course_thumbnail_upload(uuid, text)'),  -- 0018 (N1)
+            ('public.finish_course_thumbnail_upload(uuid, text)'),  -- 0018 (N1)
+            ('public.cancel_pending_upload(text)'),  -- 0018 (N1)
             ('authz.can_view_learner_record(uuid, uuid)'),
             ('public.set_quiz_settings(uuid, integer, integer, boolean, quiz_reveal_policy)'),
             ('public.add_quiz_question(uuid, text, quiz_question_type)'),
@@ -307,6 +312,11 @@ select set_eq(
             ('public.course_learners(uuid)'),
             ('public.course_people(uuid[])'),  -- 0014 (Q-07-12)
             ('public.my_enrolled_course_titles()'),  -- 0016 (D38 #10, Q-08-1)
+            ('public.begin_lesson_video_upload(uuid, text, text, bigint)'),  -- 0018 (N1)
+            ('public.finish_lesson_video_upload(uuid, text)'),  -- 0018 (N1)
+            ('public.begin_course_thumbnail_upload(uuid, text)'),  -- 0018 (N1)
+            ('public.finish_course_thumbnail_upload(uuid, text)'),  -- 0018 (N1)
+            ('public.cancel_pending_upload(text)'),  -- 0018 (N1)
             ('public.storage_cleanup_run_event(uuid, text, boolean, jsonb)'),  -- 0017, service_role only
             ('public.storage_cleanup_candidates(integer, integer)'),  -- 0017, service_role only
             ('public.storage_cleanup_check(uuid, text, text, integer, boolean)'),  -- 0017, service_role only

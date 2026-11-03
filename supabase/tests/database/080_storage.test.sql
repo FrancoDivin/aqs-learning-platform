@@ -241,11 +241,11 @@ select public.set_course_thumbnail(pg_temp.id('x'), 'image/png');
 select public.update_course_details(pg_temp.id('x'), 'Checks', '', 'organization', 'assigned');
 select throws_ok($$ select public.request_course_publication(pg_temp.id('x')) $$, '22023',
   'AQS: YouTube videos are allowed only in public courses (P16)', 'P16: a course made organization-only cannot keep YouTube videos');
-select public.set_lesson_video_upload(pg_temp.id('xv'), 'v.mp4', 'video/mp4', 10);
+select pg_temp.upload('course-video', public.set_lesson_video_upload(pg_temp.id('xv'), 'v.mp4', 'video/mp4', 10));
 select throws_ok($$ select public.request_course_publication(pg_temp.id('x')) $$, '22023',
   'AQS: the visibility changed after the thumbnail was added; add the thumbnail again (T8)',
   'T8: an organization-only course cannot publish a thumbnail from the public bucket');
-select public.set_course_thumbnail(pg_temp.id('x'), 'image/png');
+select pg_temp.upload('course-files', pg_temp.obj(public.set_course_thumbnail(pg_temp.id('x'), 'image/png')));
 select lives_ok($$ select public.request_course_publication(pg_temp.id('x')) $$, 'with a private thumbnail and a stored video it can be proposed');
 select throws_ok($$ select pg_temp.upload('course-video', (select video_path from public.lesson_contents where lesson_id = pg_temp.id('xv'))) $$,
   '42501', null, 'Q-07-3: no uploads while the course waits for approval');

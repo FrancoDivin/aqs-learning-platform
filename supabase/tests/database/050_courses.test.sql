@@ -53,6 +53,11 @@ create function pg_temp.p12_accept(p_org uuid, p_admin uuid) returns void langua
 $p12$;
 grant execute on function pg_temp.p12_accept(uuid, uuid) to authenticated;
 
+-- 0018 fixture: the file at this path was uploaded (stands for a completed Storage API upload).
+create function pg_temp.stored(p_bucket text, p_name text) returns void language sql security definer as $$
+  insert into storage.objects (bucket_id, name) values (p_bucket, p_name) on conflict do nothing;
+$$;
+grant execute on function pg_temp.stored(text, text) to authenticated;
 select plan(112);
 
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -166,7 +171,7 @@ select lives_ok($$
 select lives_ok($$ select public.set_lesson_body(pg_temp.id('l1'), 'Body of reading one'), public.set_lesson_body(pg_temp.id('l3'), 'Body two') $$,
   'staff write lesson text');
 -- 0010 fixture: a video lesson needs a video before publication (synthetic object path).
-select public.set_lesson_video_upload(pg_temp.id('l2'), 'intro.mp4', 'video/mp4', 1000);
+select pg_temp.stored('course-video', public.set_lesson_video_upload(pg_temp.id('l2'), 'intro.mp4', 'video/mp4', 1000));
 select results_eq($$ select title, position from public.course_modules where course_id = pg_temp.id('ca') order by position $$,
   $$ values ('Module 1', 0), ('Module 2', 1) $$, 'modules are appended in order');
 select throws_ok($$ select public.reorder_course_modules(pg_temp.id('ca'), array[pg_temp.id('m2')]) $$,
@@ -182,6 +187,7 @@ select throws_ok($$ update public.lessons set title = 'Direct' where id = pg_tem
 select throws_ok($$ select public.set_lesson_body(pg_temp.id('l1'), repeat('x', 200001)) $$,
   '23514', null, 'lesson text has a size limit (Q-07-8)');
 select set_config('t.r1', (select id::text from public.add_lesson_resource(pg_temp.id('l1'), 'notes.pdf', 'application/pdf', 1024, false)), true);
+select pg_temp.stored('course-files', (select storage_path from public.lesson_resources where id = pg_temp.id('r1')));
 select results_eq(
   $$ select storage_path = pg_temp.id('ca')::text || '/' || id::text || '/notes.pdf', file_name, downloadable
        from public.lesson_resources where id = pg_temp.id('r1') $$,
@@ -334,7 +340,7 @@ select set_config('t.pl2', public.add_lesson(pg_temp.id('pm'), 'Full lesson', 'r
 select set_config('t.pl3', public.add_lesson(pg_temp.id('pm'), 'Video', 'video')::text, true);
 select public.set_lesson_body(pg_temp.id('pl1'), 'Preview text');
 select public.set_lesson_body(pg_temp.id('pl2'), 'Members-only text');
-select public.set_lesson_video_upload(pg_temp.id('pl3'), 'clip.mp4', 'video/mp4', 1000);   -- 0010 fixture
+select pg_temp.stored('course-video', public.set_lesson_video_upload(pg_temp.id('pl3'), 'clip.mp4', 'video/mp4', 1000));   -- 0010 fixture (+0018: file present)
 select throws_ok($$ select public.request_lesson_preview(pg_temp.id('pl3')) $$,
   '22023', null, 'previews are text only (L3)');
 select throws_ok($$ select public.request_lesson_preview(pg_temp.id('l1')) $$,

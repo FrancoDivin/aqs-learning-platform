@@ -51,6 +51,11 @@ create function pg_temp.p12_accept(p_org uuid, p_admin uuid) returns void langua
 $p12$;
 grant execute on function pg_temp.p12_accept(uuid, uuid) to authenticated;
 
+-- 0018 fixture: the file at this path was uploaded (stands for a completed Storage API upload).
+create function pg_temp.stored(p_bucket text, p_name text) returns void language sql security definer as $$
+  insert into storage.objects (bucket_id, name) values (p_bucket, p_name) on conflict do nothing;
+$$;
+grant execute on function pg_temp.stored(text, text) to authenticated;
 select plan(73);
 
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -91,7 +96,7 @@ select set_config('t.v1', public.add_lesson(pg_temp.id('co_m'), 'V1', 'video')::
 select set_config('t.r2', public.add_lesson(pg_temp.id('co_m'), 'R2', 'reading')::text, true);
 select public.set_lesson_body(pg_temp.id('r1'), 'R1 text'), public.set_lesson_body(pg_temp.id('v1'), 'V1 notes'),
        public.set_lesson_body(pg_temp.id('r2'), 'R2 text');
-select public.set_lesson_video_upload(pg_temp.id('v1'), 'v1.mp4', 'video/mp4', 1000);   -- 0010 fixture
+select pg_temp.stored('course-video', public.set_lesson_video_upload(pg_temp.id('v1'), 'v1.mp4', 'video/mp4', 1000));   -- 0010 fixture (+0018: file present)
 select public.request_course_publication(pg_temp.id('co'));
 
 select set_config('t.cp', public.create_course(pg_temp.id('org_a'), 'Public course', 'public-course')::text, true);
@@ -100,7 +105,7 @@ select set_config('t.cp_m', public.add_course_module(pg_temp.id('cp'), 'M')::tex
 select set_config('t.p1', public.add_lesson(pg_temp.id('cp_m'), 'P1', 'reading')::text, true);
 select set_config('t.p2', public.add_lesson(pg_temp.id('cp_m'), 'P2', 'reading')::text, true);
 select public.set_lesson_body(pg_temp.id('p1'), 'P1 text'), public.set_lesson_body(pg_temp.id('p2'), 'P2 text');
-select public.add_lesson_resource(pg_temp.id('p1'), 'p1.pdf', 'application/pdf', 100, false);
+select pg_temp.stored('course-files', (select storage_path from public.add_lesson_resource(pg_temp.id('p1'), 'p1.pdf', 'application/pdf', 100, false)));
 select public.request_course_publication(pg_temp.id('cp'));
 
 select set_config('t.cpa', public.create_course(pg_temp.id('org_a'), 'Public assigned', 'public-assigned')::text, true);
