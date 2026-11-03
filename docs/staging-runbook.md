@@ -1,9 +1,21 @@
 ﻿# Staging runbook — AQS Learning Platform
 
-**Status (27 October 2026):** prepared, not executed. Every step that creates or changes a
-cloud resource waits for the owner's approval (blocking questions 1–5 in
-`docs/progress-report.md`). Staging uses **synthetic data only**; production is a separate,
-owner-approved launch.
+**Status (3 November 2026, CM1):** staging exists and is in use (synthetic data only). The
+sections below were written on 27 October as the set-up plan; sections 1, 3 and 5 are done,
+and their commands are kept as history. **Current rules override any command below:** never
+`supabase link`, never `supabase db push`, never Docker Desktop; every migration, deploy, push,
+secret or hosted setting needs the owner's explicit authorisation for that action
+(`CLAUDE.md`, completion programme). Current state and pending packages: `docs/agent-handoff.md`
+and `docs/cm1-authorisation-packages.md`.
+
+| Item | State (verified 3 Nov 2026, read-only) |
+| --- | --- |
+| Supabase `aqs-staging` (`txpaszokduxewyojrnmq`) | Free plan, `eu-central-1`, Postgres 17 |
+| Migrations applied | 0001–0013 and 0015 (in that order) |
+| Migrations prepared, not applied | 0014, 0016, 0017, 0018 |
+| Edge Functions | `invitations` v4, `media-url` v4 (match the repository); `storage-cleanup` not deployed |
+| Render `aqs-learning-staging` | live deploy `4375371`; auto-deploys every commit on `feature/first-release`; no service builds `master` |
+| Platform Admins | 1 |
 
 ## 0. What staging is
 
@@ -24,45 +36,35 @@ The existing project `eeoofujuouquhnxkpffs` is **not** used and must not receive
    the legacy `anon`/`service_role` keys are not needed (Supabase retires them at the end of
    2026), and the functions fall back to them only if the new keys are absent.
 
-## 2. Migrations (owner approval: Q2)
+## 2. Migrations
 
-The canonical sequence contains exactly 15 SQL migration files, in this order, including
-recently added 0012 (service_role privilege cleanup, not yet applied to persistent
-projects or authorized as applied during staging unless approved) and 0013
-(public instructor names and course archiving). Do not commit or apply
-`20261022210000_0005_preview_email_gate.sql`; it was repaired as `reverted` in the
-disposable Supabase CLI validation (30 October 2026), which did not modify any hosted
-Supabase resource, and it is not part of the canonical sequence. Apply them from the
-repository:
+**Apply method (current):** one migration at a time, only with the owner's authorisation for that
+migration, through the Supabase connection using the file's exact version and name. After
+each one, read back the migration history and run the read-only checks named in its package.
+The `supabase link` / `db push` commands in earlier versions of this runbook are withdrawn.
 
-1. `20261021150000_0001_foundation.sql`
-2. `20261021160000_0002_profiles_platform_admins.sql`
-3. `20261021170000_0003_organizations_memberships.sql`
-4. `20261021180000_0004_invitations.sql`
-5. `20261026120000_0005a_graphql_off.sql`
-6. `20261026120100_0005b_activation_rule.sql`
-7. `20261026120200_0006_verified_identity_invitation_visibility.sql`
-8. `20261026120300_0007_courses.sql`
-9. `20261026120400_0008_enrolment_progress.sql`
-10. `20261026120500_0009_quizzes.sql`
-11. `20261026120600_0009a_course_corrections_clone.sql`
-12. `20261026120700_0010_storage.sql`
-13. `20261026120800_0011_platform_reports.sql`
-14. `20261030120000_0012_revoke_service_role_legacy_tables.sql`
-15. `20261031120000_0013_public_instructors_and_archiving.sql`
+Canonical files, in timestamp order (20 files; the old `20261022210000_0005_preview_email_gate.sql`
+must remain absent):
 
-```bash
-npx supabase login                      # opens the browser
-npx supabase link --project-ref <staging-ref>
-npx supabase db push                    # applies the 15 canonical migrations listed above; 20261022210000 must remain absent
-# Apply only the canonical sequence above; 20261022210000 must remain absent.
-```
+| # | File | Staging |
+| --- | --- | --- |
+| 1–4 | `20261021150000_0001_foundation.sql` … `20261021180000_0004_invitations.sql` | applied |
+| 5–6 | `20261026120000_0005a_graphql_off.sql`, `20261026120100_0005b_activation_rule.sql` | applied |
+| 7–13 | `20261026120200_0006_…` … `20261026120800_0011_platform_reports.sql` (incl. `0009a`) | applied |
+| 14 | `20261030120000_0012_revoke_service_role_legacy_tables.sql` | applied |
+| 15 | `20261031120000_0013_public_instructors_and_archiving.sql` | applied |
+| 16 | `20261102120000_0014_course_staff_ids_restricted.sql` | **not applied** |
+| 17 | `20261102130000_0015_workspace_hd_claim_location.sql` | applied (2 Nov) |
+| 18 | `20261103120000_0016_suspended_org_learner_titles.sql` | not applied |
+| 19 | `20261103130000_0017_orphaned_file_cleanup.sql` | not applied |
+| 20 | `20261103160000_0018_upload_integrity.sql` | not applied |
 
-Check: `npx supabase migration list` shows exactly those 15 canonical migration files applied remotely; `20261022210000` is absent; and the Advisors page shows no "RLS disabled" findings.
-
-Backup/recovery prerequisite: before applying migrations, confirm with the owner the available Supabase recovery option and the exact restore/pause/delete procedure. This repository does not establish a hosted recovery mechanism; if it cannot be confirmed, it remains an owner prerequisite and no destructive operation should run.
-Edge Function rollback, if needed, consists of redeploying the prior function version while preserving the documented caller-session verification; function secrets are never stored by the repository.
-Preserve the stop-and-record rule: if a migration stops with an error, stop, record it, and do not edit migrations on the fly.
+**Order on staging:** 0015 is already applied, so 0014 will be applied after it, out of timestamp
+order. Sandbox evidence (3 Nov) shows both orders give an identical database (full dump,
+catalog fingerprint and all pgTAP tests). Record the actual apply order here when it happens.
+**0014 depends on the frontend:** the deployed `4375371` frontend reads course columns that 0014
+hides; apply 0014 only after a newer frontend (which uses `course_people`) is deployed and
+confirmed live. Production (empty database) applies all files in timestamp order.
 
 If a migration stops with an error, **stop and record it**; do not edit migrations on the fly.
 Two statements depend on hosted-only behaviour that the sandbox cannot reproduce:
@@ -71,8 +73,6 @@ Two statements depend on hosted-only behaviour that the sandbox cannot reproduce
 - `0010` creates policies on `storage.objects`, which Supabase's `supabase_storage_admin`
   owns; `postgres` may do this through Supabase's `supautils` policy grants. An error such as
   "must be owner of table objects" means a support question, not a workaround.
-
-Verified before staging (sandbox, not hosted): all 15 canonical migrations and the relevant database tests pass on PostgreSQL 17 (hosted runs 17.6), including the schema stand-in and Supabase Storage's real schema (`scripts/db-sandbox/run-real-storage.sh`, pinned Storage commit).
 
 ## 3. Auth (owner approval: Q3)
 
@@ -136,6 +136,10 @@ npx supabase functions deploy invitations
 npx supabase functions deploy media-url
 ```
 
+`storage-cleanup` (0017) is deployed only in CM2, with its own authorisation, after 0017 is
+applied: deploy, set `CLEANUP_SECRET` (32+ random characters), dry run, owner review, schedule,
+and only then `CLEANUP_DELETE_ENABLED=true`. It is never deployed or scheduled in CM1.
+
 `SUPABASE_URL` and the API keys (`SUPABASE_PUBLISHABLE_KEYS`, `SUPABASE_SECRET_KEYS`, and the
 legacy `SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`) are provided to functions by
 Supabase; they are never set or stored by us.
@@ -157,8 +161,8 @@ select private.grant_platform_admin(
   'AQS Owner', 'Staging setup');
 ```
 
-A second Platform Admin is needed to approve platform courses (P1); repeat with a second
-test account.
+A second Platform Admin is needed to approve platform courses (P1). The prepared package is
+`docs/second-platform-admin.md`: the owner runs it; the agent never grants Platform Admin.
 
 ## 7. Synthetic data and smoke test
 

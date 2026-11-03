@@ -8,7 +8,8 @@ React 19 + TypeScript + Vite (`src/`, live app in `src/live/`), Supabase (Postgr
 ## Commands
 - `npm run lint` · `npm run build`
 - `npm run test:db` — throwaway PostgreSQL 16 sandbox, never a real database (must run as a non-root user)
-- `npm run test:functions` · `npm run test:e2e` · `npm run test:e2e:live`
+- `npm run test:functions` · `npm run test:unit` · `npm run test:e2e` · `npm run test:e2e:live`
+- `npm run check:functions` (Deno type-check of Edge Functions) · `npm run build && npm run check:build` (production-build boundary: no dev pages, sample data or secrets)
 - Report counts only (passed/failed), not full logs.
 
 ## Hard rules (owner approval required for each)
@@ -23,5 +24,15 @@ React 19 + TypeScript + Vite (`src/`, live app in `src/live/`), Supabase (Postgr
 ## Evidence language
 Label results as repository, sandbox, staging or production evidence. "Reported" is never "verified".
 
-## Delivery rule (owner, 2 November 2026)
-Five milestones (M1–M5, unchanged), at most two owner-facing prompts each: an implementation prompt (Claude plans, decides routine matters, implements, fixes and verifies the whole milestone) and a completion prompt (remaining material issues, final verification, milestone report, then straight on to the next milestone). Internal tasks, defects, migrations, test stages and deployment activities are never turned into extra milestones or routine approval checkpoints. Stop for the owner only for a genuine product or business decision, an action outside existing authorization or touching a protected system, or a material blocker that cannot be solved safely in scope; meanwhile continue all other safe work. Actions that the hard rules above reserve for the owner (push, hosted migrations, config, deploys) are collected into one decision list in the milestone report rather than asked one by one.
+## Delivery rule (owner, 2 November 2026; M1–M5 complete)
+M1–M5 are closed. Their rule (two owner-facing prompts per milestone, owner actions batched into one decision list) is superseded by the completion programme below for all remaining work.
+
+## Completion programme (owner-approved 3 November 2026)
+Source: Claude Project audit doc "AQS Comprehensive Audit and Production Readiness Report", section 26.
+- Five completion milestones, no others: CM1 Integration and Critical Fixes · CM2 Storage and Video · CM3 Product and Learner Experience · CM4 Security, Accessibility and QA · CM5 Production Preparation and Acceptance. M1–M5 and deferred features are not reopened.
+- Exactly two owner-facing prompts per milestone (ten in total): Prompt 1 implementation (owner gives decisions and any named authorisations), Prompt 2 completion report and verification. Internal tasks, fixes, tests, reviews and verification never become extra prompts.
+- Approving the roadmap or a milestone authorises local engineering, sandbox tests and local commits only. Every restricted action needs its own explicit, named owner authorisation: push, merge, staging or production deployment, applying a migration, Edge Function deploys or secrets, hosted configuration, destructive operations, protected systems. Prepare each as a package (target, effect, commands, verification, rollback); if not authorised, it waits and is reported in Prompt 2.
+- Pushing `feature/first-release` deploys staging (Render auto-deploy, verified 3 Nov): push that branch only when the deployment is also authorised; push-only goes to a separate review branch Render does not watch; neither means the work stays local.
+- Migration 0014 only after a frontend that uses `course_people` is deployed and confirmed live. Staging order: 0014 (out of timestamp order, recorded), 0016, 0017, 0018. 0017's cleanup function is never deployed or scheduled before CM2.
+- Priority in every milestone: security and data protection, data integrity, reliability, maintainability, performance, then cosmetic refinement. Only first-release and production-blocker items are built.
+- No real personal data and no go-live until CM5's evidence checklist is complete and the owner approves go-live in writing. Nothing follows CM5.

@@ -2,7 +2,37 @@
 
 Single source for "where are we and what is next". Update at every task boundary. Decisions live in `docs/decisions.md`; milestone history in `docs/progress-report.md`.
 
-## Final position (3 November 2026, ~02:30 SAST) — release candidate, M5 complete
+## Current position: completion programme, CM1 Prompt 1 done locally (3 November 2026)
+The owner approved the completion programme CM1–CM5 (ten prompts; rules in `CLAUDE.md`).
+CM1 Prompt 1 (Integration and Critical Fixes) is implemented and committed **locally only**.
+Nothing was pushed, merged, deployed or applied; staging is unchanged (frontend `4375371`,
+migrations 0001–0013 and 0015, functions `invitations` v4 and `media-url` v4).
+
+- **N1/N2 upload integrity:** migration **0018** (`20261103160000_0018_upload_integrity.sql`,
+  **not applied**). Uploads now go begin (pending path) → file upload → finish (object must
+  exist); a failed upload is cancelled and leaves the lesson or course unchanged. Publication is
+  refused when a lesson video, resource file or thumbnail object is missing. The frontend uses
+  the new functions when present and falls back to the old ones (with undo on failure) when 0018
+  is not applied; the deployed `4375371` frontend keeps working with 0018. 0018 also makes the
+  0017 cleanup skip pending uploads (so F before G). Open pre-apply check: that `postgres`
+  bypasses row rules on hosted `storage.objects` (package G).
+- **Cache lifetime:** new uploads set `cacheControl` 900 seconds (`UPLOAD_CACHE_SECONDS`).
+- **CI preparation:** `npm run check:build` (production-build boundary: no dev pages, sample
+  data or secret patterns) and `npm run check:functions` (Deno 2.5.6 type-check of all three
+  Edge Functions, including the `storage-cleanup` entry file). The CI file itself is protected;
+  the change is package H for the owner.
+- **Rollback scripts** for 0014, 0016, 0017, 0018 in `supabase/rollbacks/`, sandbox-verified by
+  `scripts/db-sandbox/rollback-check.sh` (4/4 identical catalog and schema dump).
+- **Packages prepared** (nothing performed): `docs/cm1-authorisation-packages.md` (A push +
+  staging deploy, B review branch, C merge to master, D 0014, E 0016, F 0017, G 0018, H CI),
+  `docs/second-platform-admin.md`, `docs/video-provider-brief.md` (for CM2 Prompt 1).
+- **CM1 test results (local and sandbox):** database 990/990 (sandbox); unit 9/9; functions
+  10/10; Deno check pass; lint, build, build check pass; e2e preview and live: see the CM1
+  Prompt 1 report in the Claude Project.
+- **Next:** CM1 Prompt 2 (completion report and verification) after the owner decides on the
+  packages. 0014 only after package A is done and the new frontend is verified live.
+
+## Earlier position: M5 final (3 November 2026, ~02:30 SAST) — release candidate, M5 complete
 - **All five milestones complete.** M1 Identity, M2 Courses, M3 Learners, M4 Administration and reporting: complete and approved (reports in the Claude Project: `claude/m1-milestone-report-2026-11-02.md`, `claude/m2-implementation-report-2026-11-03.md`, `claude/m3-implementation-report-2026-11-03.md`, `claude/m4-implementation-report-2026-11-03.md`). **M5 complete for implementation and release-readiness assessment** (owner, 3 Nov; `claude/m5-release-readiness-report-2026-11-03.md`, approved subject to its limitations and production blockers). **No further milestone or implementation phase is planned.**
 - **Status:** staging release candidate with synthetic data. **Not production-ready and not approved for real personal data** until RB1–RB8 below are resolved.
 - Final M5 items (owner instruction, 3 Nov): landing heading changed to "From sign-in to completion." (layout unchanged); axe-core accessibility checks added to the e2e suites so CI runs them (`docs/accessibility-testing.md`, manual checks kept); orphaned-file cleanup **prepared only** (migration 0017 + Edge Function `storage-cleanup`, not applied, deployed or scheduled); DF3 kept open.
@@ -57,7 +87,7 @@ Earlier milestone runs (kept for the record): M5 assessment — database 911/911
 8. **Go-live approval:** the owner records the legal approval and the release decision; only then are real organizations and personal data admitted.
 
 ### Known limitations carried (from the M5 report, updated)
-1–3, 4–7, 9, 12, 13 of the M5 report stand. Changed: #6 cleanup now **prepared, not active**; #8 CI `test:unit` still an owner action; #10 accessibility checks **now automated in CI** (manual pass still outstanding); #11 heading **resolved** ("From sign-in to completion."). Also: `npm audit` reports moderate advisories in development-only lint tooling (eslint/minimatch), present before this work; the axe dependency adds none. The `storage-cleanup` entry file is not Deno type-checked (no Deno locally); its rules module is type-checked and unit-tested.
+1–3, 4–7, 9, 12, 13 of the M5 report stand. Changed: #6 cleanup now **prepared, not active**; #8 CI `test:unit` still an owner action; #10 accessibility checks **now automated in CI** (manual pass still outstanding); #11 heading **resolved** ("From sign-in to completion."). Also: `npm audit` reports moderate advisories in development-only lint tooling (eslint/minimatch), present before this work; the axe dependency adds none. The `storage-cleanup` entry file is now Deno type-checked (`npm run check:functions`, CM1).
 
 ## Staging state (synthetic data, OD15 log)
 | When (SAST) | Operation | By | Reversible by |
@@ -130,13 +160,14 @@ Deployed Edge Functions (2 Nov, ~19:25 SAST, OD2): `invitations` v4 `e406fe97…
 - Landing heading (M5): changed to "From sign-in to completion." on owner instruction (3 Nov); layout unchanged.
 - DF10 (M2): an empty or >100 MB material file reached the database and came back as a generic error. Fixed in the data layer with a clear message before anything is stored; regression test.
 - DF11 (M2, design check): at 1440 px the course outline column (I1: 260–320 px) squeezed module titles to one word per line beside four controls. Fixed: module controls on their own line; column width unchanged.
+- **N1/N2 (CM1, audit)**: a failed upload could leave a lesson or course pointing at a file that never arrived, and publication did not check that stored files exist. Fixed in code and migration 0018 (not applied); see the CM1 section above.
 - DF9 (found 2 Nov): opening a second invitation link in a tab already showing `/invite` changed only the fragment, so the page kept the old invitation's state. Fixed in code (listens for `hashchange`; a new token restarts the flow), with a regression test that fails on the old page. Reaches staging after a push.
 
 ## Gated actions (need explicit owner approval)
-- See "Outstanding owner-authorized actions" above. Any migration, push, deploy, hosted configuration or secret change needs explicit owner authorization.
+- CM1 packages A–H: `docs/cm1-authorisation-packages.md`. Older list: "Outstanding owner-authorized actions" above. Any migration, push, deploy, hosted configuration or secret change needs explicit owner authorization.
 
 ## Next action
-None by the agent. Owner actions and production blockers are listed above.
+Owner decisions on the CM1 packages, then CM1 Prompt 2 (completion report and verification).
 
 ## M1 tasks
 1. [done] Record D38 (`aacab88`).
