@@ -96,6 +96,22 @@ end $$;
 grant execute on function pg_temp.st(uuid), pg_temp.sf(uuid, text), pg_temp.sub_of(uuid, int), pg_temp.yt(uuid),
   pg_temp.vid(uuid), pg_temp.track(uuid, text), pg_temp.audits(text), pg_temp.reattach_count(uuid),
   pg_temp.check(uuid, text, text, boolean), pg_temp.age_checks(uuid), pg_temp.mode(text) to authenticated;
+-- Storage deletes through the row rules (as in 080), and test-owner helpers to plant and find objects.
+create function pg_temp.del(p_bucket text, p_name text) returns int language sql as $$
+  select set_config('storage.allow_delete_query', 'true', true);
+  with d as (delete from storage.objects where bucket_id = p_bucket and name = p_name returning 1) select count(*)::int from d;
+$$;
+create function pg_temp.plant(p_bucket text, p_name text) returns void language sql security definer as $$
+  insert into storage.objects (bucket_id, name, metadata) values (p_bucket, p_name, jsonb_build_object('size', 10));
+$$;
+create function pg_temp.obj_exists(p_bucket text, p_name text) returns boolean language sql security definer as $$
+  select exists (select 1 from storage.objects where bucket_id = p_bucket and name = p_name);
+$$;
+create function pg_temp.master_lang(p_lesson uuid) returns text language sql security definer as $$
+  select spoken_language from public.video_submissions where lesson_id = p_lesson and is_master;
+$$;
+grant execute on function pg_temp.del(text, text), pg_temp.plant(text, text), pg_temp.obj_exists(text, text),
+  pg_temp.master_lang(uuid) to authenticated;
 -- Checklist documents (part 3.1a).
 create function pg_temp.req() returns jsonb language sql immutable as $$
   select '{"schema": "aqs.video_requirements.v1", "format_and_size": true, "spoken_language_stated": true,
@@ -118,7 +134,7 @@ create function pg_temp.conf_master(p_lang text) returns jsonb language sql immu
 $$;
 grant execute on function pg_temp.req(), pg_temp.conf(text), pg_temp.conf_master(text) to authenticated, service_role;
 
-select plan(209);
+select plan(223);
 
 -- Setup ------------------------------------------------------------------------------------------------
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -300,6 +316,13 @@ select throws_ok($$ select * from public.my_video_submissions(pg_temp.id('cp')) 
   'staff of another organisation cannot list submissions');
 select pg_temp.act_as(pg_temp.u('9e4'));
 select is((select count(*)::int from public.my_video_submissions(pg_temp.id('cp'))), 1, 'course staff list their course''s submissions');
+select ok(pg_temp.del('course-video', pg_temp.s('p1')) = 0 and pg_temp.obj_exists('course-video', pg_temp.s('p1')),
+  'course staff of a draft course cannot delete a submission file (owner, 4 Nov 2026)');
+select ok(pg_temp.del('course-video', pg_temp.s('c1')) = 0 and pg_temp.obj_exists('course-video', pg_temp.s('c1')),
+  'course staff of a draft course cannot delete a submission''s caption file');
+select pg_temp.plant('course-video', pg_temp.s('cp') || '/' || pg_temp.s('v1') || '/zz-old-upload.mp4');
+select ok(pg_temp.del('course-video', pg_temp.s('cp') || '/' || pg_temp.s('v1') || '/zz-old-upload.mp4') = 1,
+  'course staff of a draft course can still delete an ordinary video file (0018 rule kept)');
 
 -- 62-79. Gate 1: content review (Platform Admin, not the submitter) --------------------------------------------------
 select throws_ok($$ select * from public.video_review_queue(null) $$, '42501', null, 'course staff do not see the review queue');
@@ -517,6 +540,14 @@ select lives_ok($$ select public.request_course_publication(pg_temp.id('cp')) $$
 select pg_temp.act_as(pg_temp.u('9e2'));
 select lives_ok($$ select public.approve_course_publication(pg_temp.id('cp')) $$, 'an org admin approves it (P22 unchanged)');
 select is((select status::text from public.courses where id = pg_temp.id('cp')), 'published', 'the public course is published');
+select pg_temp.act_as(pg_temp.u('9e4'));
+select ok(public.lesson_spoken_language(pg_temp.id('v1')) is not null
+          and public.lesson_spoken_language(pg_temp.id('v1')) = pg_temp.master_lang(pg_temp.id('v1')),
+  'spoken language: a public lesson returns its master submission''s language');
+select is(public.lesson_spoken_language(pg_temp.id('r')), null, 'spoken language: a lesson without a video returns null');
+select pg_temp.act_as(pg_temp.u('9e8'));
+select throws_ok($$ select public.lesson_spoken_language(pg_temp.id('v1')) $$, '42501', null,
+  'spoken language: another organisation''s instructor (not enrolled) is refused');
 select pg_temp.act_as(pg_temp.u('9e0'));
 select public.request_course_publication(pg_temp.id('cpl'));
 select pg_temp.act_as(pg_temp.u('9e1'));
@@ -600,6 +631,19 @@ select is(pg_temp.track(pg_temp.id('ov'), 'caption_path'), '<none>', 'a failed c
 select pg_temp.upload('course-video', pg_temp.s('oc1'));
 select lives_ok($$ select public.finish_lesson_captions(pg_temp.id('ov')) $$, 'course staff add the caption track');
 select is(pg_temp.track(pg_temp.id('ov'), 'language'), 'rw', 'the caption track records its language');
+select ok(pg_temp.del('course-video', pg_temp.s('oc1')) = 0 and pg_temp.obj_exists('course-video', pg_temp.s('oc1')),
+  'course staff of a draft course cannot delete a lesson''s caption file');
+select pg_temp.plant('course-video', pg_temp.s('co') || '/' || pg_temp.s('ov') || '/zz-old-org.mp4');
+select ok(pg_temp.del('course-video', pg_temp.s('co') || '/' || pg_temp.s('ov') || '/zz-old-org.mp4') = 1,
+  'course staff of an organisation draft can still delete an ordinary video file');
+select is(public.lesson_spoken_language(pg_temp.id('ov')), 'rw', 'spoken language: course staff read the caption-track language');
+select pg_temp.act_as(pg_temp.u('9e6'));
+select throws_ok($$ select public.lesson_spoken_language(pg_temp.id('ov')) $$, '42501', null,
+  'spoken language: a learner who may not watch the lesson yet is refused');
+select pg_temp.act_as(pg_temp.u('9e0'));
+select throws_ok($$ select public.lesson_spoken_language(pg_temp.id('ov')) $$, '42501', null,
+  'spoken language: L11 P3, a Platform Admin is refused for an organisation-only lesson');
+select pg_temp.act_as(pg_temp.u('9e4'));
 select throws_ok($$ select public.request_course_publication(pg_temp.id('co')) $$, '22023',
   'AQS: the captions of the lesson "Org lecture" must be confirmed by an Organization Admin after the latest upload (D39)',
   'publication refuses unconfirmed captions');
@@ -706,6 +750,7 @@ select is((select object_path from public.submission_media_access('lesson-captio
 select ok((select language = 'rw' and confirmed is null and confirmed_by_me is null and confirmation_note is null and uploaded_at is null
              from public.lesson_caption_status(pg_temp.id('co')) where lesson_id = pg_temp.id('ov')),
   'caption status: an enrolled learner sees only the track language, not the confirmation');
+select is(public.lesson_spoken_language(pg_temp.id('ov')), 'rw', 'spoken language: an enrolled learner reads it');
 select throws_ok($$ select * from public.submission_media_access('lesson-video-review', pg_temp.id('ov')) $$, '42501', null,
   'learners keep the ordinary video access, not the review access');
 select pg_temp.act_as(pg_temp.u('9e8'));
@@ -713,6 +758,8 @@ select throws_ok($$ select * from public.submission_media_access('lesson-caption
   'another organisation cannot open the captions of a published organisation course');
 select throws_ok($$ select * from public.lesson_caption_status(pg_temp.id('co')) $$, '42501', null,
   'caption status: another organisation''s instructor is refused for a published organisation course');
+select throws_ok($$ select public.lesson_spoken_language(pg_temp.id('ov')) $$, '42501', null,
+  'spoken language: another organisation is refused for a published organisation lesson');
 select pg_temp.act_as(pg_temp.u('9e7'));
 select throws_ok($$ select * from public.submission_media_access('submission', pg_temp.id('s2')) $$, '42501', null,
   'another organisation''s admin cannot open a submission');
@@ -764,6 +811,8 @@ select throws_ok($$ select public.begin_video_submission(pg_temp.id('v1'), 'a.mp
   'signed-out visitors cannot submit');
 select throws_ok($$ select * from public.lesson_caption_status(pg_temp.id('co')) $$, '42501', null,
   'signed-out visitors cannot read caption status');
+select throws_ok($$ select public.lesson_spoken_language(pg_temp.id('ov')) $$, '42501', null,
+  'signed-out visitors cannot read a lesson''s spoken language');
 reset role;
 select ok(not exists (select 1 from (values ('public.video_submissions'), ('public.lesson_caption_tracks'),
                                             ('private.youtube_checks'), ('private.video_master_reattachments'),
