@@ -129,6 +129,23 @@ export async function listCatalog(): Promise<CourseSummary[]> {
   return rows.map(summaryOf)
 }
 
+/**
+ * Featured courses on the landing page (CM3-7, G10): real published PUBLIC courses only, newest
+ * first, at most `limit`. No invented courses; the section hides itself when there are none.
+ */
+export async function featuredCourses(limit = 6): Promise<CourseSummary[]> {
+  const rows = await query<CourseRow[]>((db) =>
+    db
+      .from('courses')
+      .select(`${COURSE_COLUMNS}, ${OUTLINE}`)
+      .eq('status', 'published')
+      .eq('visibility', 'public')
+      .order('published_at', { ascending: false })
+      .limit(limit),
+  )
+  return rows.map(summaryOf)
+}
+
 export const CATALOG_PAGE_SIZE = 12
 
 /** Escape LIKE wildcards so a search for "100%" or "a_b" matches those characters literally. */
