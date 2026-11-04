@@ -262,6 +262,7 @@ select set_eq(
             ('public.finish_lesson_captions(uuid)'),  -- 0019 (D39)
             ('public.confirm_lesson_captions(uuid, text)'),  -- 0019 (D39)
             ('public.lesson_caption_status(uuid)'),  -- 0019 (D39)
+            ('public.lesson_spoken_language(uuid)'),  -- 0019 (D39)
             ('public.submission_media_access(text, uuid)'),  -- 0019 (D39)
             ('authz.can_write_course_object(text, text, boolean)'),
             ('authz.can_read_course_object(text)'),
@@ -351,6 +352,7 @@ select set_eq(
             ('public.finish_lesson_captions(uuid)'),  -- 0019 (D39)
             ('public.confirm_lesson_captions(uuid, text)'),  -- 0019 (D39)
             ('public.lesson_caption_status(uuid)'),  -- 0019 (D39)
+            ('public.lesson_spoken_language(uuid)'),  -- 0019 (D39)
             ('public.submission_media_access(text, uuid)'),  -- 0019 (D39)
             ('public.record_youtube_check(uuid, text, text, jsonb)'),  -- 0019 (D39), service_role only
             ('authz.can_view_learner_record(uuid, uuid)'),

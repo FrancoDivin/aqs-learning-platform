@@ -4,7 +4,8 @@
 --
 -- DATA WARNING. Rolling back DELETES: every video submission record, every caption-track record and its
 -- confirmation, every YouTube lookup result, the master re-attach history, the lookup-mode setting, and
--- pending upload rows of the kinds 'submission' and 'caption'.
+-- pending upload rows of the kinds 'submission' and 'caption'. It also lets course staff of a draft
+-- course delete submission and caption files again (0018 Storage write rule).
 -- It does NOT delete: any Storage object (submission-..., captions-... and caption files of type text/vtt
 -- stay in course-video; after the rollback no new text/vtt file can be uploaded), the audit rows written by
 -- 0019's functions (append-only by design), or the YouTube IDs already attached to lessons
@@ -35,6 +36,7 @@ drop function public.begin_lesson_captions(uuid, text);
 drop function public.finish_lesson_captions(uuid);
 drop function public.confirm_lesson_captions(uuid, text);
 drop function public.lesson_caption_status(uuid);
+drop function public.lesson_spoken_language(uuid);
 drop function public.submission_media_access(text, uuid);
 drop function private.admin_submission(uuid, boolean);
 drop function private.require_youtube_check(uuid, text);
@@ -67,6 +69,34 @@ update storage.buckets set allowed_mime_types = array['video/mp4', 'video/webm']
 
 -- D39 #2 undone: staff may set YouTube IDs again (0010 grant).
 grant execute on function public.set_lesson_youtube(uuid, text, boolean) to authenticated;
+
+-- 0018 definition of the Storage write rule restored exactly (submission and caption files can be
+-- deleted by course staff of a draft course again).
+create or replace function authz.can_write_course_object(p_bucket text, p_name text, p_upload boolean)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.courses c
+     where c.id = private.object_course(p_name)
+       and c.status = 'draft' and c.publication_requested_at is null
+       and (c.owner_type = 'platform' or c.org_is_active or exists (
+             select 1 from public.organizations o where o.id = c.org_id and o.status = 'draft'))
+       and authz.is_course_staff(c.id)
+       and (not p_upload
+            or exists (select 1 from private.pending_uploads u
+                        where u.course_id = c.id and u.bucket_id = p_bucket and u.object_name = p_name)
+            or (p_bucket = 'course-files' and (
+                  exists (select 1 from public.lesson_resources r where r.course_id = c.id and r.storage_path = p_name)
+                  or c.thumbnail_path = 'course-files/' || p_name))
+            or (p_bucket = 'course-video'
+                and exists (select 1 from public.lesson_contents b where b.course_id = c.id and b.video_path = p_name))
+            or (p_bucket = 'course-thumbnails' and c.thumbnail_path = 'course-thumbnails/' || p_name))
+  );
+$$;
 
 -- 0018 definition of the cleanup rule restored exactly.
 create or replace function private.storage_object_orphaned(p_bucket text, p_name text, p_created_at timestamptz, p_min_age_hours integer)

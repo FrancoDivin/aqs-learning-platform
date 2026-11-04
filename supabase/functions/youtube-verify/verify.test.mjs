@@ -36,7 +36,7 @@ const run = (fetch, db = fakeDb(), extra = {}) =>
 
 test('found, same channel: channel_match true, recorded through record_youtube_check', async () => {
   const db = fakeDb()
-  const r = await run(oembed('https://www.youtube.com/@aqslearning'), db)
+  const r = await run(oembed(CHANNEL), db)
   assert.equal(r.outcome, 'found')
   assert.equal(r.channelMatch, true)
   assert.equal(r.signalOnly, true)
@@ -171,14 +171,12 @@ test('oEmbed URL uses the public endpoint with the watch URL encoded, and no key
   assert.ok(!/key=/.test(url))
 })
 
-test('channel address normalisation', () => {
-  assert.equal(v.normalizeChannelUrl('http://m.youtube.com/@AQS/'), 'https://youtube.com/@aqs')
-  assert.equal(v.normalizeChannelUrl('https://www.youtube.com/channel/UCabcDEF'), 'https://youtube.com/channel/UCabcDEF')
-  assert.equal(v.channelMatch('https://www.youtube.com/channel/UCabcDEF', 'https://youtube.com/channel/ucabcdef'), false, 'channel IDs are case-sensitive')
-  assert.equal(v.normalizeChannelUrl('https://evil.test/@AQS'), null)
-  assert.equal(v.normalizeChannelUrl('https://youtube.com.evil.test/@AQS'), null)
-  assert.equal(v.normalizeChannelUrl('javascript:alert(1)'), null)
-  assert.equal(v.normalizeChannelUrl('https://www.youtube.com/'), null)
+test('channel comparison is exact: no handle or ID form is rewritten (owner, 4 Nov 2026)', () => {
+  assert.equal(v.channelMatch(CHANNEL, CHANNEL), true)
+  assert.equal(v.channelMatch(CHANNEL, `  ${CHANNEL}  `), true, 'only surrounding spaces of the setting are ignored')
+  assert.equal(v.channelMatch('https://www.youtube.com/@aqslearning', CHANNEL), false, 'a different case is a different address')
+  assert.equal(v.channelMatch('https://youtube.com/@AQSLearning', CHANNEL), false, 'a different host form is a different address')
+  assert.equal(v.channelMatch('https://www.youtube.com/channel/UCabcDEF', CHANNEL), false)
   assert.equal(v.channelMatch(null, CHANNEL), null)
-  assert.equal(v.channelMatch('https://evil.test/@AQSLearning', CHANNEL), null, 'a non-YouTube author address is no author')
+  assert.equal(v.channelMatch('', CHANNEL), null)
 })

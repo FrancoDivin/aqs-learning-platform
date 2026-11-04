@@ -26,6 +26,7 @@
 --   public.request_course_publication     (0018 body)
 --   private.storage_object_orphaned       (0018 body)
 --   private.course_content_guard          (0009a body)
+--   authz.can_write_course_object         (0018 body; refuses deleting submission and caption files)
 -- Nothing is deleted. No submission or caption file is ever eligible for cleanup (retention
 -- periods are deferred, D39). No migration 0001-0018 is edited.
 -- =============================================================================
@@ -371,6 +372,39 @@ as $$
                    or regexp_replace(p_name, '^.*/', '') like 'captions-%'));
 $$;
 revoke execute on function private.storage_object_orphaned(text, text, timestamptz, integer) from public, anon, authenticated, service_role;
+
+-- Storage write rule (create or replace from the 0018 body, owner decision 4 November 2026): a
+-- submission or caption file in course-video can never be deleted through the Storage API, not
+-- even by course staff of a draft course. Uploads to an issued pending path are unchanged.
+create or replace function authz.can_write_course_object(p_bucket text, p_name text, p_upload boolean)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.courses c
+     where c.id = private.object_course(p_name)
+       and c.status = 'draft' and c.publication_requested_at is null
+       and (c.owner_type = 'platform' or c.org_is_active or exists (
+             select 1 from public.organizations o where o.id = c.org_id and o.status = 'draft'))
+       and authz.is_course_staff(c.id)
+       and (not p_upload
+            or exists (select 1 from private.pending_uploads u
+                        where u.course_id = c.id and u.bucket_id = p_bucket and u.object_name = p_name)
+            or (p_bucket = 'course-files' and (
+                  exists (select 1 from public.lesson_resources r where r.course_id = c.id and r.storage_path = p_name)
+                  or c.thumbnail_path = 'course-files/' || p_name))
+            or (p_bucket = 'course-video'
+                and exists (select 1 from public.lesson_contents b where b.course_id = c.id and b.video_path = p_name))
+            or (p_bucket = 'course-thumbnails' and c.thumbnail_path = 'course-thumbnails/' || p_name))
+  )
+  -- 0019: never a delete of a submission- or captions- file (kept until retention is decided, D39).
+  and (p_upload or p_bucket <> 'course-video'
+       or not (regexp_replace(p_name, '^.*/', '') like 'submission-%'
+               or regexp_replace(p_name, '^.*/', '') like 'captions-%'));
+$$;
 
 -- 4. Internal helpers ---------------------------------------------------------------------------
 
@@ -1150,6 +1184,33 @@ begin
 end;
 $$;
 
+-- The spoken language of a lesson's video, for the learner player (owner decision 4 November
+-- 2026): a public lesson's master submission (YouTube captions, cc_lang_pref) or an
+-- organisation-only lesson's caption track (<track srclang>). Anyone who may watch the lesson
+-- (authz.can_view_course_content) reads it; everyone else, including another organisation, is
+-- refused. Null when the lesson has neither.
+create function public.lesson_spoken_language(p_lesson uuid)
+returns text
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_course uuid := (select l.course_id from public.lessons l where l.id = p_lesson);
+begin
+  perform private.require_active_user();
+  if v_course is null or not authz.can_view_course_content(v_course) then
+    raise exception 'AQS: not permitted' using errcode = '42501';
+  end if;
+  return coalesce(
+    (select s.spoken_language from public.video_submissions s
+      join public.lesson_contents b on b.lesson_id = s.lesson_id and b.youtube_id = s.youtube_id
+     where s.lesson_id = p_lesson and s.is_master),
+    (select t.language from public.lesson_caption_tracks t where t.lesson_id = p_lesson));
+end;
+$$;
+
 -- 10. Media access for review and captions (called by media-url as the person; audited) ------------
 -- Kinds: 'submission' (preview), 'submission-download' (the file for the YouTube upload),
 -- 'submission-captions', 'lesson-captions', 'lesson-video-review'. The Edge Function signs a
@@ -1368,6 +1429,7 @@ revoke execute on function
   public.finish_lesson_captions(uuid),
   public.confirm_lesson_captions(uuid, text),
   public.lesson_caption_status(uuid),
+  public.lesson_spoken_language(uuid),
   public.submission_media_access(text, uuid)
   from public, anon, authenticated, service_role;
 grant execute on function
@@ -1386,6 +1448,7 @@ grant execute on function
   public.finish_lesson_captions(uuid),
   public.confirm_lesson_captions(uuid, text),
   public.lesson_caption_status(uuid),
+  public.lesson_spoken_language(uuid),
   public.submission_media_access(text, uuid)
   to authenticated;
 -- youtube-verify records its lookups with the service key, inside the Edge Function only.
