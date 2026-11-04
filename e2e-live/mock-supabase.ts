@@ -9,7 +9,9 @@ export const API = 'http://127.0.0.1:54399'
 
 export const USER = { id: '00000000-0000-4000-8000-0000000000a1', email: 'ada@example.test', name: 'Ada Learner' }
 
-export type Handler = (req: { method: string; url: URL; body: unknown }) => { status?: number; json: unknown } | undefined
+export type Handler = (req: { method: string; url: URL; body: unknown; headers?: Record<string, string> }) =>
+  | { status?: number; json: unknown; /** CM3-2: extra response headers, e.g. Content-Range for count: 'exact'. */ headers?: Record<string, string> }
+  | undefined
 
 export interface Mock {
   tables: Record<string, Handler>
@@ -133,7 +135,7 @@ export async function mockSupabase(page: Page, partial: Partial<Omit<Mock, 'call
     }
     mock.calls.push({ kind, name, body, url: url.toString() })
     const handler = (mock as unknown as Record<string, Record<string, Handler>>)[kind]?.[name]
-    const answer = handler?.({ method: request.method(), url, body })
+    const answer = handler?.({ method: request.method(), url, body, headers: request.headers() })
     if (!answer) {
       return route.fulfill({ status: 500, headers: cors, json: { code: 'XX000', message: `unmocked ${kind} ${name} ${url.search}` } })
     }
@@ -142,7 +144,7 @@ export async function mockSupabase(page: Page, partial: Partial<Omit<Mock, 'call
     let json = answer.json
     if (wantsObject && Array.isArray(json)) json = json[0] ?? null
     if (wantsObject && json === null) return route.fulfill({ status: 406, headers: cors, json: { code: 'PGRST116', message: 'no rows' } })
-    return route.fulfill({ status: answer.status ?? 200, headers: { ...cors, 'Content-Range': '0-0/*' }, json })
+    return route.fulfill({ status: answer.status ?? 200, headers: { ...cors, 'Access-Control-Expose-Headers': 'Content-Range', 'Content-Range': '0-0/*', ...answer.headers }, json })
   })
   return mock
 }
