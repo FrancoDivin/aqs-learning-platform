@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { PublicLayout } from '../../../components/layout/PublicLayout'
-import { Badge, ButtonLink, Card, EmptyState, Pagination, TextField } from '../../../components/ui'
+import { Badge, ButtonLink, Card, EmptyState, Pagination, Skeleton, TextField } from '../../../components/ui'
 import { useAuth } from '../../../lib/auth-context'
 import { countOf } from '../../../lib/plural'
 import styles from '../../../pages/CatalogPage.module.css'
@@ -39,6 +39,10 @@ export default function LiveCatalog() {
           {session ? 'Courses open to you, from your organizations and the public catalog.' : 'Browse our public courses.'}
         </p>
       </header>
+      {/* CM3-8: course-card-shaped skeletons while a page of the catalog loads. */}
+      {catalog.state === 'loading' ? (
+        <CatalogSkeleton />
+      ) : (
       <Loaded resource={catalog} label="Loading courses">
         {({ courses, total }) => {
           if (total === 0 && !term) {
@@ -105,6 +109,7 @@ export default function LiveCatalog() {
           )
         }}
       </Loaded>
+      )}
     </>
   )
 
@@ -116,4 +121,25 @@ export default function LiveCatalog() {
     )
   }
   return <LiveShell shell={learnerShell()}>{body}</LiveShell>
+}
+
+/** CM3-8: six course-card-shaped placeholders, in the catalog grid. */
+function CatalogSkeleton() {
+  return (
+    <div aria-busy="true" role="status">
+      <span className="visually-hidden">Loading courses</span>
+      <ul className={styles.grid} aria-hidden="true">
+        {Array.from({ length: 6 }, (_, i) => (
+          <li key={i}>
+            <Card as="article" className={styles.card}>
+              <Skeleton shape="text" width="75%" height={20} />
+              <Skeleton shape="text" width="45%" />
+              <Skeleton shape="text" width={72} height={22} />
+              <Skeleton height={40} width={140} />
+            </Card>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
 }

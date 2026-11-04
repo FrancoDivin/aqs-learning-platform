@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Badge, Banner, Button, ProgressBar, TextArea, TextField } from '../../../components/ui'
+import { Badge, Banner, Button, ProgressBar, TextArea, TextField, useConfirm } from '../../../components/ui'
 import base from '../../../pages/InstructorCoursePage.module.css'
 import { ActionFeedback } from '../../components/States'
 import { authoring, type AuthoringCourse, type AuthoringLesson } from '../../data/authoring'
@@ -14,6 +14,9 @@ import {
   type UploadControl,
 } from '../../data/video'
 import { formatBytes } from '../../learner-model'
+import { toAppError } from '../../api'
+import { UploadStatus } from '../../components/UploadStatus'
+import type { UploadState } from '../../components/upload-status'
 import { useAction, useResource } from '../../useResource'
 import { isLanguageTag, REQUIREMENT_KEYS, REQUIREMENT_LABELS, type RequirementKey } from '../../video-captions'
 import styles from './CourseEditor.module.css'
@@ -51,6 +54,7 @@ function PublicVideo({ course, lesson, editable, onChanged }: { course: Authorin
   const subs = useResource(() => mySubmissions(course.id), `${course.id}:${lesson.id}`)
   // Kept here, not in the form: the form is replaced by the status once the submission is open.
   const [notice, setNotice] = useState<string | null>(null)
+  const { confirm, dialog } = useConfirm()
   const run = useAction(async (work: () => Promise<unknown>) => {
     setNotice(null)
     await work()
@@ -65,6 +69,7 @@ function PublicVideo({ course, lesson, editable, onChanged }: { course: Authorin
 
   return (
     <div className={styles.stack}>
+      {dialog}
       <p className={styles.muted}>
         {lesson.youtubeId
           ? `Published on the AQS YouTube channel (video ${lesson.youtubeId}).`
@@ -83,7 +88,10 @@ function PublicVideo({ course, lesson, editable, onChanged }: { course: Authorin
       {editable && subs.state === 'ready' ? (
         open && open.status !== 'uploading' ? (
           <div className={styles.row}>
-            <Button variant="text" size="sm" loading={run.busy} onClick={() => run.run(() => videoReview.withdraw(open.id))}>
+            <Button variant="text" size="sm" loading={run.busy} onClick={async () => {
+                if (await confirm({ title: 'Withdraw this video submission?', message: 'AQS stops reviewing it. The file is kept; you can submit a new one.', confirmLabel: 'Withdraw submission' }))
+                  void run.run(() => videoReview.withdraw(open.id))
+              }}>
               Withdraw this submission
             </Button>
             <span className={styles.muted}>Withdraw it to submit a different file.</span>
@@ -100,14 +108,24 @@ function PublicVideo({ course, lesson, editable, onChanged }: { course: Authorin
               subs.reload()
               onChanged()
             }}
-            onWithdraw={open ? () => run.run(() => videoReview.withdraw(open.id)) : undefined}
+            onWithdraw={open ? async () => {
+              if (await confirm({ title: 'Withdraw this video submission?', message: 'AQS stops reviewing it. The file is kept; you can submit a new one.', confirmLabel: 'Withdraw submission' }))
+                void run.run(() => videoReview.withdraw(open.id))
+              } : undefined}
           />
         )
       ) : null}
 
       {editable && lesson.videoPath ? (
         <div>
-          <Button variant="text" size="sm" onClick={() => run.run(() => authoring.clearVideo(lesson.id))}>
+          <Button
+            variant="text"
+            size="sm"
+            onClick={async () => {
+              if (await confirm({ title: 'Remove the uploaded video?', message: 'The lesson will have no stored video. Public courses use AQS review and YouTube instead.', confirmLabel: 'Remove video' }))
+                void run.run(() => authoring.clearVideo(lesson.id))
+            }}
+          >
             Remove the uploaded video
           </Button>
         </div>
@@ -303,6 +321,7 @@ function OrganizationVideo({ course, lesson, editable, onChanged }: { course: Au
   const tracks = useResource(() => (lesson.videoPath ? captionStatus(course.id) : Promise.resolve([])), `${course.id}:${lesson.id}:${lesson.videoPath ?? ''}`)
   const [language, setLanguage] = useState('')
   const [saved, setSaved] = useState<string | null>(null)
+  const { confirm, dialog } = useConfirm()
   const run = useAction(async (work: () => Promise<unknown>, message: string) => {
     setSaved(null)
     await work()
@@ -310,11 +329,26 @@ function OrganizationVideo({ course, lesson, editable, onChanged }: { course: Au
     tracks.reload()
     onChanged()
   })
-  const track = tracks.state === 'ready' ? (tracks.data.find((t) => t.lessonId === lesson.id) ?? null) : null
-  const captionState = !lesson.videoPath ? null : !track ? 'missing' : track.confirmed ? 'confirmed' : 'uploaded'
+  // CM3-8: each upload's own status, next to its control, with a cause-specific error.
+  const [videoUpload, setVideoUpload] = useState<UploadState>({ phase: 'idle' })
+  const [captionUpload, setCaptionUpload] = useState<UploadState>({ phase: 'idle' })
+  const track = async (set: (s: UploadState) => void, name: string, work: () => Promise<unknown>, message: string) => {
+    set({ phase: 'uploading', name })
+    try {
+      await work()
+      set({ phase: 'done', message })
+      tracks.reload()
+      onChanged()
+    } catch (error) {
+      set({ phase: 'failed', error: toAppError(error) })
+    }
+  }
+  const captionTrack = tracks.state === 'ready' ? (tracks.data.find((t) => t.lessonId === lesson.id) ?? null) : null
+  const captionState = !lesson.videoPath ? null : !captionTrack ? 'missing' : captionTrack.confirmed ? 'confirmed' : 'uploaded'
 
   return (
     <div className={styles.stack}>
+      {dialog}
       <p className={styles.muted}>{lesson.videoPath ? 'An uploaded video is attached.' : 'No video yet.'}</p>
       <ActionFeedback error={run.error} success={saved} />
       {editable ? (
@@ -328,10 +362,14 @@ function OrganizationVideo({ course, lesson, editable, onChanged }: { course: Au
             onChange={(event) => {
               const file = event.target.files?.[0]
               event.target.value = ''
-              if (file) void run.run(() => authoring.uploadVideo(lesson.id, file, Boolean(lesson.videoPath)), 'Video uploaded. Its captions must be confirmed again.')
+              if (file) void track(setVideoUpload, file.name, () => authoring.uploadVideo(lesson.id, file, Boolean(lesson.videoPath)), 'Video uploaded. Its captions must be confirmed again.')
             }}
+            aria-describedby={`video-upload-${lesson.id}`}
           />
         </label>
+      ) : null}
+      {editable ? (
+        <UploadStatus state={videoUpload} id={`video-upload-${lesson.id}`} />
       ) : null}
       {captionState ? (
         <div className={base.file} role="group" aria-label="Caption status">
@@ -344,7 +382,7 @@ function OrganizationVideo({ course, lesson, editable, onChanged }: { course: Au
             ) : (
               <Badge tone="success">Confirmed</Badge>
             )}
-            {track ? ` · language ${track.language}` : ''}
+            {captionTrack ? ` · language ${captionTrack.language}` : ''}
           </span>
           <span className={base.fileMeta}>
             {captionState === 'missing'
@@ -366,7 +404,7 @@ function OrganizationVideo({ course, lesson, editable, onChanged }: { course: Au
             onChange={(e) => setLanguage(e.target.value)}
           />
           <label className={base.dropzone} aria-disabled={!isLanguageTag(language)}>
-            {track ? 'Replace the caption file' : 'Upload the caption file'}
+            {captionTrack ? 'Replace the caption file' : 'Upload the caption file'}
             <span className={base.dropzoneHint}>.vtt or .srt, up to 2 MB. SRT is converted to WebVTT before upload.</span>
             <input
               type="file"
@@ -376,15 +414,24 @@ function OrganizationVideo({ course, lesson, editable, onChanged }: { course: Au
               onChange={(event) => {
                 const file = event.target.files?.[0]
                 event.target.value = ''
-                if (file) void run.run(() => uploadLessonCaptions(lesson.id, language, file), 'Captions uploaded. An Organization Admin must confirm them.')
+                if (file) void track(setCaptionUpload, file.name, () => uploadLessonCaptions(lesson.id, language, file), 'Captions uploaded. An Organization Admin must confirm them.')
               }}
+              aria-describedby={`caption-upload-${lesson.id}`}
             />
           </label>
+          <UploadStatus state={captionUpload} id={`caption-upload-${lesson.id}`} />
         </div>
       ) : null}
       {editable && lesson.videoPath ? (
         <div>
-          <Button variant="text" size="sm" onClick={() => run.run(() => authoring.clearVideo(lesson.id), 'Video removed.')}>
+          <Button
+            variant="text"
+            size="sm"
+            onClick={async () => {
+              if (await confirm({ title: 'Remove this video?', message: 'Learners will have no video for this lesson, and its captions must be confirmed again after a new upload.', confirmLabel: 'Remove video' }))
+                void run.run(() => authoring.clearVideo(lesson.id), 'Video removed.')
+            }}
+          >
             Remove video
           </Button>
         </div>

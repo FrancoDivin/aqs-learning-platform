@@ -1,12 +1,12 @@
 import { useId, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { FocusLayout } from '../../../components/layout/FocusLayout'
-import { Banner, Button, ButtonLink, Icon } from '../../../components/ui'
+import { Banner, Button, ButtonLink, Icon, Skeleton } from '../../../components/ui'
 import { cx } from '../../../lib/cx'
 import { countOf } from '../../../lib/plural'
 import styles from '../../../pages/LessonPage.module.css'
 import { NotFound } from '../../../pages/NotFound'
-import { ErrorBanner, LoadingBlock } from '../../components/States'
+import { ErrorBanner } from '../../components/States'
 import { LessonSheet } from '../../components/LessonSheet/LessonSheet'
 import sheetStyles from '../../components/LessonSheet/LessonSheet.module.css'
 import { VideoPlayer } from '../../components/VideoPlayer/VideoPlayer'
@@ -61,7 +61,16 @@ export default function LiveLessonPage() {
   if (data.state === 'loading') {
     return (
       <main id="main-content" style={{ maxWidth: 960, margin: '32px auto', padding: '0 16px' }}>
-        <LoadingBlock label="Loading lesson" rows={4} />
+        {/* CM3-8: a content-shaped skeleton (player frame, meta line, title, text). */}
+        <div aria-busy="true" role="status" style={{ display: 'grid', gap: 12 }}>
+          <span className="visually-hidden">Loading lesson</span>
+          <Skeleton height="auto" className={styles.video} />
+          <Skeleton shape="text" width="40%" />
+          <Skeleton shape="text" width="70%" height={28} />
+          <Skeleton shape="text" />
+          <Skeleton shape="text" />
+          <Skeleton shape="text" width="85%" />
+        </div>
       </main>
     )
   }

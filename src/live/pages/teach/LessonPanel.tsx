@@ -4,6 +4,9 @@ import base from '../../../pages/InstructorCoursePage.module.css'
 import { ActionFeedback } from '../../components/States'
 import { authoring, type AuthoringCourse, type AuthoringLesson } from '../../data/authoring'
 import { formatBytes, LESSON_TYPE_LABEL } from '../../learner-model'
+import { toAppError } from '../../api'
+import { UploadStatus } from '../../components/UploadStatus'
+import type { UploadState } from '../../components/upload-status'
 import { useAction } from '../../useResource'
 import styles from './CourseEditor.module.css'
 import { VideoSection } from './VideoSection'
@@ -45,6 +48,18 @@ export function LessonPanel({
     setSaved(message)
     onChanged()
   })
+  // CM3-8: the file upload's own status, next to its control, with a cause-specific error.
+  const [upload, setUpload] = useState<UploadState>({ phase: 'idle' })
+  const uploadFile = async (file: File) => {
+    setUpload({ phase: 'uploading', name: file.name })
+    try {
+      await authoring.addResource(lesson.id, file, downloadable)
+      setUpload({ phase: 'done', message: `${file.name} uploaded.` })
+      onChanged()
+    } catch (error) {
+      setUpload({ phase: 'failed', error: toAppError(error) })
+    }
+  }
   const textChanged = title.trim() !== lesson.title || body !== lesson.body
 
   return (
@@ -137,10 +152,12 @@ export function LessonPanel({
                   onChange={(event) => {
                     const file = event.target.files?.[0]
                     event.target.value = ''
-                    if (file) void run.run(() => authoring.addResource(lesson.id, file, downloadable), `${file.name} uploaded.`)
+                    if (file) void uploadFile(file)
                   }}
+                  aria-describedby={`upload-status-${lesson.id}`}
                 />
               </label>
+              <UploadStatus state={upload} id={`upload-status-${lesson.id}`} />
             </>
           ) : null}
           {lesson.resources.length > 0 ? (
@@ -164,7 +181,10 @@ export function LessonPanel({
                         <Button
                           variant="text"
                           size="sm"
-                          onClick={() => run.run(() => authoring.deleteResource(file.id, file.storagePath), 'File removed.')}
+                          onClick={async () => {
+                            if (await confirm({ title: `Remove ${file.fileName}?`, message: 'Learners will no longer see this file.', confirmLabel: 'Remove file' }))
+                              void run.run(() => authoring.deleteResource(file.id, file.storagePath), 'File removed.')
+                          }}
                         >
                           Remove<span className="visually-hidden"> {file.fileName}</span>
                         </Button>

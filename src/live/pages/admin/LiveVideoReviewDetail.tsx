@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { PageHeader } from '../../../components/layout/PageHeader'
-import { Badge, Banner, Button, Card, CardHeader, TextArea, TextField } from '../../../components/ui'
+import { Badge, Banner, Button, Card, CardHeader, TextArea, TextField, useConfirm } from '../../../components/ui'
 import base from '../../../pages/InstructorCoursePage.module.css'
 import sectionStyles from '../../../pages/PlatformAdminSectionPages.module.css'
 import { ActionFeedback, Loaded } from '../../components/States'
@@ -155,6 +155,7 @@ function Facts({ detail }: { detail: SubmissionDetail }) {
 }
 
 function GateOne({ detail, disabled, onChanged }: { detail: SubmissionDetail; disabled: boolean; onChanged: () => void }) {
+  const { confirm, dialog } = useConfirm()
   const s = detail.submission
   const [checklist, setChecklist] = useState(false)
   const [captionPlan, setCaptionPlan] = useState(false)
@@ -166,6 +167,7 @@ function GateOne({ detail, disabled, onChanged }: { detail: SubmissionDetail; di
 
   return (
     <Card as="section" padding="md" aria-label="Gate 1: content review">
+      {dialog}
       <CardHeader title="Gate 1: content review" subtitle="Decide whether AQS may publish this video" headingLevel="h2" size="md" />
       <ActionFeedback error={act.error} />
       {s.status === 'submitted' ? (
@@ -206,7 +208,10 @@ function GateOne({ detail, disabled, onChanged }: { detail: SubmissionDetail; di
             <Button variant="neutral" size="sm" disabled={disabled || !reason.trim()} onClick={() => act.run(() => videoReview.decide(s.id, 'changes_requested', reason))}>
               Request changes
             </Button>
-            <Button variant="text" size="sm" disabled={disabled || !reason.trim()} onClick={() => act.run(() => videoReview.decide(s.id, 'rejected', reason))}>
+            <Button variant="text" size="sm" disabled={disabled || !reason.trim()} onClick={async () => {
+                if (await confirm({ title: 'Reject this video?', message: 'The instructor sees your reason. They must submit a new video to continue.', confirmLabel: 'Reject video' }))
+                  void act.run(() => videoReview.decide(s.id, 'rejected', reason))
+              }}>
               Reject
             </Button>
           </div>
