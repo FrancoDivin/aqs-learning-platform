@@ -7,6 +7,8 @@ import { countOf } from '../../../lib/plural'
 import styles from '../../../pages/LessonPage.module.css'
 import { NotFound } from '../../../pages/NotFound'
 import { ErrorBanner, LoadingBlock } from '../../components/States'
+import { LessonSheet } from '../../components/LessonSheet/LessonSheet'
+import sheetStyles from '../../components/LessonSheet/LessonSheet.module.css'
 import { VideoPlayer } from '../../components/VideoPlayer/VideoPlayer'
 import { LessonText } from '../../components/LessonText'
 import {
@@ -109,6 +111,7 @@ function LessonContentView({
   const complete = useAction(() => completeLesson(lesson.id))
   // CM2-4: the saved video position is kept per learner (browser storage only).
   const { userId: sessionUserId } = useSession()
+  const [sheetOpen, setSheetOpen] = useState(false)
 
   if (!data.enrollment) {
     return (
@@ -206,13 +209,30 @@ function LessonContentView({
           </p>
           <h2 className={styles.lessonTitle}>{lesson.title}</h2>
 
-          {data.content.body ? (
-            <section className={styles.section} aria-label="Lesson text">
-              <LessonText body={data.content.body} className={styles.aboutText} />
-            </section>
-          ) : null}
+          {/* CM3-4 (G15): on narrow screens Overview and Documents open in the sheet. */}
+          <div className={sheetStyles.mobileOnly}>
+            <Button variant="secondary" onClick={() => setSheetOpen(true)}>
+              Lesson details
+            </Button>
+            <LessonSheet
+              open={sheetOpen}
+              onClose={() => setSheetOpen(false)}
+              title={lesson.title}
+              overview={data.content.body ? <LessonText body={data.content.body} className={styles.aboutText} /> : <p>This lesson has no text.</p>}
+              documents={data.content.resources.some((r) => r.downloadable) ? <Attachments resources={data.content.resources} /> : <p>No documents for this lesson.</p>}
+              documentCount={data.content.resources.filter((r) => r.downloadable).length}
+            />
+          </div>
 
-          {data.content.resources.length > 0 ? <Attachments resources={data.content.resources} /> : null}
+          <div className={sheetStyles.desktopOnly}>
+            {data.content.body ? (
+              <section className={styles.section} aria-label="Lesson text">
+                <LessonText body={data.content.body} className={styles.aboutText} />
+              </section>
+            ) : null}
+
+            {data.content.resources.length > 0 ? <Attachments resources={data.content.resources} /> : null}
+          </div>
         </article>
       </div>
     </FocusLayout>
@@ -221,11 +241,13 @@ function LessonContentView({
 
 function Attachments({ resources }: { resources: LessonContent['resources'] }) {
   const [error, setError] = useState<string | null>(null)
+  // CM3-4: rendered on the page and in the mobile sheet, so the heading ID must be unique.
+  const headingId = useId()
   const downloadable = resources.filter((r) => r.downloadable)
   if (downloadable.length === 0) return null
   return (
-    <section className={styles.section} aria-labelledby="attachments-heading">
-      <h2 className="text-section" id="attachments-heading">
+    <section className={styles.section} aria-labelledby={headingId}>
+      <h2 className="text-section" id={headingId}>
         Documents and attachments <span className={styles.count}>{countOf(downloadable.length, 'file')}</span>
       </h2>
       {error ? <Banner tone="danger">{error}</Banner> : null}

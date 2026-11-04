@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, type ReactNode } from 'react'
 import { Button } from '../Button/Button'
 import styles from './ConfirmDialog.module.css'
+import { trapTab } from './focus-trap'
 
 /*
  * One accessible confirmation for destructive or significant actions (CM3-1, G16), on the native
@@ -47,6 +48,7 @@ export function ConfirmDialog({
       className={styles.dialog}
       aria-labelledby={titleId}
       aria-describedby={messageId}
+      onKeyDown={trapTab}
       onCancel={(event) => {
         // Escape: close through React state so the promise settles as "cancelled".
         event.preventDefault()

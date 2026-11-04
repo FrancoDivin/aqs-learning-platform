@@ -33,6 +33,11 @@ async function exercise(page: Page, mock: Mock, open: () => ReturnType<Page['get
   const dialog = page.getByRole('dialog', { name: title })
   await expect(dialog).toBeVisible()
   await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused()
+  // Tab and Shift+Tab never leave the dialog (CM3-4 focus trap, shared).
+  for (const key of ['Tab', 'Tab', 'Tab', 'Shift+Tab', 'Shift+Tab', 'Shift+Tab']) {
+    await page.keyboard.press(key)
+    expect(await page.evaluate(() => !!document.activeElement?.closest('dialog'))).toBe(true)
+  }
   await dialog.getByRole('button', { name: 'Cancel' }).click()
   await expect(dialog).toBeHidden()
   await trigger.click()
