@@ -8,7 +8,7 @@ Decisions: `docs/decisions.md` D39 (owner, 3 November 2026). Specification: `doc
 | CM2-2 | `media-url` new kinds (audited); new `youtube-verify` (oEmbed, no credentials) | CM2-1 reviewed | In review | CM2-2 pull request (stacked on CM2-1 #4) | Local: test:functions 32/32 (10 existing + 9 media-url + 13 youtube-verify, fake fetch and fake database), lint pass, strict tsc on the logic modules. check:functions pending CI (Deno not installed locally). Not deployed; `AQS_YOUTUBE_CHANNEL_URL` not set |
 | CM2-3 | Submission (resumable, `tus-js-client` with dependency review), review queue, gate 1 and gate 2 screens, master re-attach, organisation caption confirmation | CM2-1 and CM2-2 merged into `integration` | Not started | | |
 | CM2-4 | Learner players: YouTube embed parameters and states; stored video with captions track, retry, saved position | CM2-1 and CM2-2 merged into `integration` | Not started | | |
-| CM2-5 | Cleanup activation runbook: documentation only. No activation, schedule or deletion; no retention periods presented as approved (package part 9a) | — | Not started | | |
+| CM2-5 | Cleanup activation runbook: documentation only. No activation, schedule or deletion; no retention periods presented as approved (package part 9a) | — | In review | CM2-5 pull request | `docs/cm2-cleanup-activation.md`: Blocked status line, six steps each with verification and rollback, retention placeholders only; boundary scan clean (no migration, schedule, secret, code or deletion script) |
 
 **Deferred by the owner (D39):** retention periods and any deletion; cleanup activation.
 
