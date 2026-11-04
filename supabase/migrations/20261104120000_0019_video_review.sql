@@ -1115,6 +1115,41 @@ begin
 end;
 $$;
 
+-- Caption tracks of a course, for the lesson editor, the Organization Admin confirmation and the
+-- learner player. Course staff and the owning organisation's admins see the confirmation state;
+-- anyone else who may view the course content (an enrolled learner) sees only each track's
+-- language, which the player needs for <track srclang>. "confirmed" is true only while the
+-- confirmation is current (its paths equal the current video and caption paths, D39 #7).
+create function public.lesson_caption_status(p_course uuid)
+returns table (lesson_id uuid, language text, uploaded_at timestamptz, confirmed boolean,
+               confirmed_at timestamptz, confirmed_by_me boolean, confirmation_note text)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid  uuid := private.require_active_user();
+  v_full boolean := authz.is_course_staff(p_course) or authz.is_course_org_admin(p_course);
+begin
+  if not v_full and not authz.can_view_course_content(p_course) then
+    raise exception 'AQS: not permitted' using errcode = '42501';
+  end if;
+  return query
+    select t.lesson_id, t.language,
+           case when v_full then t.uploaded_at end,
+           case when v_full then (t.confirmed_by is not null and t.confirmed_video_path = b.video_path
+                                  and t.confirmed_caption_path = t.caption_path) end,
+           case when v_full then t.confirmed_at end,
+           case when v_full then t.confirmed_by = v_uid end,
+           case when v_full then t.confirmation_note end
+      from public.lesson_caption_tracks t
+      join public.lesson_contents b on b.lesson_id = t.lesson_id
+     where t.course_id = p_course
+     order by t.lesson_id;
+end;
+$$;
+
 -- 10. Media access for review and captions (called by media-url as the person; audited) ------------
 -- Kinds: 'submission' (preview), 'submission-download' (the file for the YouTube upload),
 -- 'submission-captions', 'lesson-captions', 'lesson-video-review'. The Edge Function signs a
@@ -1332,6 +1367,7 @@ revoke execute on function
   public.begin_lesson_captions(uuid, text),
   public.finish_lesson_captions(uuid),
   public.confirm_lesson_captions(uuid, text),
+  public.lesson_caption_status(uuid),
   public.submission_media_access(text, uuid)
   from public, anon, authenticated, service_role;
 grant execute on function
@@ -1349,6 +1385,7 @@ grant execute on function
   public.begin_lesson_captions(uuid, text),
   public.finish_lesson_captions(uuid),
   public.confirm_lesson_captions(uuid, text),
+  public.lesson_caption_status(uuid),
   public.submission_media_access(text, uuid)
   to authenticated;
 -- youtube-verify records its lookups with the service key, inside the Edge Function only.

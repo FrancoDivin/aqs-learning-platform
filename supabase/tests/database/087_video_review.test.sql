@@ -118,7 +118,7 @@ create function pg_temp.conf_master(p_lang text) returns jsonb language sql immu
 $$;
 grant execute on function pg_temp.req(), pg_temp.conf(text), pg_temp.conf_master(text) to authenticated, service_role;
 
-select plan(200);
+select plan(209);
 
 -- Setup ------------------------------------------------------------------------------------------------
 insert into auth.users (id, email, raw_user_meta_data) values
@@ -662,12 +662,31 @@ select public.finish_lesson_video_upload(pg_temp.id('ov'), pg_temp.s('ovp2'));
 select throws_ok($$ select public.request_course_publication(pg_temp.id('co')) $$, '22023',
   'AQS: the captions of the lesson "Org lecture" must be confirmed by an Organization Admin after the latest upload (D39)',
   'a video re-upload (CM1 functions) voids the confirmation for publication');
+select is((select confirmed from public.lesson_caption_status(pg_temp.id('co')) where lesson_id = pg_temp.id('ov')), false,
+  'caption status: a video re-upload shows the confirmation as no longer current');
 select pg_temp.act_as(pg_temp.u('9e2'));
 select throws_ok($$ select public.confirm_lesson_captions(pg_temp.id('ov'), 'Checked') $$, '22023',
   'AQS: open the video and its captions before confirming them', 'the new video must be opened before confirming again');
 select (select object_path from public.submission_media_access('lesson-video-review', pg_temp.id('ov')));
 select lives_ok($$ select public.confirm_lesson_captions(pg_temp.id('ov'), 'New video watched with its captions') $$,
   'after opening the new video, the org admin confirms again');
+select ok((select confirmed and confirmed_by_me and language = 'rw' and confirmation_note = 'New video watched with its captions'
+             from public.lesson_caption_status(pg_temp.id('co')) where lesson_id = pg_temp.id('ov')),
+  'caption status: the confirming org admin sees a current confirmation made by them');
+select pg_temp.act_as(pg_temp.u('9e4'));
+select ok((select confirmed and not confirmed_by_me and uploaded_at is not null
+             from public.lesson_caption_status(pg_temp.id('co')) where lesson_id = pg_temp.id('ov')),
+  'caption status: course staff see the confirmation state');
+select pg_temp.act_as(pg_temp.u('9e7'));
+select throws_ok($$ select * from public.lesson_caption_status(pg_temp.id('co')) $$, '42501', null,
+  'caption status: another organisation''s admin is refused');
+select pg_temp.act_as(pg_temp.u('9e0'));
+select throws_ok($$ select * from public.lesson_caption_status(pg_temp.id('co')) $$, '42501', null,
+  'caption status: L11 P3, a Platform Admin is refused for an organisation-only course');
+select pg_temp.act_as(pg_temp.u('9e6'));
+select throws_ok($$ select * from public.lesson_caption_status(pg_temp.id('co')) $$, '42501', null,
+  'caption status: a learner who is not enrolled is refused');
+select pg_temp.act_as(pg_temp.u('9e2'));
 select public.add_course_staff(pg_temp.id('co'), pg_temp.u('9e2'));
 select throws_ok($$ select public.request_course_publication(pg_temp.id('co')) $$, '22023',
   'AQS: you confirmed the captions of the lesson "Org lecture"; another Organization Admin must confirm them before you request publication (P22)',
@@ -684,11 +703,16 @@ select public.assign_course(pg_temp.id('co'), pg_temp.u('9e6'));
 select pg_temp.act_as(pg_temp.u('9e6'));
 select is((select object_path from public.submission_media_access('lesson-captions', pg_temp.id('ov'))), pg_temp.s('oc2'),
   'an enrolled learner gets the caption track of the lesson');
+select ok((select language = 'rw' and confirmed is null and confirmed_by_me is null and confirmation_note is null and uploaded_at is null
+             from public.lesson_caption_status(pg_temp.id('co')) where lesson_id = pg_temp.id('ov')),
+  'caption status: an enrolled learner sees only the track language, not the confirmation');
 select throws_ok($$ select * from public.submission_media_access('lesson-video-review', pg_temp.id('ov')) $$, '42501', null,
   'learners keep the ordinary video access, not the review access');
 select pg_temp.act_as(pg_temp.u('9e8'));
 select throws_ok($$ select * from public.submission_media_access('lesson-captions', pg_temp.id('ov')) $$, '42501', null,
   'another organisation cannot open the captions of a published organisation course');
+select throws_ok($$ select * from public.lesson_caption_status(pg_temp.id('co')) $$, '42501', null,
+  'caption status: another organisation''s instructor is refused for a published organisation course');
 select pg_temp.act_as(pg_temp.u('9e7'));
 select throws_ok($$ select * from public.submission_media_access('submission', pg_temp.id('s2')) $$, '42501', null,
   'another organisation''s admin cannot open a submission');
@@ -738,6 +762,8 @@ select throws_ok($$ insert into private.pending_uploads (kind, course_id, lesson
 set local role anon;
 select throws_ok($$ select public.begin_video_submission(pg_temp.id('v1'), 'a.mp4', 'video/mp4', 10, 'en', 'file') $$, '42501', null,
   'signed-out visitors cannot submit');
+select throws_ok($$ select * from public.lesson_caption_status(pg_temp.id('co')) $$, '42501', null,
+  'signed-out visitors cannot read caption status');
 reset role;
 select ok(not exists (select 1 from (values ('public.video_submissions'), ('public.lesson_caption_tracks'),
                                             ('private.youtube_checks'), ('private.video_master_reattachments'),

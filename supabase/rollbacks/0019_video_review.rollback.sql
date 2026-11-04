@@ -34,6 +34,7 @@ drop function public.reattach_master_youtube(uuid, text, jsonb, text);
 drop function public.begin_lesson_captions(uuid, text);
 drop function public.finish_lesson_captions(uuid);
 drop function public.confirm_lesson_captions(uuid, text);
+drop function public.lesson_caption_status(uuid);
 drop function public.submission_media_access(text, uuid);
 drop function private.admin_submission(uuid, boolean);
 drop function private.require_youtube_check(uuid, text);
