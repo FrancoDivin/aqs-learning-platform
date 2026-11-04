@@ -41,6 +41,7 @@ const LivePlatformOrganizationDetail = lazy(() => import('./pages/admin/LivePlat
 const LivePlatformCourses = lazy(() => import('./pages/admin/LivePlatformCourses'))
 const LivePlatformUsers = lazy(() => import('./pages/admin/LivePlatformUsers'))
 const LiveVideoReviews = lazy(() => import('./pages/admin/LiveVideoReviews'))
+const LiveLessonPreview = lazy(() => import('./pages/teach/LiveLessonPreview'))
 const LiveVideoReviewDetail = lazy(() => import('./pages/admin/LiveVideoReviewDetail'))
 
 function Page({ children }: { children: ReactNode }) {
@@ -85,6 +86,8 @@ export function LiveApp({ extraRoutes }: { extraRoutes?: ReactNode }) {
             <Route path="courses" element={<Page><LiveInstructorCourses /></Page>} />
             <Route path="courses/:courseId" element={<Page><LiveCourseEditor /></Page>} />
             <Route path="courses/:courseId/quizzes/:quizId" element={<Page><LiveQuizBuilder /></Page>} />
+            <Route path="courses/:courseId/preview" element={<Page><LiveLessonPreview /></Page>} />
+            <Route path="courses/:courseId/preview/:lessonId" element={<Page><LiveLessonPreview /></Page>} />
             <Route path="learners" element={<Page><LiveTeachLearners /></Page>} />
           </Route>
           <Route path="/o/:orgSlug/manage" element={<RequireOrgRole roles={['org_admin']} />}>
@@ -103,6 +106,8 @@ export function LiveApp({ extraRoutes }: { extraRoutes?: ReactNode }) {
             <Route path="courses" element={<Page><LivePlatformCourses /></Page>} />
             <Route path="courses/:courseId" element={<Page><LiveCourseEditor /></Page>} />
             <Route path="courses/:courseId/quizzes/:quizId" element={<Page><LiveQuizBuilder /></Page>} />
+            <Route path="courses/:courseId/preview" element={<Page><LiveLessonPreview /></Page>} />
+            <Route path="courses/:courseId/preview/:lessonId" element={<Page><LiveLessonPreview /></Page>} />
             <Route path="reports" element={<Page><LivePlatformReports /></Page>} />
             <Route path="video-reviews" element={<Page><LiveVideoReviews /></Page>} />
             <Route path="video-reviews/:submissionId" element={<Page><LiveVideoReviewDetail /></Page>} />

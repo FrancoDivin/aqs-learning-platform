@@ -25,6 +25,7 @@ export function VideoPlayer({
   videoPath,
   youtubeId,
   className,
+  keepPosition = true,
 }: {
   lessonId: string
   userId: string
@@ -33,6 +34,8 @@ export function VideoPlayer({
   youtubeId: string | null
   /** The approved 16:9 frame (LessonPage.module.css .video). */
   className: string
+  /** False in the staff preview (CM3-3): nothing is kept, not even in browser storage. */
+  keepPosition?: boolean
 }) {
   const [language, setLanguage] = useState<{ lessonId: string; value: string | null } | null>(null)
   useEffect(() => {
@@ -62,7 +65,7 @@ export function VideoPlayer({
     )
   }
   if (!ready) return <Placeholder className={className} label="Loading video" />
-  return <StoredVideo key={`${lessonId}:${videoPath}`} lessonId={lessonId} userId={userId} title={title} spoken={spoken} className={className} />
+  return <StoredVideo key={`${lessonId}:${videoPath}`} lessonId={lessonId} userId={userId} title={title} spoken={spoken} className={className} keepPosition={keepPosition} />
 }
 
 function Placeholder({ className, label }: { className: string; label: string }) {
@@ -115,12 +118,13 @@ async function signBoth(lessonId: string, withCaptions: boolean): Promise<Signed
   }
 }
 
-function StoredVideo({ lessonId, userId, title, spoken, className }: { lessonId: string; userId: string; title: string; spoken: string | null; className: string }) {
+function StoredVideo({ lessonId, userId, title, spoken, className, keepPosition }: { lessonId: string; userId: string; title: string; spoken: string | null; className: string; keepPosition: boolean }) {
   const [source, setSource] = useState<Signed | null>(null)
   const [failed, setFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
   const videoRef = useRef<HTMLVideoElement>(null)
   const key = positionKey(userId, lessonId)
+  const storage = () => (keepPosition ? browserStorage() : null)
   // Where to continue after a URL refresh, and whether the video was playing.
   // (A first load reads the saved position when the media is ready: the learner's ID may arrive after the first render.)
   const resume = useRef<{ time: number; playing: boolean }>({ time: 0, playing: false })
@@ -180,7 +184,7 @@ function StoredVideo({ lessonId, userId, title, spoken, className }: { lessonId:
           aria-label={`Video: ${title}`}
           onLoadedMetadata={(event) => {
             const { playing } = resume.current
-            const time = resume.current.time || readPosition(browserStorage(), key)
+            const time = resume.current.time || readPosition(storage(), key)
             if (time > 0 && time < event.currentTarget.duration) event.currentTarget.currentTime = time
             if (playing) void event.currentTarget.play().catch(() => undefined)
           }}
@@ -188,10 +192,10 @@ function StoredVideo({ lessonId, userId, title, spoken, className }: { lessonId:
             const now = Date.now()
             if (now - lastSave.current < 5000) return
             lastSave.current = now
-            savePosition(browserStorage(), key, event.currentTarget.currentTime, event.currentTarget.duration)
+            savePosition(storage(), key, event.currentTarget.currentTime, event.currentTarget.duration)
           }}
-          onPause={(event) => savePosition(browserStorage(), key, event.currentTarget.currentTime, event.currentTarget.duration)}
-          onEnded={(event) => savePosition(browserStorage(), key, event.currentTarget.duration, event.currentTarget.duration)}
+          onPause={(event) => savePosition(storage(), key, event.currentTarget.currentTime, event.currentTarget.duration)}
+          onEnded={(event) => savePosition(storage(), key, event.currentTarget.duration, event.currentTarget.duration)}
           controls
           controlsList="nodownload"
           preload="metadata"

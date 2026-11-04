@@ -19,7 +19,8 @@ export interface Mock {
   functions: Record<string, Handler>
   /** Storage uploads, keyed by bucket (POST /storage/v1/object/<bucket>/<path>). */
   storage: Record<string, Handler>
-  calls: Array<{ kind: string; name: string; body: unknown; url: string }>
+  /** `method` (CM3-3) lets a test prove a screen only reads. */
+  calls: Array<{ kind: string; name: string; body: unknown; url: string; method?: string }>
   /** CM2-3: a small tus (resumable upload) server at /storage/v1/upload/resumable. */
   tus?: TusMock
 }
@@ -133,7 +134,7 @@ export async function mockSupabase(page: Page, partial: Partial<Omit<Mock, 'call
       if (parts[2] === 'user') return route.fulfill({ status: 200, headers: cors, json: { id: USER.id, email: USER.email } })
       return route.fulfill({ status: 200, headers: cors, json: {} })
     }
-    mock.calls.push({ kind, name, body, url: url.toString() })
+    mock.calls.push({ kind, name, body, url: url.toString(), method: request.method() })
     const handler = (mock as unknown as Record<string, Record<string, Handler>>)[kind]?.[name]
     const answer = handler?.({ method: request.method(), url, body, headers: request.headers() })
     if (!answer) {

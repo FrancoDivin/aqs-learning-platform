@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router'
 import { PageHeader } from '../../../components/layout/PageHeader'
-import { Badge } from '../../../components/ui'
+import { Badge, ButtonLink } from '../../../components/ui'
 import base from '../../../pages/InstructorCoursePage.module.css'
 import { NotFound } from '../../../pages/NotFound'
 import { ErrorBanner, LoadingBlock } from '../../components/States'
@@ -111,6 +111,14 @@ function Editor({
           </>
         }
         description="Course builder"
+        actions={
+          isStaff ? (
+            // CM3-3 (G13): see the course as a learner does; nothing is recorded.
+            <ButtonLink to={`${coursesPath}/${course.id}/preview`} variant="secondary" size="sm">
+              Preview as learner
+            </ButtonLink>
+          ) : undefined
+        }
       />
 
       {course.modules.length > 0 || editable ? (
