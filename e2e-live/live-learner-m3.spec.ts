@@ -12,7 +12,7 @@ function tables() {
   return {
     ...sessionTables(),
     // CM3-2: the catalog search runs in the database (title=ilike.%term%); answer like PostgREST would.
-    courses: ({ url }) => {
+    courses: ({ url }: { url: URL }) => {
       const term = url.searchParams.get('title')?.replace(/^ilike\.%|%$/g, '').toLowerCase()
       return { json: [A, B, C].filter((c) => !term || c.title.toLowerCase().includes(term)) }
     },
