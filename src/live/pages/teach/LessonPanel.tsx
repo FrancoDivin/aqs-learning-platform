@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Badge, Banner, Button, ButtonLink, Card, CardHeader, TextArea, TextField } from '../../../components/ui'
+import { Badge, Banner, Button, ButtonLink, Card, CardHeader, TextArea, TextField, useConfirm } from '../../../components/ui'
 import base from '../../../pages/InstructorCoursePage.module.css'
 import { ActionFeedback } from '../../components/States'
 import { authoring, type AuthoringCourse, type AuthoringLesson } from '../../data/authoring'
@@ -38,6 +38,8 @@ export function LessonPanel({
   const [body, setBody] = useState(lesson.body)
   const [downloadable, setDownloadable] = useState(true)
   const [saved, setSaved] = useState<string | null>(null)
+  // CM3-1 (G16): one accessible confirmation instead of window.confirm.
+  const { confirm, dialog } = useConfirm()
   const run = useAction(async (work: () => Promise<unknown>, message: string) => {
     await work()
     setSaved(message)
@@ -47,6 +49,7 @@ export function LessonPanel({
 
   return (
     <Card as="section" padding="md" aria-label="Lesson editor" className={base.editor}>
+      {dialog}
       <CardHeader title="Lesson editor" subtitle={`${LESSON_TYPE_LABEL[lesson.type]} lesson`} headingLevel="h2" size="md" />
       <ActionFeedback error={run.error} success={saved} />
 
@@ -81,8 +84,13 @@ export function LessonPanel({
             </Button>
             <Button
               variant="text"
-              onClick={() => {
-                if (window.confirm(`Delete the lesson "${lesson.title}"?`)) {
+              onClick={async () => {
+                const ok = await confirm({
+                  title: `Delete the lesson “${lesson.title}”?`,
+                  message: 'It is removed from the course with its content. This cannot be undone.',
+                  confirmLabel: 'Delete lesson',
+                })
+                if (ok) {
                   void run.run(async () => {
                     await authoring.deleteLesson(lesson.id)
                     onDeleted()
