@@ -29,31 +29,14 @@ export function oembedUrl(youtubeId: string): string {
 }
 
 /**
- * A channel address in one comparable form: https, no "www." or "m.", lower-case host and
- * handle, no query, fragment or trailing slash. Returns null for anything that is not a
- * youtube.com address.
+ * Channel comparison (owner decision, 4 November 2026): the author address YouTube returns is
+ * compared EXACTLY with the configured AQS_YOUTUBE_CHANNEL_URL. No handle or channel ID is
+ * hard-coded and no form is rewritten; the real value is set during the staging test, in the
+ * form YouTube returns. true / false when the lookup gave an author address; null when it gave none.
  */
-export function normalizeChannelUrl(value: unknown): string | null {
-  if (typeof value !== 'string' || !value.trim()) return null
-  let url: URL
-  try {
-    url = new URL(value.trim())
-  } catch {
-    return null
-  }
-  const host = url.hostname.toLowerCase().replace(/^(www\.|m\.)/, '')
-  if (host !== 'youtube.com' || (url.protocol !== 'https:' && url.protocol !== 'http:')) return null
-  let path = url.pathname.replace(/\/+$/, '')
-  // Handles are case-insensitive on YouTube; channel IDs (/channel/UC...) are not.
-  if (path.startsWith('/@')) path = path.toLowerCase()
-  return path ? `https://youtube.com${path}` : null
-}
-
-/** true / false when the lookup gave an author address; null when it gave none. */
 export function channelMatch(authorUrl: unknown, configured: string): boolean | null {
-  const author = normalizeChannelUrl(authorUrl)
-  if (author === null) return null
-  return author === normalizeChannelUrl(configured)
+  if (typeof authorUrl !== 'string' || authorUrl.length === 0) return null
+  return authorUrl === configured.trim()
 }
 
 const short = (value: unknown, max = 300) => (typeof value === 'string' ? value.slice(0, max) : null)
@@ -139,7 +122,7 @@ export type Result = {
 
 export async function verify(body: Record<string, unknown>, deps: Deps): Promise<Result> {
   const { submissionId, youtubeId } = parseRequest(body)
-  if (normalizeChannelUrl(deps.channelUrl) === null) throw new FunctionError('unavailable', 'This service is not configured.')
+  if (!deps.channelUrl.trim()) throw new FunctionError('unavailable', 'This service is not configured.')
 
   // Platform Admins only: the review queue refuses anyone else (42501), and the submission must be
   // one this Platform Admin may see (public course; 0019 refuses organisation-only courses).
