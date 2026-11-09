@@ -60,7 +60,7 @@ export default function LivePlatformCourses() {
               </div>
             </Card>
             <Card padding="lg" as="section" aria-label="New platform course">
-              <CardHeader title="New platform course" subtitle="Another Platform Admin approves its publication (P1)." headingLevel="h2" size="md" />
+              <CardHeader title="New platform course" subtitle="Another Platform Admin approves its publication." headingLevel="h2" size="md" />
               <CreateCourseForm orgId={null} base="/admin" />
             </Card>
             {pending.length > 0 ? (

@@ -138,7 +138,7 @@ export function CorrectionsPanel({
           <TextField id="correction-note" label="Note (optional)" value={note} maxLength={1000} onChange={(e) => setNote(e.target.value)} />
           <label className={styles.row}>
             <input type="checkbox" checked={attest} onChange={(e) => setAttest(e.target.checked)} />
-            <span>I confirm this correction does not change the meaning (P4).</span>
+            <span>I confirm this correction does not change the meaning.</span>
           </label>
           <div>
             <Button type="submit" size="sm" disabled={!attest || text === target.text} loading={act.busy}>

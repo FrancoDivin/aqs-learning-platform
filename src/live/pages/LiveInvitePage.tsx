@@ -8,6 +8,7 @@ import { rpc } from '../api'
 import { LoadingBlock } from '../components/States'
 import { useSession } from '../session-context'
 import { useAction, useResource } from '../useResource'
+import { formatDate } from '../../lib/format-date'
 
 /*
  * Invitation acceptance at /invite (states from the accept-invitation draft, InvitePage.tsx).
@@ -160,7 +161,7 @@ function InviteFlow({ token }: { token: string | null }) {
           You're invited as {ROLE_LABEL[invite.role] ?? invite.role}. Accepting connects your account{' '}
           <strong>{email}</strong> to {invite.organization_name}. No second account is created.
         </p>
-        <p className={styles.muted}>Expires {new Date(invite.expires_at).toLocaleDateString()}.</p>
+        <p className={styles.muted}>Expires {formatDate(invite.expires_at)}.</p>
         {accept.error ? <Banner tone="danger">{accept.error.message}</Banner> : null}
         <Button
           loading={accept.busy}

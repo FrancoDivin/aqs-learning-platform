@@ -28,7 +28,7 @@ export function CaptionConfirmationPanel({ course }: { course: AuthoringCourse }
       <CardHeader title="Caption confirmation" subtitle="Organisation-only videos need confirmed timed captions before publication" headingLevel="h2" size="md" />
       <p className={styles.muted}>
         Watch each video with its captions shown, then check timing, accuracy and completeness. Your confirmation records your judgement and is
-        audited; the system does not check caption quality. You cannot request publication of a course whose captions you confirmed yourself (P22).
+        audited; the system does not check caption quality. You cannot request publication of a course whose captions you confirmed yourself.
       </p>
       {waiting ? <Banner tone="info">This course is waiting for approval. Captions can be confirmed only while it is an editable draft.</Banner> : null}
       {tracks.state === 'loading' ? <LoadingBlock label="Loading captions" rows={2} /> : null}

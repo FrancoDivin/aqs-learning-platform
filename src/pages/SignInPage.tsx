@@ -30,14 +30,26 @@ type SignInViewProps = {
   busy?: boolean
   /** Footer: legal links (live) or unavailable placeholders (demo). */
   footer?: ReactNode
+  /**
+   * The demo page labels the empty photo panel. The live page shows the panel without any caption
+   * (WP1 task 1-2): no placeholder text reaches production until an approved photo exists.
+   */
+  photoCaption?: boolean
 }
 
 /** The approved sign-in layout, shared by the demo page and the live page. */
-export function SignInView({ notice, onContinue, busy = false, footer }: SignInViewProps) {
+export function SignInView({ notice, onContinue, busy = false, footer, photoCaption = true }: SignInViewProps) {
   const noticeId = useId()
   return (
     <AuthLayout
-      illustration={<div className={styles.placeholder}>Hero photo placeholder (pending approved asset)</div>}
+      illustration={
+        // import.meta.env.DEV is false in production builds, so the caption text is not shipped at all.
+        photoCaption && import.meta.env.DEV ? (
+          <div className={styles.placeholder}>Hero photo placeholder (pending approved asset)</div>
+        ) : (
+          <div className={styles.placeholder} aria-hidden="true" />
+        )
+      }
     >
       {notice ? (
         <div className={styles.notice} id={noticeId}>

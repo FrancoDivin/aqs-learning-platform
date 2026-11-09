@@ -13,6 +13,7 @@ import { platformShell } from '../../navigation'
 import type { OrgStatus } from '../../session-context'
 import { useAction, useResource } from '../../useResource'
 import { ORG_STATUS } from './org-status'
+import { formatDate } from '../../../lib/format-date'
 
 /*
  * Platform console: overview (/admin), organizations (/admin/organizations), new organization
@@ -181,7 +182,7 @@ export function LiveOrganizationCreate() {
           <ol>
             <li>The organization starts as a draft.</li>
             <li>Invite its Organization Admin. They accept with their Google account.</li>
-            <li>Activate the organization once an Organization Admin has accepted (P12).</li>
+            <li>Activate the organization once an Organization Admin has accepted.</li>
           </ol>
         </aside>
       </div>
@@ -194,8 +195,8 @@ export function LivePlatformReports() {
   const columns: Array<TableColumn<ReportRow>> = [
     { key: 'name', header: 'Organization', render: (r) => r.orgName ?? 'Platform courses' },
     { key: 'status', header: 'Status', render: (r) => (r.orgStatus ? ORG_STATUS[r.orgStatus].label : '—') },
-    { key: 'created', header: 'Created', render: (r) => (r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '—') },
-    { key: 'activated', header: 'Activated', render: (r) => (r.activatedAt ? new Date(r.activatedAt).toLocaleDateString() : '—') },
+    { key: 'created', header: 'Created', render: (r) => formatDate(r.createdAt) },
+    { key: 'activated', header: 'Activated', render: (r) => formatDate(r.activatedAt) },
     { key: 'admins', header: 'Org admins', align: 'right', render: (r) => r.activeOrgAdmins ?? '—' },
     { key: 'instructors', header: 'Instructors', align: 'right', render: (r) => r.activeInstructors ?? '—' },
     { key: 'learners', header: 'Learners', align: 'right', render: (r) => r.activeLearners ?? '—' },
@@ -204,7 +205,7 @@ export function LivePlatformReports() {
   ]
   return (
     <LiveShell shell={platformShell()}>
-      <PageHeader title="Reports" description="Current counts only. No learner identities, activity or results (P19)." />
+      <PageHeader title="Reports" description="Current counts only. No learner identities, activity or results." />
       <Loaded resource={report} label="Loading the report">
         {(rows) => (
           <Card padding="none" as="section" aria-label="Platform report">

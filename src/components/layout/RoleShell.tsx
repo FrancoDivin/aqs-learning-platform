@@ -12,6 +12,8 @@ type RoleShellProps = {
   /** Live pages only (see AppShell). */
   onSignOut?: () => void
   workspaceExtra?: ReactNode
+  /** Live pages only: leave out unbuilt features (see AppShell). */
+  hideUnbuilt?: boolean
   children: ReactNode
 }
 
@@ -20,7 +22,7 @@ type RoleShellProps = {
  * focus handling and header behave the same for every role. Header actions stay
  * unavailable until their behaviour exists.
  */
-export function RoleShell({ shell, user, banner, onSignOut, workspaceExtra, children }: RoleShellProps) {
+export function RoleShell({ shell, user, banner, onSignOut, workspaceExtra, hideUnbuilt, children }: RoleShellProps) {
   return (
     <AppShell
       navItems={shell.navItems}
@@ -28,6 +30,7 @@ export function RoleShell({ shell, user, banner, onSignOut, workspaceExtra, chil
       workspace={shell.workspace}
       helpTitle={shell.helpTitle}
       unavailableActions
+      hideUnbuilt={hideUnbuilt}
       banner={banner}
       onSignOut={onSignOut}
       workspaceExtra={workspaceExtra}

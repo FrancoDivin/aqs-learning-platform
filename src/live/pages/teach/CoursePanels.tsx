@@ -263,7 +263,7 @@ export function PublicationPanel({
             <Button onClick={() => run.run(() => authoring.requestPublication(course.id), 'Proposed for publication.')} loading={run.busy} disabled={unjoinable}>
               Propose for publication
             </Button>
-            <p className={styles.muted}>Another approver publishes it; you can't approve your own course (P22).</p>
+            <p className={styles.muted}>Another approver publishes it; you can't approve your own course.</p>
           </div>
         ) : null}
 
@@ -303,7 +303,7 @@ export function PublicationPanel({
             </div>
           </div>
         ) : null}
-        {pending && canApprove && proposer ? <Banner tone="info">You proposed this course, so another approver must decide (P22).</Banner> : null}
+        {pending && canApprove && proposer ? <Banner tone="info">You proposed this course, so another approver must decide.</Banner> : null}
 
         {course.status !== 'draft' && (isStaff || canApprove) ? (
           <form
@@ -314,7 +314,7 @@ export function PublicationPanel({
               if (result.ok) navigate(`${teachBase}/courses/${result.value}`)
             }}
           >
-            <p>Need a substantive change? Clone the course into a new draft, then publish it as a new course (P5).</p>
+            <p>Need a substantive change? Clone the course into a new draft, then publish it as a new course.</p>
             <TextField id="clone-title" label="Title of the new draft" value={cloneTitle} maxLength={200} onChange={(e) => setCloneTitle(e.target.value)} />
             <ActionFeedback error={clone.error} />
             <div>

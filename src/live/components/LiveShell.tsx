@@ -21,6 +21,7 @@ export function LiveShell({ shell, banner, children }: { shell: ShellDefinition;
       shell={shell}
       user={{ name: person?.fullName || person?.email || '', roleLabel: shell.roleLabel }}
       banner={banner}
+      hideUnbuilt
       onSignOut={async () => {
         // Leave the protected page first, so its guard does not send the person to sign-in.
         navigate('/', { replace: true })

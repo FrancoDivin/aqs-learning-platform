@@ -12,11 +12,11 @@ import type { OrgRole } from '../../session-context'
 import { useAction, useResource } from '../../useResource'
 
 /*
- * Invitations and domains at /o/:orgSlug/manage/invitations (draft, OrgInvitationsPage).
+ * Invitations at /o/:orgSlug/manage/invitations (draft, OrgInvitationsPage: "Invitations and domains").
  * Organization Admins invite Instructors and Learners (D6, D18); Organization Admin
  * invitations come from a Platform Admin. Invitations are bound to the address, expire after
- * seven days and can be revoked (I2). Domain verification and admission are outside the first
- * release (P14) and stay visibly unavailable.
+ * seven days and can be revoked (I2). Domain verification and admission come with WP4 (D40, which
+ * supersedes P14); until then the page says so in one line and shows no inactive controls (WP1).
  */
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -103,7 +103,7 @@ export default function LiveOrgInvitations() {
 
   return (
     <LiveShell shell={orgAdminShell(org.slug, org.name)}>
-      <PageHeader title="Invitations and domains" description="Invite people to your organization and track their invitations." />
+      <PageHeader title="Invitations" description="Invite people to your organization and track their invitations." />
 
       <Card as="section" padding="lg" aria-label="Invite someone" className={styles.panel}>
         <CardHeader title="Invite someone" subtitle="They sign in with the Google account for this address." headingLevel="h2" size="md" />
@@ -174,9 +174,6 @@ export default function LiveOrgInvitations() {
         <p className={styles.muted}>
           Until then, people join only through an invitation. An email domain alone never gives access to your organization.
         </p>
-        <Button variant="neutral" disabled>
-          Add domain<span className="visually-hidden"> (not available yet)</span>
-        </Button>
       </Card>
     </LiveShell>
   )

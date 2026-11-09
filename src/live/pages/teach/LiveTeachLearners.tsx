@@ -11,6 +11,7 @@ import { useCurrentOrg } from '../../org-context'
 import { useSession } from '../../session-context'
 import { useResource } from '../../useResource'
 import { loadTeachCourses } from './teach-data'
+import { isOverdue } from '../../../lib/format-date'
 
 /*
  * Learners at /o/:orgSlug/teach/learners: per course, each learner's progress (P8, G2) and
@@ -21,7 +22,7 @@ import { loadTeachCourses } from './teach-data'
  */
 
 function isOverdueRow(r: { status: string; due_at: string | null }, now: number): boolean {
-  return r.status !== 'completed' && !!r.due_at && new Date(r.due_at).getTime() < now
+  return isOverdue(r.due_at, r.status === 'completed', now)
 }
 
 type LearnerRow = {

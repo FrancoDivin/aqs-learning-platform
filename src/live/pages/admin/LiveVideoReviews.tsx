@@ -35,7 +35,7 @@ export default function LiveVideoReviews() {
 
   return (
     <LiveShell shell={platformShell()}>
-      <PageHeader title="Video reviews" description="Public-course videos submitted for AQS review and YouTube publication (D39)." />
+      <PageHeader title="Video reviews" description="Public-course videos submitted for AQS review and YouTube publication." />
       <Card padding="none" as="section" aria-label="Video submissions">
         <div className={sectionStyles.cardPad}>
           <Tabs

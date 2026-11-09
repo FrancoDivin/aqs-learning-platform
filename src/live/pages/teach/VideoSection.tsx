@@ -386,7 +386,7 @@ function OrganizationVideo({ course, lesson, editable, onChanged }: { course: Au
           </span>
           <span className={base.fileMeta}>
             {captionState === 'missing'
-              ? 'Required: organisation-only videos need a timed caption track before publication (D39).'
+              ? 'Required: organisation-only videos need a timed caption track before publication.'
               : captionState === 'uploaded'
                 ? 'An Organization Admin must watch the video with these captions and confirm them.'
                 : 'Confirmed by an Organization Admin. A new video or caption file needs a new confirmation.'}
