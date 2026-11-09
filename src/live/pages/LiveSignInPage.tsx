@@ -18,6 +18,7 @@ export default function LiveSignInPage() {
 
   return (
     <SignInView
+      photoCaption={false}
       busy={busy}
       notice={
         !authAvailable ? (

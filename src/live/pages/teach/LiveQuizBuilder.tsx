@@ -106,7 +106,7 @@ function Builder({
           <Banner tone="info">
             {course.status === 'draft'
               ? 'Read only: the course is waiting for approval, or you are not its course staff.'
-              : 'Read only: quizzes of a published course are frozen (P5). Typos in questions can be fixed with a correction.'}
+              : 'Read only: quizzes of a published course are frozen. Typos in questions can be fixed with a correction.'}
           </Banner>
         </div>
       ) : null}

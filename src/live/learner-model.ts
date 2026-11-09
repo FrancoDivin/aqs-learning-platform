@@ -43,7 +43,5 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-export function formatDate(value: string | null | undefined): string {
-  if (!value) return '—'
-  return new Date(value).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })
-}
+// One date format everywhere (WP1 task 1-5): see src/lib/format-date.ts.
+export { formatDate } from '../lib/format-date'

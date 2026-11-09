@@ -11,6 +11,7 @@ import { learnerShell } from '../../navigation'
 import { useSession } from '../../session-context'
 import { useResource } from '../../useResource'
 import { loadLearnerOverview, type EnrolledCourse, type LearningStatus } from './learner-overview'
+import { formatDate, isOverdue } from '../../../lib/format-date'
 
 /*
  * Live learner dashboard at /learn. Layout and wording from the approved learner dashboard
@@ -207,7 +208,11 @@ function ContinueHero({ course }: { course: EnrolledCourse }) {
           Continue learning
         </h2>
         {course.enrollment.dueAt ? (
-          <Badge tone="info">Due {new Date(course.enrollment.dueAt).toLocaleDateString()}</Badge>
+          isOverdue(course.enrollment.dueAt, course.status === 'completed') ? (
+            <Badge tone="danger">Overdue · due {formatDate(course.enrollment.dueAt)}</Badge>
+          ) : (
+            <Badge tone="info">Due {formatDate(course.enrollment.dueAt)}</Badge>
+          )
         ) : null}
       </div>
       <div className={styles.heroBody}>

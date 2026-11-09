@@ -8,6 +8,7 @@ import { learnerShell } from '../../navigation'
 import { useSession } from '../../session-context'
 import { useResource } from '../../useResource'
 import { loadLearnerOverview, type EnrolledCourse, type UnavailableCourse } from './learner-overview'
+import { isOverdue } from '../../../lib/format-date'
 
 /*
  * My courses at /my-courses: every enrolment with its progress (P8) and next lesson.
@@ -32,13 +33,13 @@ const SORTS: Array<{ value: Sort; label: string }> = [
   { value: 'progress', label: 'Progress (least first)' },
 ]
 
-function isOverdue(item: EnrolledCourse, now: number): boolean {
-  return item.status !== 'completed' && !!item.enrollment.dueAt && new Date(item.enrollment.dueAt).getTime() < now
+function itemOverdue(item: EnrolledCourse, now: number): boolean {
+  return isOverdue(item.enrollment.dueAt, item.status === 'completed', now)
 }
 
 function matches(item: EnrolledCourse, filter: Filter, now: number): boolean {
   if (filter === 'all') return true
-  if (filter === 'overdue') return isOverdue(item, now)
+  if (filter === 'overdue') return itemOverdue(item, now)
   return item.status === filter
 }
 
@@ -73,7 +74,7 @@ function CourseList({ items, now }: { items: EnrolledCourse[]; now: number }) {
                 </div>
                 {status === 'completed' ? (
                   <Badge tone="success">Completed</Badge>
-                ) : isOverdue(item, now) ? (
+                ) : itemOverdue(item, now) ? (
                   <Badge tone="danger">Overdue</Badge>
                 ) : null}
               </div>

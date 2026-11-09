@@ -14,6 +14,7 @@ import { useAction, useResource } from '../../useResource'
 import { CONFIRMATION_LABELS, confirmationKeys, confirmationsComplete, REQUIREMENT_KEYS, REQUIREMENT_LABELS, youtubeIdFrom, type Confirmations } from '../../video-captions'
 import styles from '../teach/CourseEditor.module.css'
 import { SUBMISSION_STATUS } from '../teach/video-status'
+import { formatDateTime } from '../../../lib/format-date'
 
 /*
  * One video submission at /admin/video-reviews/:submissionId (CM2-3, D39; Platform Admins,
@@ -69,8 +70,8 @@ function Detail({ detail, onChanged }: { detail: SubmissionDetail; onChanged: ()
         description={`${detail.course.title} · version ${s.version}`}
       />
       <div className={styles.stack}>
-        {!stillPublic ? <Banner tone="danger">This course is no longer public. Review, verification and attachment are refused (D39).</Banner> : null}
-        {own ? <Banner tone="warning">You submitted this video, so another Platform Admin must review and verify it (D39).</Banner> : null}
+        {!stillPublic ? <Banner tone="danger">This course is no longer public. Review, verification and attachment are refused.</Banner> : null}
+        {own ? <Banner tone="warning">You submitted this video, so another Platform Admin must review and verify it.</Banner> : null}
         <Facts detail={detail} />
         {s.status === 'submitted' || s.status === 'in_review' ? <GateOne detail={detail} disabled={own || !stillPublic} onChanged={onChanged} /> : null}
         {s.status === 'approved_for_publication' ? <Verification detail={detail} reattach={false} disabled={own || !stillPublic} onChanged={onChanged} /> : null}
@@ -253,7 +254,7 @@ function Verification({ detail, reattach, disabled, onChanged }: { detail: Submi
     <Card as="section" padding="md" aria-labelledby={headingId}>
       <CardHeader
         title={<span id={headingId}>{title}</span>}
-        subtitle={reattach ? 'Replace the YouTube video of this published lesson with a new upload of the same master file (P5 exception).' : 'Upload to YouTube by hand, then confirm and attach.'}
+        subtitle={reattach ? 'Replace the YouTube video of this published lesson with a new upload of the same master file.' : 'Upload to YouTube by hand, then confirm and attach.'}
         headingLevel="h2"
         size="md"
       />
@@ -316,7 +317,7 @@ function Verification({ detail, reattach, disabled, onChanged }: { detail: Submi
           <span className={base.fileMeta}>
             Video {check.youtubeId} · channel:{' '}
             {check.channelMatch === true ? 'matches the AQS channel address' : check.channelMatch === false ? 'a DIFFERENT channel' : 'not reported'}
-            {check.authorName ? ` (${check.authorName})` : ''} · checked {new Date(check.checkedAt).toLocaleTimeString()}
+            {check.authorName ? ` (${check.authorName})` : ''} · checked {formatDateTime(check.checkedAt)}
           </span>
           <span className={styles.muted}>
             This lookup cannot tell Unlisted from Public and never proves AQS ownership. Confirm both in YouTube Studio.

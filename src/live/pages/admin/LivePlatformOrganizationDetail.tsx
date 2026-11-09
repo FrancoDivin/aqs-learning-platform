@@ -118,10 +118,10 @@ export default function LivePlatformOrganizationDetail() {
       ) : null}
 
       <Card as="section" padding="lg" aria-label="Status" className={styles.panel}>
-        <CardHeader title="Status" subtitle="Draft while being set up; active when learners may join; suspended hides everything (P11)." headingLevel="h2" size="md" />
+        <CardHeader title="Status" subtitle="Draft while being set up; active when learners may join; suspended hides everything." headingLevel="h2" size="md" />
         {org.status === 'draft' ? (
           <>
-            <p className={styles.muted}>Activation needs an Organization Admin who accepted their invitation (P12).</p>
+            <p className={styles.muted}>Activation needs an Organization Admin who accepted their invitation.</p>
             <Button onClick={() => act.run(() => platformActions.setStatus(org.id, 'active'), `${org.name} is active.`)} loading={act.busy}>
               Activate organization
             </Button>
@@ -191,7 +191,7 @@ export default function LivePlatformOrganizationDetail() {
         <div className={styles.tableWrap}>
           <Table caption="Invitations you can see" columns={inviteColumns} rows={invitations} getRowKey={(i) => i.id} emptyMessage="No invitations to show." />
         </div>
-        <p className={styles.note}>Shows pending Organization Admin invitations and the invitations you sent (P15).</p>
+        <p className={styles.note}>Shows pending Organization Admin invitations and the invitations you sent.</p>
       </section>
     </LiveShell>
   )

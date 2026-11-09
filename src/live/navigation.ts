@@ -28,7 +28,11 @@ export function instructorShell(orgSlug: string, orgName: string): ShellDefiniti
 }
 
 export function orgAdminShell(orgSlug: string, orgName: string): ShellDefinition {
-  return { ...getOrgAdminShell(orgSlug), workspace: { title: orgName, subtitle: 'Organization admin' } }
+  const shell = getOrgAdminShell(orgSlug)
+  // WP1 task 1-4: the page has invitations only until domain admission (WP4, D40) is built; WP4 restores
+  // the design's "Invitations and domains" label. Design previews keep the design label.
+  const navItems = shell.navItems.map((item) => (item.label === 'Invitations and domains' ? { ...item, label: 'Invitations' } : item))
+  return { ...shell, navItems, workspace: { title: orgName, subtitle: 'Organization admin' } }
 }
 
 export function platformShell(): ShellDefinition {

@@ -26,6 +26,11 @@ type AppShellProps = {
    * (dimmed, not clickable) until their behaviour exists. Default false.
    */
   unavailableActions?: boolean
+  /**
+   * Live pages (WP1 task 1-3): leave out the help card and the notification bell entirely until they
+   * are built, instead of showing them dimmed. Design previews keep them. Default false.
+   */
+  hideUnbuilt?: boolean
   /** Live pages: signs the person out. When given, "Sign out" works even if other actions are unavailable. */
   onSignOut?: () => void
   /** Live pages: a control after the workspace title, e.g. the workspace switcher. */
@@ -46,6 +51,7 @@ export function AppShell({
   helpTitle = 'Here to help you learn',
   banner,
   unavailableActions = false,
+  hideUnbuilt = false,
   onSignOut,
   workspaceExtra,
   children,
@@ -169,21 +175,23 @@ export function AppShell({
           </ul>
         </nav>
 
-        <div className={styles.helpCard}>
-          <Icon name="help" size={24} />
-          <p className={styles.helpTitle}>{helpTitle}</p>
-          <p className={styles.helpText}>Find answers or get support from our learning team.</p>
-          {unavailableActions ? (
-            <span className={`${styles.helpLink} ${styles.unavailable}`} aria-disabled="true">
-              Visit help center <Icon name="arrowRight" size={16} />
-              <span className="visually-hidden"> (not available yet)</span>
-            </span>
-          ) : (
-            <Link to="/help" className={styles.helpLink}>
-              Visit help center <Icon name="arrowRight" size={16} />
-            </Link>
-          )}
-        </div>
+        {hideUnbuilt ? null : (
+          <div className={styles.helpCard}>
+            <Icon name="help" size={24} />
+            <p className={styles.helpTitle}>{helpTitle}</p>
+            <p className={styles.helpText}>Find answers or get support from our learning team.</p>
+            {unavailableActions ? (
+              <span className={`${styles.helpLink} ${styles.unavailable}`} aria-disabled="true">
+                Visit help center <Icon name="arrowRight" size={16} />
+                <span className="visually-hidden"> (not available yet)</span>
+              </span>
+            ) : (
+              <Link to="/help" className={styles.helpLink}>
+                Visit help center <Icon name="arrowRight" size={16} />
+              </Link>
+            )}
+          </div>
+        )}
 
         <div className={styles.sidebarBottom}>
           <button
@@ -233,10 +241,14 @@ export function AppShell({
           ) : null}
 
           <div className={styles.headerEnd}>
-            <button type="button" className={styles.iconButton} disabled={unavailableActions}>
-              <Icon name="bell" size={22} label={unavailableActions ? 'Notifications (not available yet)' : 'Notifications'} />
-            </button>
-            <span className={styles.divider} aria-hidden="true" />
+            {hideUnbuilt ? null : (
+              <>
+                <button type="button" className={styles.iconButton} disabled={unavailableActions}>
+                  <Icon name="bell" size={22} label={unavailableActions ? 'Notifications (not available yet)' : 'Notifications'} />
+                </button>
+                <span className={styles.divider} aria-hidden="true" />
+              </>
+            )}
             <div className={styles.user}>
               <Avatar name={user.name} decorative />
               <div className={styles.userText}>

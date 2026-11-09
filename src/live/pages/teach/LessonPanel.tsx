@@ -140,7 +140,7 @@ export function LessonPanel({
             <>
               <label className={styles.row}>
                 <input type="checkbox" checked={downloadable} onChange={(e) => setDownloadable(e.target.checked)} />
-                <span>Learners may download new files (L7)</span>
+                <span>Learners may download new files</span>
               </label>
               <label className={base.dropzone}>
                 Click to choose a file
@@ -207,7 +207,7 @@ export function LessonPanel({
             {lesson.isPreview
               ? 'Approved: anyone can read this lesson on the course page.'
               : lesson.previewRequested
-                ? 'Requested. The course approver approves previews together with publication (L3, P2).'
+                ? 'Requested. The course approver approves previews together with publication.'
                 : 'Let visitors read this lesson before enrolling. Needs the approver’s approval.'}
           </p>
           {editable ? (
