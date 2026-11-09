@@ -1,93 +1,52 @@
 # How to use the progress files
 
-Two Excel workbooks track the remaining AQS work. Two people do the work: **Owen** and **the developer**. This page explains how to use the workbooks.
+There are two workbooks. Each has two tabs.
 
-## The two workbooks
+| Workbook | Who it is for | Tabs |
+|---|---|---|
+| **`progress-tracker.xlsx`** | Supervisors and anyone who wants the big picture in two minutes | **Progress**: key dates, overall progress, the ten work areas, checkpoints, open decisions, and what the status words mean. **Updates**: a dated log of what happened and what's next |
+| **`task-sheet.xlsx`** | Owen and the developer, for day-to-day work | **Tasks**: one row per task (71) with who, due date, status and a short note. **Details**: the full wording, when each task counts as done, the proof needed, the history of changes, and links to proof |
 
-**`progress-tracker.xlsx`** is the big picture. Read it to see where things stand in two minutes.
+Both also exist as Google Sheets in Owen's Drive folder "AQS Learning Platform - Progress (Nov 2026)". Share the **AQS Progress Tracker** Google Sheet with supervisors as view-only.
 
-| Sheet | What it shows |
-|---|---|
-| Read me | The two deadlines, a live count of work packages by status, and the editing rules |
-| Work packages | WP0–WP8, the presentation and QA: who is responsible, priority, dates, status, Done %, overdue flag, dependencies, blockers, evidence |
-| Checkpoints | The six checkpoints and their results |
-| Milestone prompts | Which CM prompts fall in this period (no new milestones) |
-| Inputs and decisions | Everything still needed (approvals, materials, test accounts), with the date it is needed by and whether it has arrived |
-
-**`task-sheet.xlsx`** is the detail. Work from this.
-
-| Sheet | What it shows |
-|---|---|
-| Read me | Who does what, priorities, the shared-file rules and the fixed rules |
-| Tasks | One row per task (71 rows): who is responsible, dates, acceptance criteria, required evidence, status, overdue flag, notes, evidence links |
-| Summary | Counts by work package and status, and Done %. Calculated automatically; don't edit |
-
-**How they relate:** every task belongs to one work package. A package's status and Done % in the tracker come from its tasks, as shown on the task sheet's Summary sheet. Details live only in the task sheet; the tracker summarises.
-
-The older `cm2.md`, `cm3.md` and `cm5.md` stay as the record of those milestones' packages.
-
-**Copies in Google Drive (9 November):** both workbooks also exist as Google Sheets in Owen's Drive folder "AQS Learning Platform - Progress (Nov 2026)", named "AQS Progress Tracker" and "AQS Task Sheet". Owen decides which copy is the live one. Until he does, both are updated together, so they never disagree.
-
-**Editing:**
-- Only the columns marked ✎ change from day to day.
-- Status is a drop-down with the six statuses.
-- "Overdue" fills itself in when a due date passes and the work isn't Complete or Deferred.
-
-## Who updates what, and when
-
-Excel files can't be merged in Git. If two people change the same workbook on different branches, one person's changes are lost. So:
-
-| Who | What they do |
-|---|---|
-| **Developer** | Doesn't edit the workbooks. In every pull request description, he writes the task IDs, their new status and the evidence links (PR, CI run, test output, screenshots). |
-| **Owen** | The only one who changes the two workbooks. Copies in the developer's updates and his own every working day at about 18:00, and at each checkpoint. Changes "Last updated" on every row he touches and at the top of each sheet. |
-
-**Reviews:** Owen reviews the developer's pull requests, and the developer reviews Owen's.
-
-## What each status means
+## Status words
 
 | Status | Meaning |
 |---|---|
-| **Not started** | No work yet |
-| **In progress** | Being built on a branch |
-| **Blocked** | Can't continue; the notes say what it waits for, from whom, and since when |
-| **In review** | Pull request open, waiting for review or CI |
-| **Complete** | Meets its acceptance criteria **and** has its evidence (below) |
-| **Deferred** | Moved past 20 November, with reason, consequence and new date |
+| Not started | Work has not begun |
+| In progress | Being prepared or built |
+| In review | Built; a pull request is open and waiting for the other person's review or for the automatic checks |
+| Blocked | Waiting on a decision or input; the note says what, and from whom |
+| Complete | All four: merged into `integration`, automatic checks green on that merge, proof linked on the Details tab, and reviewed by the other person. Tasks that touch the test website also need their check there |
+| Deferred | Moved after 20 November, with the reason and the new date |
 
-## What "Complete" needs
+Built but unreviewed work is never Complete.
 
-All four, no exceptions:
-1. **Merged** into `integration`.
-2. **CI green** on that merge.
-3. **The task's "Required evidence"** is linked in "Evidence links".
-4. **Reviewed by the other person.**
+## Who updates what
 
-For tasks that touch staging, the staging check is also needed. Code written, or "works on my machine", is never Complete.
+Excel files can't be merged in Git, so only Owen changes them.
 
-## Blockers, changes and deferrals
+| Who | What they do |
+|---|---|
+| **Developer** | Doesn't edit the workbooks. In every pull request description, he lists the task IDs, the status he proposes, and the proof (PR, test run, screenshots) |
+| **Owen** | Once each working day (about 18:00) and at each checkpoint: (1) updates Status and Note on the Tasks tab, and adds history and proof links on the Details tab; (2) copies the status counts into the Progress tab and updates each area's row; (3) adds one or two lines to the Updates tab; (4) changes "Last updated" |
 
-- **Blocker:** set Blocked and write what is needed, from whom, and since when. If it's an approval, material or account, it also goes on the tracker's Inputs and decisions sheet.
-- **Change** (new task, date or person): edit the row and add "Changed [date]: reason" in the notes. **Never delete a row.** If a task is no longer needed, mark it Deferred with the reason.
-- **Deferred:** only when a task truly can't fit. Write the reason, what it means for the product, and the new target date. Every deferral is listed at the next checkpoint.
+If the two workbooks disagree, the task sheet wins.
 
-## Keeping the two workbooks in step
+## Changes
 
-At each daily update, Owen does three things in this order:
-1. Updates the task rows.
-2. Reads the Summary sheet.
-3. Sets each package's status and Done % in the tracker to match.
+- **New task, date or person:** edit the row and add "Changed [date]: reason" to its history on the Details tab. Never delete a row.
+- **Task no longer needed:** set it to Deferred, with the reason.
 
-A package is Complete only when all its tasks are. If any task is Blocked, the package's blocker column says so. If the two files disagree, the task sheet wins.
+## Checkpoints
 
-## Reporting at the checkpoints
+| Checkpoint | When |
+|---|---|
+| Demo go/no-go | Tue 10 Nov, 20:00 |
+| Presentation | Wed 11 Nov |
+| Midpoint check | Fri 13 Nov, 17:00 |
+| Everything built | Wed 18 Nov, 17:00 |
+| Freeze | Thu 19 Nov, 12:00 |
+| Final check | Fri 20 Nov, 17:00 |
 
-| Checkpoint | When | Report |
-|---|---|---|
-| Presentation go/no-go | Tue 10, 20:00 | Is staging ready? Which demo fixes made it? Staging or fallback? (Staging on 9 November: partly updated and paused; see `docs/staging-update-pack-1.md`) |
-| Presentation | Wed 11 | What was shown; feedback added as tasks if needed |
-| Midpoint | Fri 13, 17:00 | Short note: what's complete, what's blocked, whether 20 November still holds |
-| Feature-complete | Wed 18, 17:00 | Everything merged or in review; anything at risk named |
-| Final | Fri 20, 17:00 | CM3 and CM4 completion reports with test, security and accessibility evidence; any deferral with reasons |
-
-**At every checkpoint:** each Complete claim points to its evidence, and each Blocked or Deferred item says what is needed.
+At each checkpoint, every Complete claim points to its proof, and every Blocked or Deferred task says what it needs.
