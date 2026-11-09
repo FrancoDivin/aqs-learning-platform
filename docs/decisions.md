@@ -938,6 +938,23 @@ No approval decision has changed. D1 colours, D24 unavailable navigation and the
 
 **Effect on earlier entries:** D5, D20, P16 and D38 are unchanged and stand. Q-07-5's non-sensitive attestation is given by the submitter at submission; the AQS verifier attests at attachment. L11 P3 gains the exception in point 5; P5 gains the exception in point 9; Q-07-2 (Platform Admin approval of organisation courses from the outline) is unchanged, but captions on an organisation-only course must already be confirmed by an Organization Admin of that organisation (point 7). The text of earlier entries is unchanged.
 
+## D40 — Organisation domain admission in the first release (owner decisions, 8 November 2026)
+
+*Amends D34 P14.* The first release includes domain verification and automatic domain admission. Invitations remain available to everyone and stay the route for people who do not qualify. P14's text is kept as the historical record. The development page's "later release" label is removed when the feature is built.
+
+- **Unchanged and binding:** D4 and D31 (DNS TXT verification; verification alone grants nothing; admission off until explicitly enabled; Learners only; turning admission off stops new admissions only; email-domain matching alone never grants course access); D33 identity rules; P10 and Q-08-4 (Organisation Admins assign courses); P12 and F4 (organisation status); T9 (audit).
+- **Eligibility:** a signed-in person is admitted when `private.caller_verified_google_email()` (D33, 0015) returns a non-`gmail.com` address whose domain **exactly equals** a domain that is verified and admission-enabled for an **active** organisation.
+- **Control:** Platform Admins add, verify, enable, disable and remove domains. Organisation Admins may view their own organisation's domains and pause or resume admission for a verified domain of their own organisation. They have no access to other organisations' domains. Pausing stops new admissions only; existing members keep their membership.
+- **Identity rules:** D33 is unchanged. Organisations whose staff cannot meet it (no Google Workspace, or secondary Workspace domains) use invitations. The limitation is explained during onboarding.
+- **Uniqueness:** a domain belongs to at most one organisation. Public email-provider domains are refused.
+- **Effect of admission:** one active membership with the Learner role only. No enrolment. An existing membership is never changed. A **removed** membership is never reactivated by admission.
+- **Status:** draft and suspended organisations admit no one.
+- **Leavers:** removal is manual by Organisation Admins in the first release.
+- **Audit:** every domain change, verification result, enable/disable and admission writes one row to `private.organization_audit`.
+- **Not authorised by this entry:** migrations, Edge Function deployment, hosted configuration and staging changes; each needs its own approval.
+
+*Effect on earlier entries:* P14 is superseded as above. D4, D31, D33, P10, P12, F4 and T9 are unchanged. T1: the domain migration takes the next free number after 0019. D31's open DNS-timeout item: no automatic expiry in the first release; verification is re-checked when admission is enabled.
+
 ## Amendment index
 
 The older entries listed here keep their original text. This index records how later entries relate to them.
@@ -984,6 +1001,7 @@ The older entries listed here keep their original text. This index records how l
 | D33, D34 (T1, P15), D35 | — | Status on 2 November 2026: migrations 0005a–0013 exist in the repository, pass the sandbox suite and were applied to staging (0012 and 0013 on 1 November 2026, reported in the A5 record). D33's and T1's "planned, not yet written" wording and D35's file facts describe 26 October 2026 and are kept unchanged. Real Google identity evidence on staging is recorded outside this file (A8). |
 | D19, D20, D32, D34, D37 | D38 | D38 confirms the working defaults built into migrations 0006–0011 and their review answers (Q-06…Q-10, Q-P4, Q-P12-1), with two changes (Q-07-12, Q-08-1) to be implemented in M2 and M3. Earlier entries' text is unchanged. |
 | D5, D20, D34 (P5, P16, L11 P3), D38 (Q-07-2, Q-07-5, #6) | D39 | Public-course video through the AQS-owned YouTube channel after two-gate AQS review; organisation-only video stays in private Storage with required, confirmed timed captions; narrow audited exceptions to L11 P3 (review of public-course submissions) and P5 (re-attaching the same reviewed master); retention periods deferred to R4. P16's boundary and D20 stand. Earlier entries' text is unchanged. |
+| D34 (P14) | D40 | Superseded 8 November 2026: domain verification and automatic domain admission are in the first release under D4 and D31's rules. Organisation Admins view, pause and resume admission for their own verified domains; Platform Admins add, verify and remove domains. P14's text is unchanged as the historical record. |
 
 ### Owner confirmations — 22 October 2026
 

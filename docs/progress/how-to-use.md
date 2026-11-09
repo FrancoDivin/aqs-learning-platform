@@ -19,12 +19,14 @@ Two Excel workbooks track the remaining AQS work. Two people do the work: **Owen
 | Sheet | What it shows |
 |---|---|
 | Read me | Who does what, priorities, the shared-file rules and the fixed rules |
-| Tasks | One row per task (70 rows): who is responsible, dates, acceptance criteria, required evidence, status, overdue flag, notes, evidence links |
+| Tasks | One row per task (71 rows): who is responsible, dates, acceptance criteria, required evidence, status, overdue flag, notes, evidence links |
 | Summary | Counts by work package and status, and Done %. Calculated automatically; don't edit |
 
 **How they relate:** every task belongs to one work package. A package's status and Done % in the tracker come from its tasks, as shown on the task sheet's Summary sheet. Details live only in the task sheet; the tracker summarises.
 
 The older `cm2.md`, `cm3.md` and `cm5.md` stay as the record of those milestones' packages.
+
+**Copies in Google Drive (9 November):** both workbooks also exist as Google Sheets in Owen's Drive folder "AQS Learning Platform - Progress (Nov 2026)", named "AQS Progress Tracker" and "AQS Task Sheet". Owen decides which copy is the live one. Until he does, both are updated together, so they never disagree.
 
 **Editing:**
 - Only the columns marked ✎ change from day to day.
@@ -82,8 +84,8 @@ A package is Complete only when all its tasks are. If any task is Blocked, the p
 
 | Checkpoint | When | Report |
 |---|---|---|
-| Presentation go/no-go | Mon 9, 20:00 | Is staging ready? Which demo fixes made it? Staging or fallback? |
-| Presentation | Tue 10 | What was shown; feedback added as tasks if needed |
+| Presentation go/no-go | Tue 10, 20:00 | Is staging ready? Which demo fixes made it? Staging or fallback? (Staging on 9 November: partly updated and paused; see `docs/staging-update-pack-1.md`) |
+| Presentation | Wed 11 | What was shown; feedback added as tasks if needed |
 | Midpoint | Fri 13, 17:00 | Short note: what's complete, what's blocked, whether 20 November still holds |
 | Feature-complete | Wed 18, 17:00 | Everything merged or in review; anything at risk named |
 | Final | Fri 20, 17:00 | CM3 and CM4 completion reports with test, security and accessibility evidence; any deferral with reasons |
