@@ -158,13 +158,13 @@ Each item is a separate decision. None is implied by another.
 
 | # | Action | Who does it | Needed before |
 |---|---|---|---|
-| 1 | **Commit and push step 0** to `integration`: `docs/decisions.md`, `render.yaml`, `docs/staging-update-pack-1.md`, `docs/progress/progress-tracker.xlsx`, `docs/progress/task-sheet.xlsx`, `docs/progress/how-to-use.md` (named files only, never `git add .`) | Owen | The frontend push |
-| 2 | **Staging export (PRES-9):** run it and check it, or record a decision to continue without one | Owen (database password stays with him) | Any further staging database step |
+| 1 | **Done 9 Nov (commit `046f3ef`).** Commit and push step 0 to `integration`: `docs/decisions.md`, `render.yaml`, `docs/staging-update-pack-1.md`, `docs/progress/progress-tracker.xlsx`, `docs/progress/task-sheet.xlsx`, `docs/progress/how-to-use.md` (named files only, never `git add .`) | Owen | The frontend push |
+| 2 | **Staging export (PRES-9):** run it and check it, or record a decision to continue without one. **Open.** Owen's 07:25 instruction holds 0019 and every further staging database change until this is decided | Owen (database password stays with him) | Any further staging database step |
 | 3 | **Choose Option A, B or C** (section 4) | Done 9 Nov, 02:30: Option A, under Owen's instruction to go ahead without his input. Owen can override | Anything below |
-| 4 | **Staging database steps** (0019, then 0014 once the new frontend is confirmed) | Covered by Owen's 02:19 instruction: they run through the Supabase connection without further input once the frontend is live, each check reported, stopping at the first failure | Each step |
-| 5 | **Edge Function deployments** (`media-url` redeploy, `youtube-verify` deploy) | Covered by the same instruction; they run right after 0019 | That step |
-| 6 | **Promote the frontend:** `git push origin integration:feature/first-release` (fast-forward, no force) | Owen | That step |
-| 7 | **Render:** choose the Render workspace so the deploy ID can be read, and confirm the new security header is live | Owen | The frontend check |
+| 4 | **Staging database steps** (0019, then 0014 once the new frontend is confirmed) | **On hold since 9 Nov, 07:25** until item 2 is decided; then a new go from Owen. (Earlier: covered by Owen's 02:19 instruction: they run through the Supabase connection without further input once the frontend is live, each check reported, stopping at the first failure.) | Each step |
+| 5 | **Edge Function deployments** (`media-url` redeploy, `youtube-verify` deploy) | **On hold with item 4**; they run right after 0019 | That step |
+| 6 | **Done 9 Nov; Owen confirmed staging Live on `046f3ef` at 07:25.** Promote the frontend: `git push origin integration:feature/first-release` (fast-forward, no force) | Owen | That step |
+| 7 | **Render:** choose the Render workspace so the deploy ID can be read. The new security header is confirmed live (section 9.1); only the deploy ID is missing | Owen | The PRES-3 evidence |
 | 8 | **Final walkthrough** with the demo accounts | Owen | The go/no-go, Tue 10, 20:00 |
 
 **Later, when the AQS YouTube channel address and a test video are available:** set `AQS_YOUTUBE_CHANNEL_URL` for `youtube-verify`, then run the CM2 video check (task Q-4). The presentation doesn't need this.
@@ -192,3 +192,101 @@ Each item is a separate decision. None is implied by another.
 **Found for the demo:** staging has no published public course (the public courses are drafts or archived), so the public catalogue is empty for a signed-out visitor. The demo data (PRES-5) needs at least one published public course.
 
 **Still needs Owen:** the two pushes (section 6, items 1 and 6); the export, if wanted (item 2); the token-based staging script and the four-role walkthrough, which need his Google test accounts (item 8).
+
+## 9. Execution log, 9 November from 07:25 SAST
+
+### 9.1 Step A1: frontend promoted (done by Owen)
+
+| Check | Result |
+|---|---|
+| Step 0 commit on `integration` | `046f3ef`: exactly the six named files, each identical to the prepared version |
+| `feature/first-release` | Fast-forwarded to `046f3ef` by Owen |
+| Render `aqs-learning-staging` | **Live on `046f3ef`**, confirmed by Owen at 07:25. The landing page loads and the Sign In button works (Owen's own check). The deploy ID is not recorded: the Render workspace is not selected (section 6, item 7) |
+| Security policy header on the live site | Exactly the value in `render.yaml`; the other security headers are present |
+| Fonts | Inter is served from the site itself (HTTP 200, `font/woff2`); the file checksum matches `public/fonts/inter/SOURCE.md`. No request goes to Google Fonts |
+| Policy errors | None on `/`, `/catalog`, `/sign-in`, an unknown address (not-found page) and `/learn` (which correctly sends a signed-out visitor to sign-in) |
+| Outside addresses contacted | Only the staging Supabase project |
+| Built code | The style file name on staging equals a local build of the same code, so staging serves the reviewed build |
+
+One browser notice is harmless: the font preload is reported as "not used within a few seconds" on pages that show text only after loading. The preload line itself is correct.
+
+### 9.2 Checks without test accounts (live site, signed-out visitor)
+
+28 pass, 0 fail, 1 not conclusive. The visitor cannot read or write the closed tables, cannot run the platform report, and GraphQL is off. The not-conclusive item is `youtube-verify`: it is not deployed yet (step A3, on hold). The Supabase function list confirms this: `invitations` v4 and `media-url` v4 only.
+
+### 9.3 Database checks (read-only; nothing on staging changed)
+
+**Migration history.** All 18 recorded migrations are identical to the repository files: 0001 to 0011 stored as whole files, 0012 and 0013 in the older command-line format (statements without the closing semicolon), and 0015 to 0018 in the current format. 0014 and 0019 are not recorded. The history is clean, so this check no longer blocks 0019.
+
+**Database structure compared with a throwaway database at the same migrations.** Functions (133) and access rules (29) are identical. Table permissions differ in two ways:
+
+1. The newer PostgreSQL on staging adds a "maintain" permission for table owners. This is expected and harmless.
+2. **Finding (not blocking, existed before today):** on staging, the service role has no read or update permission on any app table or view, including `profiles` (0 of 22 in the public schema, read-only check). Migration 0012 meant the service role to keep UPDATE on `profiles` (for the anonymisation path that is still undecided, F8/R4). The cause: on hosted Supabase, new tables give the service role fewer default permissions than the throwaway database assumes. The throwaway database's Supabase stand-in grants everything.
+   - **Impact today: none.** `invitations` acts as the signed-in caller. `media-url` uses the service key only to sign Storage links. `youtube-verify` and the cleanup job call only functions that run with the owner's rights, and execute permission on those functions is granted to the service role. Migration 0019 grants the service role only execute on `record_youtube_check`, and takes every table permission away from it. Nothing that runs or will run depends on the missing permission.
+   - **Later:** (a) when F8/R4 is decided, the anonymisation route must not assume the service role can update `profiles`; (b) the throwaway database should copy hosted Supabase's default permissions, so tests match staging. Both are recorded for CM4. No staging change is proposed.
+
+**Supabase security advisor:** 1 error, 72 warnings, all already known.
+- The error is the public instructor-names view, which is deliberately built this way (P6).
+- 71 warnings are app functions that signed-in users may call. Each function checks permissions itself.
+- 1 warning is leaked-password protection. Staging allows Google sign-in only (D15).
+
+### 9.4 Token-based staging script (PRES-4): test accounts
+
+The existing staging accounts (read-only check; names shown here by role only):
+
+| Account | Platform Admin | ZZ Test Org A | ZZ Test Org B |
+|---|---|---|---|
+| Account 1 (Owen's) | Yes | — | — |
+| Account 2 | Yes | Organization Admin | — |
+| Account 3 | — | — | Organization Admin, Learner |
+| Account 4 | — | Learner | Instructor |
+
+The script needs one organisation with an organisation-only course (its "Org A"), and an Organization Admin of the other organisation who is **not** a Platform Admin and is **not** a member of "Org A". Platform Admins may see every organisation by design, so they cannot be used as the outsider.
+
+- Today the only organisation-only course is in **ZZ Test Org B**, so ZZ Test Org B would have to be the script's "Org A", and the outsider would have to come from ZZ Test Org A.
+- The only admin of ZZ Test Org A is also a Platform Admin. **No existing account can be the outsider.** A run with the current accounts would fail at least three checks for the wrong reason (the outsider could read the organisation, its memberships and the platform report).
+
+**The two ways to get a valid outsider, compared (9 Nov, 08:00):**
+
+| | Option 1: one new Google test account | Option 2: one organisation-only draft course in ZZ Test Org A (recommended) |
+|---|---|---|
+| What Owen does | Creates a Google account; a Platform Admin invites it as Organization Admin of ZZ Test Org A; the account accepts | Signs in as Account 2, opens `/o/zz-test-org-a/teach/courses`, creates one draft course (for example "ZZ PRES-4 isolation check"); does **not** request publication |
+| Staging change | New user, membership, role, invitation and audit rows | One draft course, one course-staff row, one audit row |
+| Time | About 15 minutes (new account, invitation, acceptance) | About 2 minutes |
+| New credentials to manage | Yes | No |
+| Script coverage | All checks, including the signed-link checks | All checks except the signed-link checks (reported as skipped) |
+| Signed links | Tested now, but only on a file in an archived public course | Already verified on staging on 3 Nov (M3: 15-minute links; outsider and Platform Admin refused). They are re-run when PRES-5 adds a file to an organisation-only course |
+
+**Recommendation: Option 2.** It is the smallest change, needs no new account, and gives a clean outsider: Account 3 is not a Platform Admin and not a member of ZZ Test Org A. The one check it skips was verified on staging on 3 November, and Option 1 could only re-test it on a weaker file. Both options are staging data changes, so both wait for Owen's approval.
+
+Values for Option 2 (ids are synthetic test data):
+
+| Variable | Value |
+|---|---|
+| `AQS_STAGING_API_URL` | `https://txpaszokduxewyojrnmq.supabase.co` |
+| `AQS_STAGING_PUBLISHABLE_KEY` | The publishable key from the Supabase dashboard (Settings, API Keys; a public value) |
+| `AQS_ORG_A_ID` | `9c1c4af5-627b-418e-9b19-db4adeab7193` (ZZ Test Org A) |
+| `AQS_A_COURSE_ID` | The new draft course's id (the last part of its editor address) |
+| `AQS_TOKEN_A_ADMIN` | Account 2's access token |
+| `AQS_TOKEN_B_ADMIN` | Account 3's access token |
+| `AQS_TOKEN_A_LEARNER`, `AQS_A_RESOURCE_ID` | Leave unset (signed-link checks skipped) |
+
+Why Option 2 passes the first checks:
+- Account 2 is staff of the course it creates and an admin of ZZ Test Org A, so it sees both the organisation and the draft.
+- Account 3 sees neither: draft courses are visible only to their staff, the owning organisation's admins, and Platform Admins once publication is requested. That is why publication must not be requested.
+
+Two limits remain:
+- The current staging data has no published public course and no overdue assignment, so the public catalogue and the new overdue badge can only be shown after PRES-5 creates demo data.
+- A file in an organisation-only course, with an assigned learner, is needed to re-run the signed-link checks. PRES-5 should add one.
+
+**Pre-check done today (simulated sessions, read-only):**
+- Account 3 sees nothing of ZZ Test Org A: 0 organisation, membership, role, invitation and course rows.
+- Account 3 is refused (42501) by `create_invitation`, `organization_members` and `platform_report` for ZZ Test Org A.
+- `media_access` gives Account 3 the downloadable file `a4e2fd0b…` of its own organisation, as an assigned learner (positive control).
+
+This checks the database rules only. It does not replace the script run over the internet.
+
+### 9.5 What is on hold and why
+
+- **0019 (A2), the `media-url` redeploy and the `youtube-verify` deploy (A3), and 0014:** held by Owen's 07:25 instruction until the export decision (PRES-9). The migration-history check (section 9.3) is now resolved.
+- **Run files and undo scripts:** unchanged and ready (section 8). Before 0019 runs, its run file refuses to run if 0019 is already recorded.
