@@ -24,7 +24,8 @@ test.describe('live mode, signed out', () => {
   test('the header offers sign-in and private pages redirect to it', async ({ page }) => {
     await mockSupabase(page, { tables: learnerTables({ enrolled: false, done: [] }) })
     await page.goto('/')
-    await expect(page.getByRole('link', { name: 'Sign in' })).toBeVisible()
+    // Scoped to the header: the landing page also links "Sign in" for invited staff (Concept C).
+    await expect(page.getByRole('banner').getByRole('link', { name: 'Sign in', exact: true })).toBeVisible()
     await page.goto('/learn')
     await expect(page).toHaveURL(/\/sign-in\?next=%2Flearn/)
     await expect(page.getByRole('button', { name: 'Continue with Google' })).toBeEnabled()

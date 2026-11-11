@@ -51,11 +51,12 @@ const colourGroups: Array<{ title: string; note: string; swatches: Swatch[] }> =
     ],
   },
   {
-    title: 'Accessible action colours (D1)',
-    note: 'Primary buttons use #C2410C so white labels meet WCAG AA. #F97316 stays as a brand accent.',
+    title: 'Action colours (D1, D41)',
+    note: 'Primary buttons use action blue #1D4ED8 (owner approval, 10 November 2026). Orange stays as a brand accent: #F97316 for decoration, #C2410C for orange-looking text.',
     swatches: [
-      { name: 'Action', token: '--color-action', hex: '#C2410C', role: 'Primary button fill', textUse: true },
-      { name: 'Action hover', token: '--color-action-hover', hex: '#9A3412', role: 'Primary button hover', textUse: true },
+      { name: 'Action', token: '--color-action', hex: '#1D4ED8', role: 'Primary button fill', textUse: true },
+      { name: 'Action hover', token: '--color-action-hover', hex: '#1E40AF', role: 'Primary button hover', textUse: true },
+      { name: 'Action pressed', token: '--color-action-pressed', hex: '#1E3A8A', role: 'Primary button pressed', textUse: true },
       { name: 'Accent text', token: '--color-accent-text', hex: '#C2410C', role: 'Orange eyebrows & labels', textUse: true },
       { name: 'Sidebar active', token: '--color-navy-light', hex: '#2C4D75', role: 'Active nav item, help card', textUse: false },
     ],
@@ -299,7 +300,7 @@ export default function DesignSystemPage() {
           <Section
             id="colour"
             title="Colour system"
-            note="Navy builds trust, blue supports navigation, and orange marks emphasis and the primary action. Ratios are calculated against white."
+            note="Navy builds trust, blue supports navigation and marks the primary action, and orange adds emphasis. Ratios are calculated against white."
           >
             {colourGroups.map((group) => (
               <div key={group.title} className={styles.stack}>
@@ -486,7 +487,7 @@ export default function DesignSystemPage() {
           <Section
             id="buttons"
             title="Button system"
-            note="48px height and 12px radius. Orange is reserved for the clearest next step — one per view. Press Tab to see real keyboard focus."
+            note="48px height and 12px radius. The blue primary button is reserved for the clearest next step — one per view. Press Tab to see real keyboard focus."
           >
             <Card padding="lg">
               <div className={styles.stateGrid}>
@@ -532,7 +533,7 @@ export default function DesignSystemPage() {
               </div>
               <div className={`${styles.guidance} ${styles.guidanceAvoid}`}>
                 <h3 className={`${styles.guidanceTitle} ${styles.guidanceTitleAvoid}`}>Avoid</h3>
-                <p className="text-body-sm">Do not place multiple orange actions in the same decision area.</p>
+                <p className="text-body-sm">Do not place multiple primary actions in the same decision area.</p>
               </div>
             </div>
             <div className={styles.row}>
@@ -541,6 +542,9 @@ export default function DesignSystemPage() {
                 Add module
               </Button>
               <Button loading>Saving</Button>
+              <Button data-preview-state="pressed" tabIndex={-1}>
+                Pressed
+              </Button>
               <Button size="sm" variant="secondary">
                 Small (36px)
               </Button>
@@ -548,9 +552,22 @@ export default function DesignSystemPage() {
                 Link styled as button
               </ButtonLink>
             </div>
+            <div className={`${styles.darkRow} on-dark`} data-testid="buttons-on-navy">
+              <p className={styles.darkRowLabel}>On navy (inverse)</p>
+              <Button>Start course</Button>
+              <Button data-preview-state="hover" tabIndex={-1}>
+                Hover
+              </Button>
+              <Button data-preview-state="pressed" tabIndex={-1}>
+                Pressed
+              </Button>
+              <Button variant="secondary">View syllabus</Button>
+              <Button disabled>Not available</Button>
+            </div>
             <Banner tone="info">
-              Hover and focus columns are forced for comparison only. The design system page shows an identical
-              colour for primary default and hover; a darker hover (#9A3412) was added so the state is visible.
+              Hover and focus columns, and the Pressed example, are forced for comparison only. Primary: default #1D4ED8, hover #1E40AF,
+              pressed #1E3A8A, all with white text. Secondary: white with a #8391A7 outline and navy text. On navy,
+              the primary turns white with navy text and the secondary becomes a white outline (D41).
             </Banner>
           </Section>
 

@@ -43,6 +43,13 @@ const LivePlatformUsers = lazy(() => import('./pages/admin/LivePlatformUsers'))
 const LiveVideoReviews = lazy(() => import('./pages/admin/LiveVideoReviews'))
 const LiveLessonPreview = lazy(() => import('./pages/teach/LiveLessonPreview'))
 const LiveVideoReviewDetail = lazy(() => import('./pages/admin/LiveVideoReviewDetail'))
+// About AQS and Contact (Concept C, approved 10 November 2026): registered only in development builds
+// (marked placeholders) until the owner approves their content (content/public-site.ts).
+// The condition must be a build-time constant so production builds leave the pages out entirely
+// (`npm run check:build` fails otherwise). When the owner approves the content, set
+// ABOUT_AND_CONTACT_APPROVED in content/public-site.ts and change `import.meta.env.DEV` here to `true`.
+const AboutPage = import.meta.env.DEV ? lazy(() => import('../pages/AboutPage')) : null
+const ContactPage = import.meta.env.DEV ? lazy(() => import('../pages/ContactPage')) : null
 
 function Page({ children }: { children: ReactNode }) {
   return (
@@ -71,6 +78,8 @@ export function LiveApp({ extraRoutes }: { extraRoutes?: ReactNode }) {
         <Route path="/courses/:courseId" element={<Page><LiveCourseDetail /></Page>} />
         <Route path="/access-denied" element={<LiveAccessDenied />} />
         <Route path="/session-expired" element={<LiveSignInRequired />} />
+        {AboutPage ? <Route path="/about" element={<Page><AboutPage /></Page>} /> : null}
+        {ContactPage ? <Route path="/contact" element={<Page><ContactPage /></Page>} /> : null}
 
         <Route element={<RequireSignedIn />}>
           <Route path="/home" element={<HomeRedirect />} />

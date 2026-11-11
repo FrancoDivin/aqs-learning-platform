@@ -80,6 +80,14 @@ export function useSession(): SessionValue {
   return value
 }
 
+/**
+ * The session when inside SessionProvider, otherwise null. The public layout uses it, because the
+ * design previews render public pages without a SessionProvider.
+ */
+export function useOptionalSession(): SessionValue | null {
+  return useContext(SessionContext)
+}
+
 /** Active memberships in organizations the person can currently see. */
 export function activeMemberships(me: Me): Array<Membership & { org: NonNullable<Membership['org']> }> {
   return me.memberships.filter(

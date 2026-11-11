@@ -67,61 +67,58 @@ test.describe('public navigation at mobile width', () => {
   })
 })
 
-// About and Contact were authorised for the development build on 26 October 2026. The footer's legal and
-// company destinations have no approved content yet, so they stay unavailable (D24).
-test.describe('About and Contact in the public header (development build)', () => {
+// Landing page Concept C (owner, 10 November 2026): only working destinations appear. About AQS and
+// Contact are implemented, but their links stay hidden until the owner approves their content; in
+// development builds the pages are reachable by URL, with marked placeholders, for design review.
+test.describe('header and footer destinations', () => {
   test.use({ viewport: DESKTOP })
 
-  test('are links that open their pages, in tab order after For Organizations', async ({ page }) => {
+  test('the header shows Courses and For organizations only', async ({ page }) => {
     await page.goto('/')
-    const nav = mainNav(page)
+    await expect(mainNav(page).getByRole('link')).toHaveText(['Courses', 'For organizations'])
+    await expect(page.getByRole('link', { name: /^(About|About AQS|Contact)$/ })).toHaveCount(0)
+    await expect(page.locator('[aria-disabled="true"]', { hasText: /About|Contact/ })).toHaveCount(0)
+  })
 
-    await nav.getByRole('link', { name: 'For Organizations', exact: true }).focus()
-    await page.keyboard.press('Tab')
-    await expect(nav.getByRole('link', { name: 'About', exact: true })).toBeFocused()
-    await page.keyboard.press('Tab')
-    await expect(nav.getByRole('link', { name: 'Contact', exact: true })).toBeFocused()
+  test('the footer lists working links only, with nothing greyed out', async ({ page }) => {
+    await page.goto('/')
+    const footer = page.getByRole('contentinfo')
+    await expect(footer.getByRole('heading', { level: 2 })).toHaveText(['Learn', 'Organizations'])
+    await expect(footer.getByRole('navigation', { name: 'Learn' }).getByRole('link')).toHaveText(['Courses'])
+    await expect(footer.getByRole('navigation', { name: 'Organizations' }).getByRole('link')).toHaveText(['For organizations'])
+    for (const gone of ['Our Story', 'Instructors', 'Careers', 'Blog', 'Privacy Policy', 'Terms', 'Cookie Policy', 'About', 'Contact']) {
+      await expect(footer.getByText(gone, { exact: true })).toHaveCount(0)
+    }
+    await expect(footer.locator('[aria-disabled="true"]')).toHaveCount(0)
+  })
 
-    await nav.getByRole('link', { name: 'About', exact: true }).click()
-    await expect(page).toHaveURL(/\/about$/)
-    await expect(page.getByRole('heading', { level: 1, name: 'About AQS E-Learning' })).toBeVisible()
-    await expect(mainNav(page).getByRole('link', { name: 'About', exact: true })).toHaveAttribute('aria-current', 'page')
+  test('For organizations opens the organizations section from another page', async ({ page }) => {
+    await page.goto('/about')
+    await mainNav(page).getByRole('link', { name: 'For organizations', exact: true }).click()
+    await expect(page).toHaveURL(/\/#organizations$/)
+    await expect(page.locator('#organizations')).toBeFocused()
+  })
 
-    await mainNav(page).getByRole('link', { name: 'Contact', exact: true }).click()
-    await expect(page).toHaveURL(/\/contact$/)
+  test('development build: About AQS shows marked placeholders and no invented company facts', async ({ page }) => {
+    await page.goto('/about')
+    await expect(page.getByRole('heading', { level: 1, name: 'About AQS' })).toBeVisible()
+    for (const label of ['Introduction', 'Mission', 'Purpose']) {
+      await expect(page.getByText(`Placeholder · ${label} · AQS to supply`)).toBeVisible()
+    }
+    await expect(page.getByText(/owned and operated|founded|award/i)).toHaveCount(0)
+    await expect(page.getByRole('link', { name: 'Contact AQS' })).toHaveAttribute('href', '/contact')
+  })
+
+  test('development build: Contact shows marked placeholders, no real-looking details and no form', async ({ page }) => {
+    await page.goto('/contact')
     await expect(page.getByRole('heading', { level: 1, name: 'Contact AQS' })).toBeVisible()
-  })
-})
-
-test.describe('unavailable public footer items', () => {
-  test.use({ viewport: DESKTOP })
-
-  test('legal and company items are not links, not focusable, and say they are not available yet', async ({ page }) => {
-    await page.goto('/')
-    const legal = page.getByRole('navigation', { name: 'Legal' })
-    const company = page.getByRole('navigation', { name: 'Company' })
-
-    for (const label of ['Privacy Policy', 'Terms', 'Cookie Policy']) {
-      await expect(legal.getByRole('listitem').filter({ hasText: label })).toHaveText(`${label} (not available yet)`)
+    for (const label of ['Email', 'Phone', 'Address']) {
+      await expect(page.getByText(`Placeholder · ${label} · AQS to supply`)).toBeVisible()
     }
-    for (const label of ['Our Story', 'Instructors', 'Careers', 'Blog']) {
-      await expect(company.getByRole('listitem').filter({ hasText: label })).toHaveText(`${label} (not available yet)`)
-    }
-    await expect(legal.getByRole('link')).toHaveCount(0)
-    await expect(company.getByRole('link')).toHaveCount(0)
-
-    const terms = legal.getByRole('listitem').filter({ hasText: 'Terms' })
-    await terms.locator('span').first().focus()
-    await expect(legal.locator(':focus')).toHaveCount(0)
-  })
-
-  test('the footer About and Contact links open their pages', async ({ page }) => {
-    await page.goto('/')
-    const platform = page.getByRole('navigation', { name: 'Platform' })
-    await platform.getByRole('link', { name: 'Contact', exact: true }).click()
-    await expect(page).toHaveURL(/\/contact$/)
-    await page.getByRole('navigation', { name: 'Platform' }).getByRole('link', { name: 'About', exact: true }).click()
-    await expect(page).toHaveURL(/\/about$/)
+    await expect(page.getByRole('link', { name: /@|mailto|tel:/ })).toHaveCount(0)
+    await expect(page.locator('a[href^="mailto:"], a[href^="tel:"]')).toHaveCount(0)
+    await expect(page.locator('form')).toHaveCount(0)
+    await expect(page.getByRole('heading', { level: 3 })).toHaveText(['Training for your organization', 'Help with an assigned course'])
   })
 })
 
