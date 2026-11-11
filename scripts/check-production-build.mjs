@@ -28,6 +28,8 @@ const FORBIDDEN = [
   { name: 'sign-in photo placeholder caption', pattern: /Hero photo placeholder/ },
   { name: 'partner logo placeholders', pattern: /Partner logos \(placeholders|PARTNER_PLACEHOLDERS/ },
   { name: 'thumbnail placeholder text', pattern: /Thumbnail placeholder/ },
+  // Landing page Concept C (owner, 10 November 2026): placeholder and dummy company content never ships.
+  { name: 'About/Contact placeholder', pattern: /AQS to supply|Placeholder · |\[AQS (?:email address|phone number|physical or postal address)/ },
   // Secrets (T6). The publishable key (sb_publishable_…) is public by design and allowed.
   { name: 'Supabase secret key', pattern: /sb_secret_[A-Za-z0-9_-]{10,}/ },
   { name: 'service-role key name', pattern: /SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEYS/ },
@@ -73,6 +75,16 @@ export function decisionCodesIn(text) {
   return found
 }
 
+// About AQS and Contact stay out of production until the owner approves their content
+// (src/content/public-site.ts). While the gate is closed, the pages themselves must not ship.
+const infoGateOpen = /ABOUT_AND_CONTACT_APPROVED\s*=\s*true/.test(readFileSync('src/content/public-site.ts', 'utf8'))
+if (!infoGateOpen) {
+  FORBIDDEN.push(
+    { name: 'About AQS page before approval', pattern: /Why we built AQS E-Learning|Questions about AQS\?/ },
+    { name: 'Contact page before approval', pattern: /Choose the route that fits your question|Help with an assigned course/ },
+  )
+}
+
 const problems = []
 for (const file of all) {
   const text = readFileSync(file, 'utf8')
@@ -85,4 +97,4 @@ if (problems.length) {
   console.error('Production build check FAILED:\n' + problems.map((p) => `  - ${p}`).join('\n'))
   process.exit(1)
 }
-console.log(`Production build check passed: ${all.length} files in ${dist} scanned; no development pages, sample data, secrets or decision codes.`)
+console.log(`Production build check passed: ${all.length} files in ${dist} scanned; no development pages, sample data, secrets, placeholders or decision codes.`)

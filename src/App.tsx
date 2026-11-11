@@ -106,6 +106,11 @@ const LessonPage = import.meta.env.DEV ? lazy(() => import('./pages/LessonPage')
   const LearnerMessagesPage = import.meta.env.DEV ? lazy(() => import('./pages/LearnerMessagesPage')) : null
   const InstructorCoursesPage = import.meta.env.DEV ? lazy(() => import('./pages/InstructorCoursesPage')) : null
   const OrgAdminDashboardPage = import.meta.env.DEV ? lazy(() => import('./pages/OrgAdminDashboardPage')) : null
+  /* About AQS and Contact (Concept C, approved 10 November 2026): development builds show them with marked
+   * placeholders; production builds register them only after the owner approves the content.
+   * The condition must be a build-time constant so production builds leave the pages out entirely
+   * (`npm run check:build` fails otherwise). When the owner approves the content, set
+   * ABOUT_AND_CONTACT_APPROVED in content/public-site.ts and change `import.meta.env.DEV` here to `true`. */
   const AboutPage = import.meta.env.DEV ? lazy(() => import('./pages/AboutPage')) : null
   const ContactPage = import.meta.env.DEV ? lazy(() => import('./pages/ContactPage')) : null
 

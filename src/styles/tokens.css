@@ -20,10 +20,11 @@
   --color-text: #0f172a; /* primary content · 17.85:1 */
   --color-white: #ffffff; /* surfaces */
 
-  /* ---- Accessible action colours (decision D1) ---- */
-  --color-action: #c2410c; /* primary button fill · white text 5.18:1 */
-  --color-action-hover: #9a3412; /* primary hover · white text 7.31:1 */
-  --color-accent-text: #c2410c; /* orange-looking text, e.g. eyebrows · 5.18:1 */
+  /* ---- Primary action colours (D1; blue approved by the owner on 10 November 2026, D41) ---- */
+  --color-action: #1d4ed8; /* primary button fill (action blue) · white text 6.70:1 */
+  --color-action-hover: #1e40af; /* primary hover · white text 8.72:1 */
+  --color-action-pressed: #1e3a8a; /* primary pressed · white text 10.36:1 */
+  --color-accent-text: #c2410c; /* orange-looking text, e.g. eyebrows · 5.18:1 (orange stays the accent) */
 
   /* ---- Neutrals ---- */
   --color-text-muted: #64748b; /* secondary text · 4.76:1 (4.55:1 on canvas) — do not go lighter */

@@ -1,57 +1,66 @@
 import type { NavItem } from '../components/layout/types'
+import {
+  ABOUT_AND_CONTACT_APPROVED,
+  GET_STARTED_PAGE_AVAILABLE,
+  LEGAL_PAGES_AVAILABLE,
+  REQUEST_WORKSPACE_AVAILABLE,
+} from '../content/public-site'
 
 /*
- * Public header and footer destinations, shared by every page that uses PublicLayout.
+ * Public header and footer destinations (landing page Concept C, approved 10 November 2026).
  *
- * About and Contact were authorised for the application on 26 October 2026. Like every other demo
- * page they are registered only in the development build (see App.tsx), because D27 keeps production
- * to `/` and the Not Found page until the owner approves more. In a production build the two items
- * therefore stay unavailable (D24), so they never lead to the Not Found page.
- *
- * Privacy Policy, Terms and Cookie Policy stay unavailable: the approved legal text is not in the
- * repository or the Project, and legal wording is never written here.
+ * Only destinations that work are shown: an unbuilt or unapproved destination is left out, not
+ * greyed out. The gates live in content/public-site.ts:
+ * - About AQS and Contact appear only after the owner approves their content (owner decision,
+ *   10 November 2026). Until then they are reachable in development builds only, by URL.
+ * - Request a workspace appears with task 3-3, the legal pages with task 5-5.
  */
-export const PUBLIC_INFO_PAGES_AVAILABLE = import.meta.env.DEV
 
-const infoPagesUnavailable = !PUBLIC_INFO_PAGES_AVAILABLE
+/** Where "Get started" leads: the Get Started page once it exists (2-1), sign-in until then. */
+export const GET_STARTED_PATH = GET_STARTED_PAGE_AVAILABLE ? '/get-started' : '/sign-in'
 
-/** Header navigation. `courses` and `organizations` let a page point at its own sections. */
-export function publicHeaderNav(options: { courses?: string; organizations?: string } = {}): NavItem[] {
-  return [
-    // CM3-7: the landing page's featured section exists only when real courses do; the catalog always does.
+/** Header navigation. Every page points For organizations at the landing page's section. */
+export function publicHeaderNav(options: { courses?: string } = {}): NavItem[] {
+  const items: NavItem[] = [
     { label: 'Courses', to: options.courses ?? '/catalog' },
-    { label: 'For Organizations', to: options.organizations ?? '/#for-organizations' },
-    { label: 'About', to: '/about', unavailable: infoPagesUnavailable },
-    { label: 'Contact', to: '/contact', unavailable: infoPagesUnavailable },
+    { label: 'For organizations', to: '/#organizations' },
   ]
+  if (ABOUT_AND_CONTACT_APPROVED) {
+    items.push({ label: 'About AQS', to: '/about' }, { label: 'Contact', to: '/contact' })
+  }
+  return items
 }
 
-export const PUBLIC_FOOTER_COLUMNS: Array<{ heading: string; links: NavItem[] }> = [
-  {
-    heading: 'Platform',
-    links: [
-      { label: 'Courses', to: '/catalog' },
-      { label: 'For Organizations', to: '/#for-organizations' },
-      { label: 'About', to: '/about', unavailable: infoPagesUnavailable },
-      { label: 'Contact', to: '/contact', unavailable: infoPagesUnavailable },
-    ],
-  },
-  {
-    // These destinations need company content that AQS has not supplied, so they stay unavailable.
-    heading: 'Company',
-    links: [
-      { label: 'Our Story', to: '/our-story', unavailable: true },
-      { label: 'Instructors', to: '/instructors', unavailable: true },
-      { label: 'Careers', to: '/careers', unavailable: true },
-      { label: 'Blog', to: '/blog', unavailable: true },
-    ],
-  },
-  {
-    heading: 'Legal',
-    links: [
-      { label: 'Privacy Policy', to: '/privacy', unavailable: true },
-      { label: 'Terms', to: '/terms', unavailable: true },
-      { label: 'Cookie Policy', to: '/cookies', unavailable: true },
-    ],
-  },
-]
+export type FooterColumn = { heading: string; links: NavItem[] }
+
+/** Footer columns. `signInAvailable` is false in the design previews, which have no sign-in. */
+export function publicFooterColumns(options: { signInAvailable: boolean }): FooterColumn[] {
+  const learn: NavItem[] = [{ label: 'Courses', to: '/catalog' }]
+  if (options.signInAvailable) {
+    learn.push({ label: 'Get started', to: GET_STARTED_PATH })
+    // Until /get-started exists both lead to sign-in; listing the same page twice helps nobody.
+    if (GET_STARTED_PAGE_AVAILABLE) learn.push({ label: 'Sign in', to: '/sign-in' })
+  }
+
+  const organizations: NavItem[] = [{ label: 'For organizations', to: '/#organizations' }]
+  if (REQUEST_WORKSPACE_AVAILABLE) organizations.push({ label: 'Request a workspace', to: '/request-workspace' })
+
+  const columns: FooterColumn[] = [
+    { heading: 'Learn', links: learn },
+    { heading: 'Organizations', links: organizations },
+  ]
+  if (ABOUT_AND_CONTACT_APPROVED) {
+    columns.push({ heading: 'AQS', links: [{ label: 'About AQS', to: '/about' }, { label: 'Contact', to: '/contact' }] })
+  }
+  if (LEGAL_PAGES_AVAILABLE) {
+    columns.push({
+      heading: 'Legal',
+      links: [
+        { label: 'Terms of Use', to: '/terms' },
+        { label: 'Privacy Policy', to: '/privacy' },
+        { label: 'Cookie Policy', to: '/cookies' },
+      ],
+    })
+  }
+  return columns
+}
