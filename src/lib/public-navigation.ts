@@ -4,6 +4,7 @@ import {
   GET_STARTED_PAGE_AVAILABLE,
   LEGAL_PAGES_AVAILABLE,
   REQUEST_WORKSPACE_AVAILABLE,
+  SHOW_INFO_PAGE_PREVIEWS,
 } from '../content/public-site'
 
 /*
@@ -16,17 +17,32 @@ import {
  * - Request a workspace appears with task 3-3, the legal pages with task 5-5.
  */
 
-/** Where "Get started" leads: the Get Started page once it exists (2-1), sign-in until then. */
-export const GET_STARTED_PATH = GET_STARTED_PAGE_AVAILABLE ? '/get-started' : '/sign-in'
+/**
+ * Where "Get started" leads: the Get Started page once it exists (2-1), the sign-up page until then
+ * (D42, 12 November 2026: sign-up with Google, Apple, Facebook or email).
+ */
+export const GET_STARTED_PATH = GET_STARTED_PAGE_AVAILABLE ? '/get-started' : '/sign-up'
 
-/** Header navigation. Every page points For organizations at the landing page's section. */
+/** The landing page. The header's Home link always opens it at the top (see PublicLayout). */
+export const HOME_PATH = '/'
+
+/**
+ * Header navigation, in the client's order (11 November 2026): Home, Courses, About, Contact;
+ * Sign in and Get started follow in the header's actions. For organizations stays in the footer
+ * and in the landing page's own buttons.
+ *
+ * About and Contact open the About AQS and Contact pages. Both appear wherever those pages exist:
+ * in development builds (marked placeholders, for review) and, once the owner approves the
+ * content, in production. Production builds before that approval have neither page, so they show
+ * no link to them.
+ */
 export function publicHeaderNav(options: { courses?: string } = {}): NavItem[] {
   const items: NavItem[] = [
+    { label: 'Home', to: HOME_PATH },
     { label: 'Courses', to: options.courses ?? '/catalog' },
-    { label: 'For organizations', to: '/#organizations' },
   ]
-  if (ABOUT_AND_CONTACT_APPROVED) {
-    items.push({ label: 'About AQS', to: '/about' }, { label: 'Contact', to: '/contact' })
+  if (ABOUT_AND_CONTACT_APPROVED || SHOW_INFO_PAGE_PREVIEWS) {
+    items.push({ label: 'About', to: '/about' }, { label: 'Contact', to: '/contact' })
   }
   return items
 }
@@ -37,9 +53,7 @@ export type FooterColumn = { heading: string; links: NavItem[] }
 export function publicFooterColumns(options: { signInAvailable: boolean }): FooterColumn[] {
   const learn: NavItem[] = [{ label: 'Courses', to: '/catalog' }]
   if (options.signInAvailable) {
-    learn.push({ label: 'Get started', to: GET_STARTED_PATH })
-    // Until /get-started exists both lead to sign-in; listing the same page twice helps nobody.
-    if (GET_STARTED_PAGE_AVAILABLE) learn.push({ label: 'Sign in', to: '/sign-in' })
+    learn.push({ label: 'Get started', to: GET_STARTED_PATH }, { label: 'Sign in', to: '/sign-in' })
   }
 
   const organizations: NavItem[] = [{ label: 'For organizations', to: '/#organizations' }]
