@@ -1,5 +1,5 @@
 import { useEffect, useId, useState } from 'react'
-import { Link, useLocation } from 'react-router'
+import { Link, useLocation, useNavigationType } from 'react-router'
 import { PublicLayout } from '../components/layout/PublicLayout'
 import { ButtonLink } from '../components/ui'
 import { cx } from '../lib/cx'
@@ -7,14 +7,7 @@ import { countOf } from '../lib/plural'
 import { publicHeaderNav } from '../lib/public-navigation'
 import { featuredCourses, type CourseSummary } from '../live/data/learning'
 import { LIVE_MODE } from '../live/mode'
-import {
-  ABOUT_AND_CONTACT_APPROVED,
-  ABOUT_CONTENT,
-  claimCleared,
-  SHOW_INFO_PAGE_PREVIEWS,
-  type PublicClaimId,
-} from '../content/public-site'
-import { PlaceholderNote } from './info/PlaceholderNote'
+import { claimCleared, type PublicClaimId } from '../content/public-site'
 import { HeroNetwork } from './landing/HeroNetwork'
 import styles from './LandingPage.module.css'
 
@@ -29,8 +22,9 @@ import styles from './LandingPage.module.css'
  *   2026; see landing/HeroNetwork.tsx). It is decorative and still for reduced motion.
  * - Only statements cleared in content/public-site.ts are shown (no unverified security, privacy or
  *   capability claims). The "Private organization workspaces" block is therefore not rendered yet.
- * - The About AQS block, the ownership line and every link to /about or /contact stay hidden until
- *   the owner approves the content. Development builds show a marked preview for design review.
+ * - The page has no About AQS block (removed at the client's request, 11 November 2026); the header's
+ *   About link opens the About AQS page instead.
+ * - The For organizations band uses the page's light palette (client request, 11 November 2026).
  * - No invented content (CM3-7): courses are real published public courses; the product picture is
  *   a screenshot of the real learner dashboard, labelled as sample data.
  */
@@ -99,22 +93,33 @@ export function LandingPage() {
     }
   }, [])
 
+  const navigationType = useNavigationType()
+
   // React Router does not scroll to #anchors by itself, so do it here and move
   // keyboard focus to the section so the next Tab continues from there.
+  // Without a hash, a link to this page (not Back or Forward) opens it at the top instead of at
+  // the previous page's scroll position. The header's Home link scrolls smoothly when the visitor
+  // is already here, and moves focus to the main content so the next Tab starts from the top.
   useEffect(() => {
-    if (!location.hash) return
-    const target = document.getElementById(location.hash.slice(1))
-    if (!target) return
-    target.scrollIntoView({ block: 'start' })
-    target.focus({ preventScroll: true })
-  }, [location.key, location.hash])
+    if (location.hash) {
+      const target = document.getElementById(location.hash.slice(1))
+      if (!target) return
+      target.scrollIntoView({ block: 'start' })
+      target.focus({ preventScroll: true })
+      return
+    }
+    if (navigationType === 'POP') return
+    const homeTop = (location.state as { homeTop?: boolean } | null)?.homeTop === true
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    window.scrollTo({ top: 0, behavior: homeTop && !reduceMotion ? 'smooth' : 'auto' })
+    if (homeTop) document.getElementById('main-content')?.focus({ preventScroll: true })
+  }, [location.key, location.hash, location.state, navigationType])
 
   const heroHeadingId = useId()
   const organizationFacts = cleared(ORGANIZATION_FACTS)
   const privacyStatements = cleared(PRIVACY_STATEMENTS)
   const showPrivacyBlock = privacyStatements.length === PRIVACY_STATEMENTS.length
   const learningItems = cleared(LEARNING_ITEMS)
-  const showAbout = ABOUT_AND_CONTACT_APPROVED || SHOW_INFO_PAGE_PREVIEWS
   const shownCourses = featured.slice(0, 3)
 
   return (
@@ -151,14 +156,14 @@ export function LandingPage() {
             </p>
           </div>
           <figure className={styles.heroMedia}>
+            {/* Photo: Pexels 7689856, "People working in the office" (client request, 12 November 2026). */}
             <img
-              src="/images/landing/learner-dashboard-sample.png"
-              width={1200}
-              height={505}
-              alt="The learner dashboard: a welcome message, and a course to continue with its progress bar and an overdue due date."
+              src="/images/landing/team-working-office.jpg"
+              width={1600}
+              height={1066}
+              alt="Four colleagues wearing headsets work together at laptops and a monitor in an office."
               className={styles.heroImage}
             />
-            <figcaption className={styles.heroCaption}>The learner dashboard, shown with sample data.</figcaption>
           </figure>
         </div>
       </section>
@@ -217,8 +222,8 @@ export function LandingPage() {
         aria-labelledby="organizations-heading"
       >
         <div className={styles.container}>
-          <p className={cx('eyebrow', styles.eyebrowOnDark)}>For organizations</p>
-          <h2 className={cx('text-h2', styles.sectionHeading, styles.headingOnDark)} id="organizations-heading">
+          <p className="eyebrow">For organizations</p>
+          <h2 className={cx('text-h2', styles.sectionHeading)} id="organizations-heading">
             Train your staff in your organization&apos;s own workspace.
           </h2>
           {organizationFacts.length > 0 ? (
@@ -284,39 +289,6 @@ export function LandingPage() {
           </ul>
         </div>
       </section>
-
-      {/* ------------------------------------------------------------ About AQS */}
-      {showAbout ? (
-        <section className={cx(styles.section, styles.sectionMuted)} id="about" aria-labelledby="about-heading">
-          <div className={cx(styles.container, styles.split)}>
-            <div>
-              <p className="eyebrow">About AQS</p>
-              <h2 className={cx('text-h2', styles.sectionHeading)} id="about-heading">
-                About AQS
-              </h2>
-            </div>
-            <div className={styles.aboutBody}>
-              {ABOUT_CONTENT.ownershipLine ? <p>{ABOUT_CONTENT.ownershipLine}</p> : null}
-              {ABOUT_CONTENT.introduction ? (
-                <p>{ABOUT_CONTENT.introduction}</p>
-              ) : (
-                <PlaceholderNote label="Introduction">
-                  [Short introduction to AQS: two or three sentences, approved by AQS, with the official name and the
-                  approved ownership wording.]
-                </PlaceholderNote>
-              )}
-              <p className={styles.aboutLinks}>
-                <ButtonLink to="/about" variant="text" iconEnd="arrowRight">
-                  More about AQS
-                </ButtonLink>
-                <ButtonLink to="/contact" variant="text" iconEnd="arrowRight">
-                  Contact AQS
-                </ButtonLink>
-              </p>
-            </div>
-          </div>
-        </section>
-      ) : null}
 
       {/* -------------------------------------------------------------- Closing */}
       <section className={cx(styles.section, styles.closing)} aria-labelledby="closing-heading">

@@ -116,17 +116,42 @@
   display: block;
   width: 100%;
   height: auto;
+  /* The hero frame keeps its 1200 : 505 proportions; the 3:2 photo is cropped to fill it, keeping
+     the four people and the desk in view. */
+  aspect-ratio: 1200 / 505;
+  object-fit: cover;
+  object-position: 50% 60%;
   border: 1px solid var(--color-border);
-  border-radius: 16px;
+  /* Sharp corners (client request, 12 November 2026). */
+  border-radius: 0;
   background: var(--color-white);
   box-shadow: 0 12px 32px -4px rgb(30 58 95 / 15%);
 }
 
-.heroCaption {
-  margin-top: var(--space-12);
-  color: var(--color-text-muted);
-  font-size: var(--text-hint);
-  line-height: var(--leading-hint);
+/* Desktop (two columns): the photo fills the whole right column, top to bottom, at the height of
+   the text beside it (client request, 12 November 2026). Below 1024px the hero is one column and
+   the photo keeps the 1200 : 505 frame above. */
+@media (min-width: 1024px) {
+  /* Edge to edge (client request, 12 November 2026): the photo starts right under the header,
+     cancelling the hero's 80px top padding, and runs to the screen's right edge, cancelling the
+     container's 72px padding and, on screens wider than the 1440px grid, the centred margin. The
+     hero clips anything past the edge (overflow: hidden), so the page never scrolls sideways. */
+  .heroMedia {
+    align-self: stretch;
+    display: flex;
+    margin-top: -80px;
+    margin-right: calc(-72px - max(0px, (100vw - (var(--content-max-width) + 2 * 72px)) / 2));
+  }
+
+  /* Square corners and no frame where the photo touches the header and the screen edge. The photo
+     keeps the left part of the 3:2 frame in view, where the two women work at the screen. */
+  .heroImage {
+    height: 100%;
+    aspect-ratio: auto;
+    object-position: 4% 50%;
+    border: 0;
+    box-shadow: none;
+  }
 }
 
 /* -------------------------------------------------------------- Sections */
@@ -264,18 +289,13 @@
 
 /* ------------------------------------------------------ For organizations */
 
+/* Client request (11 November 2026): the band uses the page's light palette (the hero's blue-50
+   tint, dark text, the orange accent line) instead of a navy block. Text contrast: --color-text
+   17.2:1, --color-text-subtle 7.0:1 and the eyebrow's --color-accent-text 4.9:1 on blue-50. */
 .organizations {
-  background: var(--color-navy);
-  color: var(--color-white);
-}
-
-/* White on navy is 11.5:1; the orange eyebrow colour would fail contrast here */
-.organizations .eyebrowOnDark {
-  color: var(--color-blue-100);
-}
-
-.headingOnDark {
-  color: var(--color-white);
+  background: var(--color-blue-50);
+  border-top: 1px solid var(--color-blue-100);
+  border-bottom: 1px solid var(--color-blue-100);
 }
 
 .facts {
@@ -294,7 +314,7 @@
 
 .factTitle {
   margin: 0 0 var(--space-8);
-  color: var(--color-white);
+  color: var(--color-text);
   font-size: var(--text-card-sm);
   line-height: var(--leading-card-sm);
   font-weight: var(--weight-semibold);
@@ -303,14 +323,14 @@
 .fact p,
 .step p {
   margin: 0;
-  color: var(--color-blue-100);
+  color: var(--color-text-subtle);
   font-size: var(--text-body-sm);
   line-height: var(--leading-body-sm);
 }
 
 .stepsHeading {
   margin: 56px 0 0;
-  color: var(--color-white);
+  color: var(--color-text);
   font-size: 22px;
   line-height: 30px;
   font-weight: var(--weight-semibold);
@@ -331,23 +351,18 @@
 }
 
 .step p {
-  color: var(--color-white);
+  color: var(--color-text);
   font-size: var(--text-body);
   line-height: var(--leading-body);
 }
 
 .stepNumber {
-  color: var(--color-blue-100);
+  color: var(--color-action);
   font-size: var(--text-caption);
   font-weight: var(--weight-bold);
 }
 
-/* Focus ring on the navy band uses the light ring (6.38:1 on navy) */
-.organizations :focus-visible {
-  box-shadow: 0 0 0 2px var(--color-navy), 0 0 0 4px var(--focus-ring-on-dark);
-}
-
-/* ------------------------------------- Statements, learning items, About */
+/* ------------------------------------------- Statements, learning items */
 
 .statements {
   display: grid;
@@ -363,8 +378,7 @@
 }
 
 .statement p,
-.learning p,
-.aboutBody p {
+.learning p {
   margin: 0;
   color: var(--color-text-subtle);
   font-size: var(--text-body-sm);
@@ -378,17 +392,6 @@
   margin: var(--space-40) 0 0;
   padding: 0;
   list-style: none;
-}
-
-.aboutBody {
-  display: grid;
-  gap: var(--space-16);
-}
-
-.aboutLinks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-24);
 }
 
 /* --------------------------------------------------------------- Closing */
