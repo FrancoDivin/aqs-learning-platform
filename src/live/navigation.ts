@@ -52,6 +52,9 @@ export function platformShell(): ShellDefinition {
   // WP3 (task 3-4): workspace requests from the public form, after Organizations. Not in the approved
   // shell either: added with the request review (research and design report, 10 November 2026).
   const orgs = withVideo.findIndex((item) => item.label === 'Organizations') + 1
-  const navItems = [...withVideo.slice(0, orgs), { label: 'Workspace requests', to: '/admin/requests' }, ...withVideo.slice(orgs)]
+  const withRequests = [...withVideo.slice(0, orgs), { label: 'Workspace requests', to: '/admin/requests' }, ...withVideo.slice(orgs)]
+  // Assignment 3.5: the page is a support lookup for one case, not a list of users, so the live menu says so.
+  // The URL stays /admin/users; design previews keep the design label.
+  const navItems = withRequests.map((item) => (item.label === 'Users and roles' ? { ...item, label: 'Support lookup' } : item))
   return { ...shell, navItems }
 }

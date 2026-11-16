@@ -63,7 +63,7 @@ const CASES = [
     who: 'platform admin',
     path: '/admin',
     admin: true,
-    items: ['Overview', 'Organizations', 'Workspace requests', 'Users and roles', 'Courses', 'Video reviews', 'Reports'],
+    items: ['Overview', 'Organizations', 'Workspace requests', 'Support lookup', 'Courses', 'Video reviews', 'Reports'],
   },
 ]
 
