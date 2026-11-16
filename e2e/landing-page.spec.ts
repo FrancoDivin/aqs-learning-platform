@@ -87,15 +87,17 @@ test.describe('landing page content', () => {
     await expect(page.getByText(/Hero image placeholder|Partner 1|Thumbnail placeholder/)).toHaveCount(0)
   })
 
-  test('the organizations section ends with Request a workspace, styled for the navy band (WP3)', async ({ page }) => {
+  test('the organizations section ends with Request a workspace, styled for the light band (WP3)', async ({ page }) => {
     await page.goto('/')
     const section = page.locator('#organizations')
     const request = section.getByRole('link', { name: 'Request a workspace' })
     await expect(request).toHaveAttribute('href', '/request-workspace')
     await expect(section.getByText('AQS reviews every request. Nothing is set up until we have checked it with you.')).toBeVisible()
     await section.screenshot({ path: 'test-results/wp3-screens/landing-organizations-section-1440.png' })
-    // D41: on navy the primary button is the inverse style, not action blue.
-    await expect(request).not.toHaveCSS('background-color', 'rgb(29, 78, 216)')
+    // The band is light (client request, 11 November 2026), so the standard action-blue primary
+    // applies (D41), and the note uses the readable secondary text colour.
+    await expect(request).toHaveCSS('background-color', 'rgb(29, 78, 216)')
+    await expect(section.getByText('AQS reviews every request.', { exact: false })).toHaveCSS('color', 'rgb(71, 85, 105)')
     await request.click()
     await expect(page).toHaveURL(/\/request-workspace$/)
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()

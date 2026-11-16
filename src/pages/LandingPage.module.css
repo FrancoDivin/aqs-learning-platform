@@ -401,14 +401,9 @@
 
 .organizationsAction p {
   margin: 0;
-  color: var(--color-blue-100);
+  color: var(--color-text-subtle);
   font-size: var(--text-body-sm);
   line-height: var(--leading-body-sm);
-}
-
-/* Focus ring on the navy band uses the light ring (6.38:1 on navy) */
-.organizations :focus-visible {
-  box-shadow: 0 0 0 2px var(--color-navy), 0 0 0 4px var(--focus-ring-on-dark);
 }
 
 /* ------------------------------------- Statements, learning items, About */
