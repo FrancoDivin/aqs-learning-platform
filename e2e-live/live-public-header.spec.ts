@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 import { mockSupabase, sessionTables, signIn, USER } from './mock-supabase.js'
+import { settleAnimations } from '../e2e/settle-animations.js'
 
 // Landing page Concept C (owner, 10 November 2026): the public header knows whether someone is signed
 // in. Signed in: "My workspace" and an account menu with the person's workspaces and Sign out, instead of
@@ -87,6 +88,7 @@ for (const width of [1440, 820, 390]) {
     if (width >= 1024) await banner(page).getByRole('button', { name: /Account menu for/ }).click()
     else await banner(page).getByRole('button', { name: 'Open menu' }).click()
     await page.screenshot({ path: `test-results/landing-concept-c/signed-in-header-${width}.png` })
+    await settleAnimations(page)
     const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()
     expect(result.violations.map((v) => `${v.id}: ${v.nodes.length}`)).toEqual([])
   })

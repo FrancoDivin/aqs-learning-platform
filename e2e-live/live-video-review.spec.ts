@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 import { mockSupabase, sessionTables, signIn, tusMock, USER, type Handler, type Mock } from './mock-supabase.js'
+import { settleAnimations } from '../e2e/settle-animations.js'
 
 // CM2-3 (D39; migration 0019) against the MOCKED Supabase API: video submission (resumable upload,
 // interruption, failure, replace, withdraw), the two AQS review gates, the master re-attach and
@@ -463,6 +464,7 @@ for (const width of [1440, 390]) {
     const scan = async (page: Page, name: string) => {
       // Review screenshots for the owner (synthetic data): test-results/cm2-3-screens/<name>-<width>.png
       await page.screenshot({ path: `test-results/cm2-3-screens/${name}-${width}.png`, fullPage: true })
+      await settleAnimations(page)
       const result = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
       expect(result.violations.map((v) => `${v.id}: ${v.nodes.length}`)).toEqual([])
       // The new CM2-3 regions never stick out of the viewport; on failure, name what does. (The
