@@ -7,7 +7,6 @@ import { listOrgCourses, type OrgCourse } from '../../data/authoring'
 import { listInvitations, listMembers } from '../../data/orgAdmin'
 import { orgAdminShell } from '../../navigation'
 import { useCurrentOrg } from '../../org-context'
-import { useSession } from '../../session-context'
 import { useResource } from '../../useResource'
 import { courseStatus } from '../teach/teach-data'
 
@@ -20,12 +19,10 @@ import { courseStatus } from '../teach/teach-data'
  */
 export default function LiveOrgAdminDashboard() {
   const org = useCurrentOrg()
-  const { me } = useSession()
   const data = useResource(async () => {
     const [members, invitations, courses] = await Promise.all([listMembers(org.id), listInvitations(org.id), listOrgCourses(org.id)])
     return { members, invitations, courses, loadedAt: Date.now() }
   }, org.id)
-  const firstName = me.state === 'ready' && me.data ? me.data.fullName.split(' ')[0] : ''
   const base = `/o/${org.slug}`
 
   const columns: Array<TableColumn<OrgCourse>> = [
@@ -46,8 +43,8 @@ export default function LiveOrgAdminDashboard() {
       align: 'right',
       render: (c) => (
         <ButtonLink to={`${base}/teach/courses/${c.id}`} variant="secondary" size="sm">
-          {c.publicationRequestedAt && c.status === 'draft' ? 'Review' : 'Open'}
-          <span className="visually-hidden"> {c.title}</span>
+          {c.publicationRequestedAt && c.status === 'draft' ? 'Review' : 'Open'} in Teaching Studio
+          <span className="visually-hidden">: {c.title}</span>
         </ButtonLink>
       ),
     },
@@ -56,7 +53,7 @@ export default function LiveOrgAdminDashboard() {
   return (
     <LiveShell shell={orgAdminShell(org.slug, org.name)}>
       <PageHeader
-        title={`Welcome back${firstName ? `, ${firstName}` : ''}`}
+        title={`${org.name} overview`}
         description={`Manage ${org.name}: people, invitations and courses.`}
         actions={<ButtonLink to={`${base}/manage/invitations`} iconStart="plus">Invite members</ButtonLink>}
       />
@@ -91,11 +88,11 @@ export default function LiveOrgAdminDashboard() {
                   <div className={styles.cardPad}>
                     <CardHeader
                       title="Courses"
-                      subtitle="Approve publication and assign courses to members."
+                      subtitle="Approve publication and assign courses to members. Courses open in the Teaching Studio."
                       size="md"
                       action={
                         <ButtonLink to={`${base}/teach/courses`} variant="text" size="sm" iconEnd="arrowRight">
-                          All courses
+                          All courses in Teaching Studio
                         </ButtonLink>
                       }
                     />
