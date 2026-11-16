@@ -5,6 +5,7 @@ import { Banner, Button, ButtonLink, Card, Icon } from '../../../components/ui'
 import { useAuth } from '../../../lib/auth-context'
 import { cx } from '../../../lib/cx'
 import { countOf } from '../../../lib/plural'
+import { CourseArtwork } from '../../components/CourseArtwork/CourseArtwork'
 import styles from '../../../pages/CourseDetailPage.module.css'
 import { NotFound } from '../../../pages/NotFound'
 import { query } from '../../api'
@@ -118,7 +119,9 @@ function DetailContent({ data, signedIn, onChanged }: { data: DetailData; signed
             {thumbnail ? (
               <img src={thumbnail} alt="" className={styles.imagePlaceholder} style={{ objectFit: 'cover' }} />
             ) : (
-              <div className={styles.imagePlaceholder} aria-hidden="true" />
+              <div className={styles.imagePlaceholder} aria-hidden="true" style={{ border: 0, padding: 0 }}>
+                <CourseArtwork title={course.title} tone="dark" />
+              </div>
             )}
             <figcaption>
               <p className={styles.imageMeta}>{structure}</p>
@@ -317,7 +320,7 @@ function ModuleList({
                       ) : null}
                     </span>
                     {openPreview === lesson.id && preview !== undefined ? (
-                      <div style={{ gridColumn: '1 / -1', paddingTop: 8 }}>
+                      <div style={{ gridColumn: '1 / -1', paddingTop: 'var(--space-8)' }}>
                         <LessonText body={preview} />
                       </div>
                     ) : null}
