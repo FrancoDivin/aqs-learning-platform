@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
 import { COURSE, mockSupabase, sessionTables, signIn } from './mock-supabase.js'
+import { settleAnimations } from '../e2e/settle-animations.js'
 
 // CM3-4 (G15, owner approval 4 November 2026): on narrow screens the lesson's Overview and
 // Documents open in a bottom sheet (Notes stays deferred). Focus stays in the sheet, Escape closes
@@ -56,6 +57,7 @@ test.describe('at 390 px', () => {
     await page.getByRole('button', { name: 'Lesson details' }).click()
     await expect(page.getByRole('dialog')).toBeVisible()
     await page.screenshot({ path: 'test-results/cm3-4-screens/sheet-390.png' })
+    await settleAnimations(page)
     const result = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']).analyze()
     expect(result.violations.map((v) => `${v.id}: ${v.nodes.length}`)).toEqual([])
     await page.getByRole('dialog').getByRole('button', { name: 'Close' }).click()

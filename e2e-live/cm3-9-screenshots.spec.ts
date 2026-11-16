@@ -105,9 +105,12 @@ const SCREENS: { who: 'public' | 'signed-in' | 'platform admin'; routes: string[
 ]
 
 // The CM2/CM3 screens that are not in the accessibility list, added for the review.
-const EXTRA: { who: 'signed-in' | 'platform admin'; routes: string[] }[] = [
+const EXTRA: { who: 'public' | 'signed-in' | 'platform admin'; routes: string[] }[] = [
   { who: 'platform admin', routes: ['/admin/video-reviews'] },
   { who: 'signed-in', routes: [`/o/abc/teach/courses/${COURSE.id}/preview`] },
+  // Task 8-6: the screens added since CM3-9 (sign-up, Get Started, workspace requests, sign-in errors).
+  { who: 'public', routes: ['/sign-up', '/get-started', '/request-workspace', '/sign-in?error=cancelled'] },
+  { who: 'platform admin', routes: ['/admin/requests'] },
 ]
 
 const slug = (route: string) => (route === '/' ? 'home' : route.replace(/^\/+/, '').replace(/[^a-z0-9]+/gi, '-').replace(/-+$/, '').slice(0, 80))
