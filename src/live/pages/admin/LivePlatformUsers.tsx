@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { PageHeader } from '../../../components/layout/PageHeader'
-import { Badge, Banner, Button, Card, CardHeader, Table, TextField, type TableColumn } from '../../../components/ui'
+import { Badge, Banner, Button, Card, CardHeader, EmptyState, Table, TextField, type TableColumn } from '../../../components/ui'
 import styles from '../../../pages/PlatformAdminUsersPage.module.css'
 import { ActionFeedback } from '../../components/States'
 import { LiveShell } from '../../components/LiveShell'
@@ -43,7 +43,7 @@ export default function LivePlatformUsers() {
       header: <span className="visually-hidden">Actions</span>,
       render: (r) =>
         r.status === 'pending' ? (
-          <Button
+          <Button needsConnection
             variant="text"
             size="sm"
             onClick={async () => {
@@ -89,7 +89,7 @@ export default function LivePlatformUsers() {
       {rows ? (
         <section className={styles.panel} aria-label="Lookup results">
           <div className={styles.tableWrap}>
-            <Table caption="Lookup results" columns={columns} rows={rows} getRowKey={(r) => r.id} emptyMessage="No invitations match." />
+            <Table caption="Lookup results" columns={columns} rows={rows} getRowKey={(r) => r.id} emptyMessage={<EmptyState title="No invitations match" description="Check the email address and search again with the full address." />} />
           </div>
         </section>
       ) : null}

@@ -50,7 +50,7 @@ export default function LiveOrganizationRequestDetail() {
     data.reload()
   })
 
-  if (data.state === 'loading') return <LiveShell shell={platformShell()}><LoadingBlock label="Loading request" rows={4} /></LiveShell>
+  if (data.state === 'loading') return <LiveShell shell={platformShell()}><LoadingBlock shape="detail" label="Loading request" rows={4} /></LiveShell>
   if (data.state === 'error') return <LiveShell shell={platformShell()}><ErrorBanner error={data.error} onRetry={data.reload} /></LiveShell>
   if (!data.data) return <NotFound />
   const r = data.data

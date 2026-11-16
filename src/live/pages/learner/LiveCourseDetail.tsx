@@ -71,7 +71,7 @@ export default function LiveCourseDetail() {
     <PublicLayout>
       {data.state === 'loading' ? (
         <div className={styles.container}>
-          <LoadingBlock label="Loading course" rows={4} />
+          <LoadingBlock label="Loading course" shape="detail" />
         </div>
       ) : null}
       {data.state === 'error' ? (

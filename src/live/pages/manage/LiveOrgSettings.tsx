@@ -47,7 +47,7 @@ export default function LiveOrgSettings() {
         </Card>
         <Card as="section" padding="lg" aria-label="Organisation profile" className={styles.card}>
           <CardHeader title="Organisation profile" subtitle="What AQS holds about your organisation." headingLevel="h2" size="md" />
-          <Loaded resource={profile} label="Loading the organisation profile">
+          <Loaded resource={profile} label="Loading the organisation profile" loading="form">
             {(p) =>
               p ? (
                 <dl className={styles.fields}>

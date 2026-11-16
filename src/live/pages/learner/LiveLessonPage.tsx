@@ -269,7 +269,7 @@ function Attachments({ resources }: { resources: LessonContent['resources'] }) {
                 {file.contentType.split('/')[1]?.toUpperCase()} · {formatBytes(file.sizeBytes)}
               </span>
             </span>
-            <Button
+            <Button needsConnection
               variant="text"
               className={styles.download}
               onClick={async () => {

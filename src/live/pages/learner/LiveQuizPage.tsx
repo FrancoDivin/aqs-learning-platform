@@ -59,8 +59,8 @@ export default function LiveQuizPage() {
 
   if (data.state === 'loading' || data.state === 'error') {
     return (
-      <main id="main-content" style={{ maxWidth: 800, margin: '32px auto', padding: '0 16px' }}>
-        {data.state === 'loading' ? <LoadingBlock label="Loading quiz" /> : <ErrorBanner error={data.error} onRetry={data.reload} />}
+      <main id="main-content" style={{ maxWidth: 800, margin: 'var(--space-32) auto', padding: '0 var(--space-16)' }}>
+        {data.state === 'loading' ? <LoadingBlock label="Loading quiz" shape="form" /> : <ErrorBanner error={data.error} onRetry={data.reload} />}
       </main>
     )
   }
@@ -255,7 +255,7 @@ function QuizFlow({ data, user, onFinished }: { data: QuizData; user: { name: st
 
 function QuizReview({ quiz, onBack }: { quiz: LearnerQuiz; onBack: () => void }) {
   const review = useResource(() => getQuizReview(quiz.id), quiz.id)
-  if (review.state === 'loading') return <LoadingBlock label="Loading your answers" />
+  if (review.state === 'loading') return <LoadingBlock label="Loading your answers" shape="form" />
   if (review.state === 'error') return <ErrorBanner error={review.error} onRetry={review.reload} />
   const byOption = new Map<string, ReviewRow>(review.data.map((row) => [row.optionId, row]))
   return (

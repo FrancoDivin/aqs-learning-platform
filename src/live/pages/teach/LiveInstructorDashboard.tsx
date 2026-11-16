@@ -71,7 +71,7 @@ export default function LiveInstructorDashboard() {
         title={`Welcome back${firstName ? `, ${firstName}` : ''}`}
         actions={<ButtonLink to={`${base}/courses#new`}>Create course</ButtonLink>}
       />
-      <Loaded resource={courses} label="Loading your courses">
+      <Loaded resource={courses} label="Loading your courses" loading="dashboard">
         {(list) => (
           <>
             <div className={styles.stats}>

@@ -97,7 +97,7 @@ export function LessonPanel({
             <Button type="submit" variant="secondary" loading={run.busy} disabled={!textChanged}>
               Save lesson
             </Button>
-            <Button
+            <Button needsConnection
               variant="text"
               onClick={async () => {
                 const ok = await confirm({
@@ -178,7 +178,7 @@ export function LessonPanel({
                         >
                           {file.downloadable ? 'Stop downloads' : 'Allow downloads'}
                         </Button>
-                        <Button
+                        <Button needsConnection
                           variant="text"
                           size="sm"
                           onClick={async () => {

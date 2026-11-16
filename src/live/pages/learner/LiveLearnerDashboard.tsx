@@ -45,7 +45,7 @@ export default function LiveLearnerDashboard() {
         <h1 className="text-title">Welcome back{firstName ? `, ${firstName}` : ''}</h1>
       </header>
 
-      {overview.state === 'loading' ? <LoadingBlock label="Loading your dashboard" rows={4} /> : null}
+      {overview.state === 'loading' ? <LoadingBlock label="Loading your dashboard" shape="cards" /> : null}
       {overview.state === 'error' ? <ErrorBanner error={overview.error} onRetry={overview.reload} /> : null}
       {overview.state === 'ready' && overview.data.unavailable.length > 0 ? (
         <Banner tone="info">

@@ -102,7 +102,7 @@ export default function LiveOrgMembers() {
           <div className={styles.badges}>
             {toggle('instructor')}
             {toggle('learner')}
-            <Button
+            <Button needsConnection
               variant="text"
               size="sm"
               onClick={async () => {
@@ -116,7 +116,7 @@ export default function LiveOrgMembers() {
             >
               Suspend<span className="visually-hidden"> {m.fullName || m.email}</span>
             </Button>
-            <Button
+            <Button needsConnection
               variant="text"
               size="sm"
               onClick={async () => {
@@ -149,7 +149,7 @@ export default function LiveOrgMembers() {
         }
       />
       <ActionFeedback error={act.error} success={message} />
-      {data.state === 'loading' ? <LoadingBlock label="Loading members" /> : null}
+      {data.state === 'loading' ? <LoadingBlock label="Loading members" shape="table" /> : null}
       {data.state === 'error' ? <ErrorBanner error={data.error} onRetry={data.reload} /> : null}
       {data.state === 'ready' ? (
         <>

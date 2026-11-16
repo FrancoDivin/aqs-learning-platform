@@ -63,7 +63,7 @@ export default function LiveOrgAdminDashboard() {
           This organization is being set up. Learners can join once a Platform Admin activates it.
         </p>
       ) : null}
-      <Loaded resource={data} label="Loading your organization">
+      <Loaded resource={data} label="Loading your organization" loading="dashboard">
         {({ members, invitations, courses, loadedAt }) => {
           const pending = invitations.filter((i) => i.status === 'pending' && Date.parse(i.expiresAt) > loadedAt)
           const awaiting = courses.filter((c) => c.status === 'draft' && c.publicationRequestedAt)

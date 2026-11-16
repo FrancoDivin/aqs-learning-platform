@@ -47,7 +47,7 @@ export default function LiveTeachLearners() {
   return (
     <LiveShell shell={instructorShell(org.slug, org.name)}>
       <PageHeader title="Learners" description="Progress and quiz results for the courses you teach." />
-      <Loaded resource={courses} label="Loading courses">
+      <Loaded resource={courses} label="Loading courses" loading="table">
         {(list) => {
           const published = list.filter((c) => c.status !== 'draft')
           if (published.length === 0) {
@@ -119,13 +119,13 @@ function CourseLearners({ courseId }: { courseId: string }) {
   ]
 
   return (
-    <Loaded resource={data} label="Loading learners">
+    <Loaded resource={data} label="Loading learners" loading="table">
       {({ learners, results, now }) => {
         const overdue = learners.filter((r) => isOverdueRow(r, now)).length
         return (
-        <div style={{ display: 'grid', gap: 24 }}>
+        <div style={{ display: 'grid', gap: 'var(--space-24)' }}>
           <Card padding="none" as="section" aria-label="Enrolled learners">
-            <div style={{ padding: 24 }}>
+            <div style={{ padding: 'var(--space-24)' }}>
               <CardHeader
                 title="Enrolled learners"
                 subtitle={`${learners.length} learners${overdue > 0 ? ` · ${overdue} overdue` : ''}`}
@@ -133,14 +133,14 @@ function CourseLearners({ courseId }: { courseId: string }) {
                 size="md"
               />
             </div>
-            <Table caption="Enrolled learners" columns={columns} rows={learners} getRowKey={(r) => r.user_id} emptyMessage="No one is enrolled yet." />
+            <Table caption="Enrolled learners" columns={columns} rows={learners} getRowKey={(r) => r.user_id} emptyMessage={<EmptyState title="No one is enrolled yet" description="Learners appear here when they enroll, or when an Organization Admin assigns the course." />} />
           </Card>
           {results.map((quiz) => (
             <Card key={quiz.lesson} padding="none" as="section" aria-label={`Quiz results: ${quiz.lesson}`}>
-              <div style={{ padding: 24 }}>
+              <div style={{ padding: 'var(--space-24)' }}>
                 <CardHeader title={quiz.lesson} subtitle="Quiz results" headingLevel="h2" size="md" />
               </div>
-              <Table caption={`Quiz results: ${quiz.lesson}`} columns={resultColumns} rows={quiz.rows} getRowKey={(r) => r.user_id} emptyMessage="No attempts yet." />
+              <Table caption={`Quiz results: ${quiz.lesson}`} columns={resultColumns} rows={quiz.rows} getRowKey={(r) => r.user_id} emptyMessage={<EmptyState title="No attempts yet" description="Results appear here after learners submit this quiz." />} />
             </Card>
           ))}
         </div>
