@@ -1,6 +1,8 @@
 # Page state matrix (tasks 6-1 to 6-5)
 
-Every live page × loading, empty, error, success and offline. Branch `cm3/page-states`.
+Every live page × loading, empty, error, success and offline. Built on `cm3/page-states`; reconciled
+onto `refresh/base-phases-1-3` on `refine/a1-reconcile-cm3` (16 November 2026), which adds the legal
+pages and, in development builds, About and Contact.
 
 How each state works everywhere (shared components, `src/live/components/States.tsx`):
 
@@ -14,7 +16,9 @@ How each state works everywhere (shared components, `src/live/components/States.
 - **Success (6-3):** `ActionFeedback`, placed directly with the buttons of the form or panel it
   belongs to; the confirmation appears in a live region that is always on the page (role status), so
   it is announced reliably; errors use role alert.
-- **Offline (6-4):** one notice at the top of every live page while the browser is offline;
+- **Offline (6-4):** one notice while the browser is offline: inside a workspace it sits in the
+  shell's banner slot (between the header and the content, in all four workspaces); pages without a
+  shell (public, sign-in, lessons, quizzes) show it at the top of the page instead, never both;
   submit buttons and buttons with a loading state are disabled ("unavailable while offline") and
   enabled again when the connection returns. Nothing is queued or saved offline (D7).
 
@@ -49,8 +53,17 @@ How each state works everywhere (shared components, `src/live/components/States.
 | Users lookup (`/admin/users`) | rows | No match: check the address | Banner | — | Notice; Search disabled |
 | Video reviews (`/admin/video-reviews`) | table | Nothing here: per filter | Banner + retry | — | Notice |
 | Video review detail | detail | — | Banner + retry | Each gate's decision | Notice; decisions disabled |
+| Terms of Use, Privacy Policy, Cookie Policy (`/terms`, `/privacy`, `/cookies`) | — (text is in the page's code, nothing is fetched) | — | — (no data to fail) | — | Notice at the top; the text stays readable |
+| About AQS, Contact (`/about`, `/contact`; development builds only, labelled sample content) | — (nothing is fetched) | — | — | — | Notice at the top |
 | Sign-in, sign-up, callback, invitation | rows | — | Plain reason (cancelled, expired, failed; 2-4) | Check your email | Notice; sign-in buttons disabled |
 
+Below 1024 px live tables show one card per row (base, Phase 3); the table placeholder matches it
+(no header row, one column per row), so nothing is wider than the screen while loading at 390 or
+768 px.
+
 Proof: `e2e-live/live-page-states.spec.ts` (offline notice and disabled actions, the table-shaped
-placeholder, the empty state's next step, the always-present success live region); the existing
+placeholder, the empty state's next step, the always-present success live region);
+`e2e-live/live-page-states-shells.spec.ts` (the notice in each workspace's banner slot at 1440, 768
+and 390 px, the no-shell fallback, the card-shaped table placeholder at 390 and 768 px with no
+overflow and no shift when content arrives); the existing
 axe checks on every live page (`e2e-live/live-accessibility.spec.ts`).
