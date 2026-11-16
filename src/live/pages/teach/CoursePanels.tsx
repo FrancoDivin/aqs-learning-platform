@@ -101,7 +101,7 @@ export function DetailsPanel({ course, editable, onChanged }: { course: Authorin
               }}
             />
             {course.thumbnailPath ? (
-              <Button
+              <Button needsConnection
                 variant="text"
                 size="sm"
                 onClick={async () => {
@@ -149,7 +149,7 @@ export function StaffPanel({
     <Card as="section" padding="md" aria-label="Course staff">
       <CardHeader title="Course staff" subtitle="People who may edit this course while it is a draft." headingLevel="h2" size="md" />
       <ActionFeedback error={run.error} />
-      <Loaded resource={members} label="Loading staff">
+      <Loaded resource={members} label="Loading staff" loading="table">
         {(list) => {
           const names = new Map(list.map((m) => [m.user_id, m.full_name || m.email]))
           const candidates = list.filter((m) => !staffIds.has(m.user_id) && (m.roles.includes('instructor') || m.roles.includes('org_admin')))
@@ -360,7 +360,7 @@ export function AssignPanel({ course }: { course: AuthoringCourse }) {
     <Card as="section" padding="md" aria-label="Assign to members">
       <CardHeader title="Assign to members" subtitle="Members you assign see the course in My courses." headingLevel="h2" size="md" />
       <ActionFeedback error={assign.error} success={message} />
-      <Loaded resource={data} label="Loading members">
+      <Loaded resource={data} label="Loading members" loading="table">
         {({ candidates, enrolledCount }) => (
           <form
             className={styles.stack}

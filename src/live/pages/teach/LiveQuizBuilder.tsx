@@ -45,7 +45,7 @@ export default function LiveQuizBuilder() {
 
   return (
     <LiveShell shell={shell}>
-      {data.state === 'loading' ? <LoadingBlock label="Loading quiz" rows={4} /> : null}
+      {data.state === 'loading' ? <LoadingBlock label="Loading quiz" shape="editor" /> : null}
       {data.state === 'error' ? <ErrorBanner error={data.error} onRetry={data.reload} /> : null}
       {data.state === 'ready' && !data.data ? <NotFound /> : null}
       {data.state === 'ready' && data.data ? (
@@ -267,7 +267,7 @@ function QuestionEditor({
               <Button variant="text" size="sm" disabled={index === count - 1} onClick={() => onMove(1)}>
                 Move down<span className="visually-hidden"> {label}</span>
               </Button>
-              <Button variant="text" size="sm" onClick={onDelete}>
+              <Button needsConnection variant="text" size="sm" onClick={onDelete}>
                 Delete<span className="visually-hidden"> {label}</span>
               </Button>
             </>

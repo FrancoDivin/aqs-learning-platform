@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { PageHeader } from '../../../components/layout/PageHeader'
-import { Badge, Banner, Button, Card, CardHeader, Select, Table, TextField, type BadgeTone, type TableColumn } from '../../../components/ui'
+import { Badge, Banner, Button, Card, CardHeader, EmptyState, Select, Table, TextField, type BadgeTone, type TableColumn } from '../../../components/ui'
 import styles from '../../../pages/OrgInvitationsPage.module.css'
 import { ActionFeedback, Loaded } from '../../components/States'
 import { LiveShell } from '../../components/LiveShell'
@@ -154,7 +154,7 @@ export default function LiveOrgInvitations() {
 
       <ActionFeedback error={act.error} success={sent ? null : message} />
       <section aria-label="Invitations" className={styles.panel}>
-        <Loaded resource={list} label="Loading invitations">
+        <Loaded resource={list} label="Loading invitations" loading="table">
           {({ rows, loadedAt }) => (
             <div className={styles.tableWrap}>
               <Table
@@ -162,7 +162,7 @@ export default function LiveOrgInvitations() {
                 columns={columns}
                 rows={rows.map((i) => ({ ...i, shown: i.status === 'pending' && Date.parse(i.expiresAt) <= loadedAt ? 'expired' : i.status }))}
                 getRowKey={(i) => i.id}
-                emptyMessage="No invitations yet."
+                emptyMessage={<EmptyState title="No invitations yet" description="Send the first one with the form above. Each invitation link works for seven days." />}
               />
             </div>
           )}

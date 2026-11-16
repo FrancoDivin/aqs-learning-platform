@@ -37,7 +37,7 @@ export default function LiveCourseEditor() {
 
   return (
     <LiveShell shell={shell}>
-      {data.state === 'loading' ? <LoadingBlock label="Loading course" rows={4} /> : null}
+      {data.state === 'loading' ? <LoadingBlock label="Loading course" shape="editor" /> : null}
       {data.state === 'error' ? <ErrorBanner error={data.error} onRetry={data.reload} /> : null}
       {data.state === 'ready' && !data.data ? <NotFound /> : null}
       {data.state === 'ready' && data.data && person ? (

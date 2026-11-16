@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { PageHeader } from '../../../components/layout/PageHeader'
-import { Badge, Banner, Button, Card, CardHeader, Select, StatCard, Table, TextField, type TableColumn, useConfirm } from '../../../components/ui'
+import { Badge, Banner, Button, Card, CardHeader, EmptyState, Select, StatCard, Table, TextField, type TableColumn, useConfirm } from '../../../components/ui'
 import { ORGANIZATION_TYPE_OPTIONS, organizationTypeLabel } from '../../../lib/workspace-request'
 import styles from '../../../pages/PlatformAdminOrganizationDetailPage.module.css'
 import { NotFound } from '../../../pages/NotFound'
@@ -56,7 +56,7 @@ export default function LivePlatformOrganizationDetail() {
     data.reload()
   })
 
-  if (data.state === 'loading') return <LiveShell shell={platformShell()}><LoadingBlock label="Loading organization" rows={4} /></LiveShell>
+  if (data.state === 'loading') return <LiveShell shell={platformShell()}><LoadingBlock shape="detail" label="Loading organization" rows={4} /></LiveShell>
   if (data.state === 'error') return <LiveShell shell={platformShell()}><ErrorBanner error={data.error} onRetry={data.reload} /></LiveShell>
   if (!data.data) return <NotFound />
   const { org, row, admins, invitations, profile, origin, loadedAt } = data.data
@@ -146,7 +146,7 @@ export default function LivePlatformOrganizationDetail() {
           </>
         ) : null}
         {org.status === 'active' ? (
-          <Button
+          <Button needsConnection
             variant="danger"
             onClick={async () => {
               const ok = await confirm({
@@ -171,7 +171,7 @@ export default function LivePlatformOrganizationDetail() {
       <Card as="section" padding="lg" aria-label="Organization Admins" className={styles.panel}>
         <CardHeader title="Organization Admins" subtitle="Names and email addresses are not shown routinely; use the support lookup for a case." headingLevel="h2" size="md" />
         {admins.length === 0 ? (
-          <p className={styles.muted}>No Organization Admin yet.</p>
+          <EmptyState title="No Organization Admin yet" description="Send an Organization Admin invitation for this organization from this page." />
         ) : (
           <ul>
             {admins.map((a, index) => (
@@ -250,7 +250,7 @@ export default function LivePlatformOrganizationDetail() {
 
       <section aria-label="Invitations" className={styles.panel}>
         <div className={styles.tableWrap}>
-          <Table caption="Invitations you can see" columns={inviteColumns} rows={invitations} getRowKey={(i) => i.id} emptyMessage="No invitations to show." />
+          <Table caption="Invitations you can see" columns={inviteColumns} rows={invitations} getRowKey={(i) => i.id} emptyMessage={<EmptyState title="No invitations yet" description="Invitations sent for this organization appear here." />} />
         </div>
         <p className={styles.note}>Shows pending Organization Admin invitations and the invitations you sent.</p>
       </section>

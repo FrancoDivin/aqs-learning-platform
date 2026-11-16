@@ -47,7 +47,7 @@ export default function LiveInstructorCourses() {
   return (
     <LiveShell shell={instructorShell(org.slug, org.name)}>
       <PageHeader title="Courses" description="Draft, publish and maintain your courses." />
-      <Loaded resource={courses} label="Loading courses">
+      <Loaded resource={courses} label="Loading courses" loading="table">
         {(list) => (
           <section className={styles.panel} aria-label="Your courses">
             <div className={styles.tableWrap}>
