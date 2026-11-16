@@ -267,7 +267,7 @@ function QuizReview({ quiz, onBack }: { quiz: LearnerQuiz; onBack: () => void })
           <Card key={question.id} padding="lg" className={styles.questionCard}>
             <p className={styles.counter}>Question {index + 1}</p>
             <h3 className={styles.prompt}>{question.prompt}</h3>
-            <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 8 }}>
+            <ul style={{ listStyle: 'none', padding: 0, display: 'grid', gap: 'var(--space-8)' }}>
               {question.options.map((option) => {
                 const row = byOption.get(option.id)
                 return (

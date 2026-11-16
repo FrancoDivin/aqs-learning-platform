@@ -14,7 +14,7 @@ import { activeMemberships, homePath, useSession, type OrgRole } from './session
 
 function FullPage({ children }: { children: ReactNode }) {
   return (
-    <main id="main-content" style={{ maxWidth: 720, margin: '48px auto', padding: '0 16px' }}>
+    <main id="main-content" style={{ maxWidth: 720, margin: 'var(--space-48) auto', padding: '0 var(--space-16)' }}>
       {children}
     </main>
   )

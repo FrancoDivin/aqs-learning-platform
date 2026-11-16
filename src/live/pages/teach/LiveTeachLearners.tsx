@@ -56,7 +56,7 @@ export default function LiveTeachLearners() {
           const selected = courseId || published[0].id
           return (
             <>
-              <div style={{ maxWidth: 420, marginBottom: 24 }}>
+              <div style={{ maxWidth: 420, marginBottom: 'var(--space-24)' }}>
                 <Select
                   id="learners-course"
                   label="Course"

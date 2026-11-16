@@ -80,7 +80,7 @@ export default function LivePlatformOrganizationDetail() {
       header: <span className="visually-hidden">Actions</span>,
       render: (i) =>
         i.status === 'pending' ? (
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-8)' }}>
             <Button variant="text" size="sm" onClick={() => act.run(() => invitationActions.revoke(i.id), `The invitation for ${i.email} was revoked.`)}>
               Revoke<span className="visually-hidden"> {i.email}</span>
             </Button>
@@ -182,7 +182,7 @@ export default function LivePlatformOrganizationDetail() {
           </ul>
         )}
         <form
-          style={{ display: 'grid', gap: 12, maxWidth: 480, marginTop: 16 }}
+          style={{ display: 'grid', gap: 'var(--space-12)', maxWidth: 480, marginTop: 'var(--space-16)' }}
           onSubmit={async (event) => {
             event.preventDefault()
             setSent(null)
@@ -286,7 +286,7 @@ function ProfileCard({
       {editing ? (
         <form
           id={`profile-${orgId}`}
-          style={{ display: 'grid', gap: 12, maxWidth: 560 }}
+          style={{ display: 'grid', gap: 'var(--space-12)', maxWidth: 560 }}
           onSubmit={async (event) => {
             event.preventDefault()
             if (!draft.organizationType || draft.country.trim().length < 2 || draft.contactName.trim().length < 2 || !draft.contactEmail.includes('@')) {
@@ -310,7 +310,7 @@ function ProfileCard({
           <TextField id="profile-contact-name" label="Primary contact name" value={draft.contactName} onChange={(e) => set('contactName', e.target.value)} />
           <TextField id="profile-contact-email" label="Primary contact email" type="email" value={draft.contactEmail} onChange={(e) => set('contactEmail', e.target.value)} />
           {error ? <Banner tone="warning">{error}</Banner> : null}
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-12)' }}>
             <Button type="submit" loading={busy}>
               Save profile
             </Button>
