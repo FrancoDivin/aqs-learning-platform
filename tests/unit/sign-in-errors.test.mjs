@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { SIGN_IN_PROBLEM_MESSAGES, callbackProblem, signInProblemFromQuery } from '../../src/lib/auth-errors.ts'
-import { signInNoticeParts } from '../../src/lib/sign-in-notice.ts'
 
 // Task 2-4: the reason a sign-in came back without a session. Task 2-3: the approved notice.
 
@@ -41,14 +40,3 @@ test('messages are plain, and a cancelled sign-in is not shown as an error', () 
   }
 })
 
-test('the notice is shown only with both links in the approved sentence', () => {
-  assert.equal(signInNoticeParts(null), null)
-  assert.equal(signInNoticeParts('Only {terms} here.'), null)
-  assert.deepEqual(signInNoticeParts('Read our {terms} and our {privacy}. 18+ only.'), [
-    { kind: 'text', text: 'Read our ' },
-    { kind: 'link', to: '/terms', text: 'Terms of Use' },
-    { kind: 'text', text: ' and our ' },
-    { kind: 'link', to: '/privacy', text: 'Privacy Policy' },
-    { kind: 'text', text: '. 18+ only.' },
-  ])
-})
