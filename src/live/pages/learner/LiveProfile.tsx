@@ -64,7 +64,7 @@ export default function LiveProfile() {
                 me.reload()
               }
             }}
-            style={{ display: 'grid', gap: 12, marginTop: 16 }}
+            style={{ display: 'grid', gap: 'var(--space-12)', marginTop: 'var(--space-16)' }}
           >
             <TextField id="profile-name" label="Display name" value={name} maxLength={200} onChange={(e) => setName(e.target.value)} />
             <ActionFeedback error={save.error} success={saved ? 'Your name was saved.' : null} />

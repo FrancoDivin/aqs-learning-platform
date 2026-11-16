@@ -161,7 +161,7 @@ function Builder({
                 { value: 'never', label: 'Never' },
               ]}
             />
-            <label style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <label style={{ display: 'flex', gap: 'var(--space-8)', alignItems: 'center' }}>
               <input type="checkbox" checked={retake} disabled={!editable} onChange={(e) => setRetake(e.target.checked)} />
               <span>Allow retakes after passing</span>
             </label>

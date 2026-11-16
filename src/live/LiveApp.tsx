@@ -65,7 +65,7 @@ function Page({ children }: { children: ReactNode }) {
   return (
     <Suspense
       fallback={
-        <main id="main-content" style={{ maxWidth: 960, margin: '48px auto', padding: '0 16px' }}>
+        <main id="main-content" style={{ maxWidth: 960, margin: 'var(--space-48) auto', padding: '0 var(--space-16)' }}>
           <LoadingBlock label="Loading page" rows={3} />
         </main>
       }

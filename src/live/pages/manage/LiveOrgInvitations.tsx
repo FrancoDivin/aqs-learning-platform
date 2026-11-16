@@ -85,7 +85,7 @@ export default function LiveOrgInvitations() {
       header: <span className="visually-hidden">Actions</span>,
       render: (i) =>
         i.role === 'org_admin' ? null : (
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 'var(--space-8)' }}>
             {i.shown === 'pending' ? (
               <Button variant="text" size="sm" onClick={() => act.run(() => invitationActions.revoke(i.id), `The invitation for ${i.email} was revoked.`)}>
                 Revoke<span className="visually-hidden"> {i.email}</span>

@@ -78,7 +78,7 @@ export function DetailsPanel({ course, editable, onChanged }: { course: Authorin
         ) : null}
       </form>
 
-      <div className={styles.stack} style={{ marginTop: 24 }}>
+      <div className={styles.stack} style={{ marginTop: 'var(--space-24)' }}>
         <h3 className="text-card-sm">Thumbnail</h3>
         {thumb ? <img src={thumb} alt="" className={styles.thumbnail} /> : null}
         <p className={styles.muted}>

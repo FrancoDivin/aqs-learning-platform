@@ -66,7 +66,7 @@ export default function LivePlatformUsers() {
       <Card as="section" padding="lg" aria-label="Support lookup" className={styles.panel}>
         <CardHeader title="Find invitations" subtitle="Exact matches only. Give a case reference, a reason and at least one search field." headingLevel="h2" size="md" />
         <form
-          style={{ display: 'grid', gap: 12, maxWidth: 560 }}
+          style={{ display: 'grid', gap: 'var(--space-12)', maxWidth: 560 }}
           onSubmit={async (event) => {
             event.preventDefault()
             setMessage(null)

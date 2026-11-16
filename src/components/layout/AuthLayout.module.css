@@ -63,7 +63,7 @@
 
 .headline {
   max-width: 440px;
-  font-size: 48px;
+  font-size: var(--text-display);
   line-height: 52px;
   font-weight: var(--weight-bold);
   letter-spacing: -0.02em;
