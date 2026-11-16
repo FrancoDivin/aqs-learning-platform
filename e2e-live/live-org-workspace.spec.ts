@@ -63,6 +63,8 @@ async function confirmsThroughPattern(page: Page, mock: Mock, trigger: ReturnTyp
   const dialog = page.getByRole('dialog', { name: title })
   await expect(dialog).toBeVisible()
   await expect(dialog.getByRole('button', { name: 'Cancel' })).toBeFocused()
+  // An opaque card: the page must not show through the message
+  expect(await dialog.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(255, 255, 255)')
   const confirmButton = dialog.getByRole('button', { name: confirmLabel })
   await expect(confirmButton).toHaveClass(/_danger_/)
   await expect(dialog.locator('[data-undo]')).toHaveAttribute('data-undo', undoable ? 'yes' : 'no')
