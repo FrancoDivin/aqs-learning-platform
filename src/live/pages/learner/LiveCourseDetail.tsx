@@ -202,7 +202,7 @@ function EnrolControl({ data, signedIn, onChanged }: { data: DetailData; signedI
     if (!signedIn) {
       return (
         <div className={styles.accessBlock}>
-          <p className={styles.accessNote}>Sign in with Google to enrol. It's free.</p>
+          <p className={styles.accessNote}>Sign in or create a free account to enroll.</p>
           <ButtonLink to={`/sign-in?next=${encodeURIComponent(`/courses/${course.id}`)}`} className={styles.enroll}>
             Sign in to enroll
           </ButtonLink>
