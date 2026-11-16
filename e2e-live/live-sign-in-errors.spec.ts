@@ -62,9 +62,12 @@ test('the sign-in photo fills the navy side from below the words to its bottom a
   await expect(photo).toHaveCSS('border-radius', '0px')
 })
 
-test('no Terms and Privacy notice appears before its wording and the legal pages exist (task 2-3)', async ({ page }) => {
+test('sign-in and sign-up each show one sign-in notice, the one from the legal footer (task 2-3)', async ({ page }) => {
   await mockSupabase(page)
-  await page.goto('/sign-in')
-  await expect(page.getByRole('link', { name: 'Terms of Use' })).toHaveCount(0)
-  await expect(page.getByText(/18\+/)).toHaveCount(0)
+  for (const path of ['/sign-in', '/sign-up']) {
+    await page.goto(path)
+    await expect(page.locator('[data-provisional]')).toHaveCount(1)
+    await expect(page.getByRole('link', { name: 'Terms of Use' })).toHaveCount(1)
+    await expect(page.getByRole('link', { name: 'Privacy Policy' })).toHaveCount(1)
+  }
 })
