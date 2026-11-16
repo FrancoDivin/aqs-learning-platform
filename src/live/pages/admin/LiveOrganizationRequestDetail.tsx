@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { PageHeader } from '../../../components/layout/PageHeader'
-import { Badge, Button, Card, CardHeader, TextArea, TextField, useConfirm } from '../../../components/ui'
+import { Badge, Button, Card, CardHeader, TextArea, TextField, highImpact, useConfirm } from '../../../components/ui'
 import { learnerRangeLabel, organizationTypeLabel } from '../../../lib/workspace-request'
 import styles from '../../../pages/PlatformAdminOrganizationDetailPage.module.css'
 import { NotFound } from '../../../pages/NotFound'
@@ -202,11 +202,17 @@ function Decide({ request, busy, confirm, onApprove, onDecline }: DecideProps) {
             return
           }
           setNoteError(undefined)
-          const ok = await confirm({
-            title: `Create a draft workspace for ${name.trim()}?`,
-            message: 'This creates one organisation in Draft, with its profile filled from the request. It sends no invitation and activates nothing.',
-            confirmLabel: 'Approve and create draft',
-          })
+          const ok = await confirm(
+            highImpact({
+              title: `Create a draft workspace for ${name.trim()}?`,
+              happens: 'This creates one organisation in Draft, with its profile filled from the request.',
+              kept: 'Nobody gains access yet: it sends no invitation and activates nothing. The request and your note are kept.',
+              canUndo: false,
+              undo: "This can't be undone here, but the draft stays unused until you invite its Organization Admin and activate it.",
+              confirmLabel: 'Approve and create draft',
+              tone: 'default',
+            }),
+          )
           if (ok) await onApprove(name.trim(), slug.trim(), note.trim())
         }}
       >
@@ -230,11 +236,15 @@ function Decide({ request, busy, confirm, onApprove, onDecline }: DecideProps) {
             return
           }
           setDeclineError(undefined)
-          const ok = await confirm({
-            title: `Decline the request from ${request.organizationName}?`,
-            message: 'The request is closed. Nothing is sent to the contact; reply to them by email.',
-            confirmLabel: 'Decline request',
-          })
+          const ok = await confirm(
+            highImpact({
+              title: `Decline the request from ${request.organizationName}?`,
+              happens: 'The request is closed and no workspace is created. Nothing is sent to the contact; reply to them by email.',
+              kept: 'The request and your reason are kept, seen only by AQS.',
+              canUndo: false,
+              confirmLabel: 'Decline request',
+            }),
+          )
           if (ok) await onDecline(declineNote.trim())
         }}
       >
