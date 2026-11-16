@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { PageHeader } from '../../../components/layout/PageHeader'
-import { Badge, Banner, Button, Card, CardHeader, EmptyState, Select, Table, TextField, highImpact, useConfirm, type BadgeTone, type TableColumn } from '../../../components/ui'
+import { Badge, Banner, Button, Card, CardHeader, EmptyState, Select, Table, TextField, revokeInvitation, useConfirm, type BadgeTone, type TableColumn } from '../../../components/ui'
 import styles from '../../../pages/OrgInvitationsPage.module.css'
 import { ActionFeedback, Loaded } from '../../components/States'
 import { LiveShell } from '../../components/LiveShell'
@@ -137,16 +137,7 @@ export default function LiveOrgInvitations() {
                 size="sm"
                 needsConnection
                 onClick={async () => {
-                  const ok = await confirm(
-                    highImpact({
-                      title: `Revoke the invitation for ${i.email}?`,
-                      happens: 'The link stops working straight away, so they cannot join with it.',
-                      kept: 'Nobody loses access: they are not a member yet.',
-                      canUndo: false,
-                      undo: "This can't be undone, but you can send them a new invitation.",
-                      confirmLabel: 'Revoke invitation',
-                    }),
-                  )
+                  const ok = await confirm(revokeInvitation(i.email))
                   if (ok) void act.run(() => invitationActions.revoke(i.id), `The invitation for ${i.email} was revoked.`)
                 }}
               >

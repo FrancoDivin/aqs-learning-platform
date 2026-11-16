@@ -25,6 +25,11 @@ type TableProps<Row> = {
   emptyMessage?: ReactNode
   /** Footer, e.g. "Showing 5 of 5 organizations". */
   footer?: ReactNode
+  /**
+   * Assignment 3.6: "compact" tightens the rows at 1024 px and wider, for the Platform Control Center's
+   * scanning tables. Below 1024 px every table is cards, whatever the density.
+   */
+  density?: 'comfortable' | 'compact'
 }
 
 export function Table<Row>({
@@ -35,6 +40,7 @@ export function Table<Row>({
   getRowKey,
   emptyMessage = 'Nothing to show yet.',
   footer,
+  density = 'comfortable',
 }: TableProps<Row>) {
   // WCAG 2.1.1 / axe scrollable-region-focusable (M5): when the table is wider than its box
   // (narrow screens), keyboard users must be able to reach and scroll it, so the scroll box
@@ -67,7 +73,7 @@ export function Table<Row>({
         className={styles.scroll}
         {...(scrolls ? { tabIndex: 0, role: 'region', 'aria-label': `${caption} (scrolls sideways)` } : {})}
       >
-        <table className={styles.table} role="table">
+        <table className={cx(styles.table, density === 'compact' && styles.compact)} role="table" data-density={density}>
           <caption className={captionVisible ? styles.caption : 'visually-hidden'}>{caption}</caption>
           <thead role="rowgroup">
             <tr role="row">

@@ -77,7 +77,7 @@ function Queue({ status }: { status: RequestStatus }) {
     <Loaded resource={rows} label="Loading workspace requests" loading="table">
       {(data) => (
         <div className={sectionStyles.tableWrap}>
-          <Table
+          <Table density="compact"
             caption="Workspace requests"
             columns={columns}
             rows={data}
