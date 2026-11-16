@@ -114,3 +114,12 @@ export const PLATFORM_TUTORIALS: PlatformTutorial[] = [
     youtubeId: null,
   },
 ]
+
+/*
+ * Sign-in notice (task 2-3): Owen's approved sentence linking the Terms of Use and the Privacy
+ * Policy and stating the 18+ requirement. null until Owen supplies the exact wording; never write
+ * a sentence here yourself. Write {terms} and {privacy} where the two links go, for example
+ * "... you agree to our {terms} and confirm you have read our {privacy} ...". The notice also needs
+ * the legal pages (LEGAL_PAGES_AVAILABLE, tasks 5-1 to 5-5); until both exist nothing is shown.
+ */
+export const SIGN_IN_NOTICE_TEXT: string | null = null

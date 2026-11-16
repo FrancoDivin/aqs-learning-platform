@@ -3,6 +3,8 @@ import { Link } from 'react-router'
 import { AuthLayout, AuthPhotoImage } from '../components/layout/AuthLayout'
 import { AUTH_PHOTOS } from '../components/layout/auth-photos'
 import { Banner } from '../components/ui'
+import { LEGAL_PAGES_AVAILABLE, SIGN_IN_NOTICE_TEXT } from '../content/public-site'
+import { signInNoticeParts } from '../lib/sign-in-notice'
 import { AUTH_METHOD_ORDER, type AuthMethodId, type OAuthProviderId } from '../lib/auth-methods'
 import { cx } from '../lib/cx'
 import { EmailSignInForm, EmailToggle, OrDivider, ProviderButtons } from './auth/AuthOptions'
@@ -112,6 +114,8 @@ export function SignInView({
         </Link>
       </p>
 
+      <SignInNotice />
+
       {footer ?? (
         <div className={styles.footer}>
           <p className={styles.footerRow}>
@@ -124,6 +128,25 @@ export function SignInView({
         </div>
       )}
     </AuthLayout>
+  )
+}
+
+/** Task 2-3: the approved Terms, Privacy and 18+ notice, shown only once its wording and the legal pages exist. */
+function SignInNotice() {
+  const parts = LEGAL_PAGES_AVAILABLE ? signInNoticeParts(SIGN_IN_NOTICE_TEXT) : null
+  if (!parts) return null
+  return (
+    <p className={cx('text-caption', styles.note)}>
+      {parts.map((part, index) =>
+        part.kind === 'text' ? (
+          <span key={index}>{part.text}</span>
+        ) : (
+          <Link key={index} to={part.to} className={styles.textLink}>
+            {part.text}
+          </Link>
+        ),
+      )}
+    </p>
   )
 }
 
