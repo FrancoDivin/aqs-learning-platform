@@ -62,27 +62,31 @@
   gap: var(--space-8);
 }
 
+/*
+ * Below 1024 px a live table shows one card per row (Table.module.css, refinement Phase 3), so the
+ * table placeholder does too: no header row, the first line stands for the card's title and the
+ * others for its label and value lines. Nothing is wider than the screen while loading, and the
+ * layout does not jump when the cards arrive.
+ */
+@media (max-width: 1023px) {
+  .tableHead {
+    display: none;
+  }
+
+  .tableRow {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+    padding: var(--space-16) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .tableRow:last-child {
+    border-bottom: 0;
+  }
+}
+
 @media (max-width: 767px) {
   .editor {
     grid-template-columns: minmax(0, 1fr);
   }
-
-  .tableHead,
-  .tableRow {
-    grid-template-columns: 2fr 1fr;
-  }
-
-  .tableHead > :nth-child(n + 3),
-  .tableRow > :nth-child(n + 3) {
-    display: none;
-  }
-}
-
-/* Action feedback (task 6-3): the same gap above it wherever it sits; no space while empty. */
-.feedback {
-  margin-top: var(--space-12);
-}
-
-.feedback[data-empty] {
-  margin-top: 0;
 }
