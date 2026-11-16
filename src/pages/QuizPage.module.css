@@ -10,7 +10,7 @@
 
 .eyebrow {
   color: var(--color-accent-text);
-  font-size: 12px;
+  font-size: var(--text-label);
   line-height: 16px;
   font-weight: var(--weight-semibold);
   letter-spacing: 0.08em;
@@ -130,7 +130,7 @@
 
 .score {
   color: var(--color-navy);
-  font-size: 48px;
+  font-size: var(--text-display);
   line-height: 52px;
   font-weight: var(--weight-bold);
 }
@@ -209,7 +209,7 @@
   }
 
   .score {
-    font-size: 40px;
+    font-size: var(--text-h2);
     line-height: 44px;
   }
 }

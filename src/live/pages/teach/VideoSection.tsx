@@ -118,7 +118,7 @@ function PublicVideo({ course, lesson, editable, onChanged }: { course: Authorin
 
       {editable && lesson.videoPath ? (
         <div>
-          <Button
+          <Button needsConnection
             variant="text"
             size="sm"
             onClick={async () => {
@@ -424,7 +424,7 @@ function OrganizationVideo({ course, lesson, editable, onChanged }: { course: Au
       ) : null}
       {editable && lesson.videoPath ? (
         <div>
-          <Button
+          <Button needsConnection
             variant="text"
             size="sm"
             onClick={async () => {

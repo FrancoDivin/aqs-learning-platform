@@ -32,7 +32,7 @@
   padding: var(--space-8) var(--space-4);
   border-radius: var(--radius-sm);
   color: var(--color-navy);
-  font-size: 15px;
+  font-size: var(--text-body-sm);
   font-weight: var(--weight-semibold);
   text-decoration: none;
 }
@@ -46,7 +46,7 @@
 }
 
 .eyebrow {
-  font-size: 11px;
+  font-size: var(--text-badge);
   line-height: 14px;
   font-weight: var(--weight-semibold);
   letter-spacing: 0.04em;
@@ -119,7 +119,7 @@
   }
 
   .title {
-    font-size: 16px; /* measured in the mobile course-player design */
+    font-size: var(--text-body); /* measured in the mobile course-player design */
     line-height: 24px;
   }
 

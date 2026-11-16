@@ -5,6 +5,7 @@ import { NotFound } from '../pages/NotFound'
 import { LoadingBlock } from './components/States'
 import { HomeRedirect, RequireOrgRole, RequirePlatformAdmin, RequireSignedIn } from './guards'
 import { SessionProvider } from './SessionProvider'
+import { ConnectionProvider } from './components/Connection'
 import { LiveAccessDenied, LiveSignInRequired } from './pages/LiveNotices'
 
 /*
@@ -64,7 +65,7 @@ function Page({ children }: { children: ReactNode }) {
   return (
     <Suspense
       fallback={
-        <main id="main-content" style={{ maxWidth: 960, margin: '48px auto', padding: '0 16px' }}>
+        <main id="main-content" style={{ maxWidth: 960, margin: 'var(--space-48) auto', padding: '0 var(--space-16)' }}>
           <LoadingBlock label="Loading page" rows={3} />
         </main>
       }
@@ -77,6 +78,7 @@ function Page({ children }: { children: ReactNode }) {
 export function LiveApp({ extraRoutes }: { extraRoutes?: ReactNode }) {
   return (
     <SessionProvider>
+      <ConnectionProvider>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/sign-in" element={<Page><LiveSignInPage /></Page>} />
@@ -143,6 +145,7 @@ export function LiveApp({ extraRoutes }: { extraRoutes?: ReactNode }) {
         {extraRoutes}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </ConnectionProvider>
     </SessionProvider>
   )
 }

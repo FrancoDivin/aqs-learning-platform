@@ -63,7 +63,7 @@ export function LivePlatformOverview() {
   return (
     <LiveShell shell={platformShell()}>
       <PageHeader title="Overview" description="Organizations, people and courses on AQS E-Learning, as of now." />
-      <Loaded resource={report} label="Loading the platform report">
+      <Loaded resource={report} label="Loading the platform report" loading="dashboard">
         {(rows) => {
           const orgs = rows.filter((r) => r.orgId)
           const platform = rows.find((r) => !r.orgId)
@@ -88,7 +88,7 @@ export function LivePlatformOverview() {
                   />
                 </div>
                 <div className={sectionStyles.tableWrap}>
-                  <Table caption="Organizations" columns={orgColumns()} rows={orgs.slice(0, 8)} getRowKey={(r) => r.orgId ?? 'platform'} emptyMessage="No organizations yet." />
+                  <Table caption="Organizations" columns={orgColumns()} rows={orgs.slice(0, 8)} getRowKey={(r) => r.orgId ?? 'platform'} emptyMessage={<EmptyState title="No organizations yet" description="Create the first organization for a client." />} />
                 </div>
               </Card>
             </>
@@ -121,7 +121,7 @@ export default function LivePlatformOrganizations() {
             </Button>
           ))}
         </div>
-        <Loaded resource={report} label="Loading organizations">
+        <Loaded resource={report} label="Loading organizations" loading="table">
           {(rows) => (
             <div className={styles.tableWrap}>
               <Table
@@ -201,7 +201,7 @@ export function LivePlatformReports() {
   return (
     <LiveShell shell={platformShell()}>
       <PageHeader title="Reports" />
-      <Loaded resource={report} label="Loading the report">
+      <Loaded resource={report} label="Loading the report" loading="table">
         {(rows) => (
           <Card padding="none" as="section" aria-label="Platform report">
             <div className={sectionStyles.tableWrap}>

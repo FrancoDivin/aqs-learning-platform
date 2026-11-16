@@ -59,9 +59,11 @@ test('inline upload status: an organisation video of the wrong type says "Wrong 
   }, { 'course-video': () => ({ json: { Key: 'x' } }) })
   const input = page.getByRole('region', { name: 'Video' }).locator('input[type=file][accept^="video"]')
   await input.setInputFiles({ name: 'notes.txt', mimeType: 'text/plain', buffer: Buffer.from('x') })
-  await expect(page.getByRole('region', { name: 'Video' }).getByRole('status').first()).toContainText('Wrong file type: Videos must be MP4 or WebM files.')
+  // The panel also has the always-present action-feedback region (task 6-3), so pick the upload status by its text.
+  const video = page.getByRole('region', { name: 'Video' })
+  await expect(video.getByRole('status').filter({ hasText: 'Wrong file type' })).toContainText('Wrong file type: Videos must be MP4 or WebM files.')
   await input.setInputFiles({ name: 'lecture.mp4', mimeType: 'video/mp4', buffer: Buffer.from('fake mp4') })
-  await expect(page.getByRole('region', { name: 'Video' }).getByRole('status').first()).toContainText('Video uploaded.')
+  await expect(video.getByRole('status').filter({ hasText: 'Video uploaded.' })).toContainText('Video uploaded.')
 })
 
 test('consistent confirmations: removing a file, the video and the thumbnail ask through the dialog', async ({ page }) => {

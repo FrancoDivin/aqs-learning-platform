@@ -39,7 +39,7 @@ export default function LiveSignUpPage() {
       signInTo={`/sign-in${query}`}
       notice={
         !authAvailable ? (
-          <Banner tone="warning">Sign-up is not configured for this site.</Banner>
+          <Banner tone="warning">Sign-up is not available on this site right now. Please try again later.</Banner>
         ) : error ? (
           // A danger banner is announced at once (role="alert").
           <Banner tone="danger">{error}</Banner>

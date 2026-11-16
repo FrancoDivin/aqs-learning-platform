@@ -71,7 +71,7 @@ export default function LiveInstructorDashboard() {
         title={`Welcome back${firstName ? `, ${firstName}` : ''}`}
         actions={<ButtonLink to={`${base}/courses#new`}>Create course</ButtonLink>}
       />
-      <Loaded resource={courses} label="Loading your courses">
+      <Loaded resource={courses} label="Loading your courses" loading="dashboard">
         {(list) => (
           <>
             <div className={styles.stats}>
@@ -124,7 +124,7 @@ export function CreateCourseForm({ orgId, base }: { orgId: string | null; base: 
         const result = await create.run()
         if (result.ok) navigate(`${base}/courses/${result.value}`)
       }}
-      style={{ display: 'grid', gap: 12, maxWidth: 560 }}
+      style={{ display: 'grid', gap: 'var(--space-12)', maxWidth: 560 }}
       aria-label="Create a course"
     >
       <TextField id="course-title" label="Course title" value={title} required minLength={2} maxLength={200} onChange={(e) => setTitle(e.target.value)} />

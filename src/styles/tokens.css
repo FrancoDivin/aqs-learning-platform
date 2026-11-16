@@ -117,6 +117,11 @@
   --text-badge: 11px; /* status badges — measured 10–11; 11 is the readable minimum */
   --leading-badge: 14px;
   --text-button-sm: 13px; /* row/table actions — measured 12–14 */
+  /* Task 8-4: sizes already used consistently across pages, now named so they stay consistent. */
+  --text-meta: 13px; /* course meta lines, dates and small labels under titles */
+  --text-subsection: 22px; /* sub-section headings inside a page section */
+  --text-h1-mobile: 36px; /* h1 and h2 headings on narrow screens */
+  --text-display: 48px; /* display titles (course hero, auth panel, quiz score) */
 
   --weight-regular: 400;
   --weight-medium: 500;
@@ -151,6 +156,7 @@
   --content-max-width: 1296px;
 
   --transition-fast: 120ms ease;
+  --transition-enter: 180ms ease-out; /* task 8-3: content appearing after a state change */
 }
 
 /*

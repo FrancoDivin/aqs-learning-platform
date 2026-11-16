@@ -15,6 +15,8 @@ import { courseStatus } from '../teach/teach-data'
  * Organization Admin dashboard at /o/:orgSlug/manage (dashboard draft, OrgAdminDashboardPage).
  * Figures are current counts of the organization's own records. Domain verification is not in
  * the first release (P14), so the design's "domains needing action" is not shown.
+ * Task 8-1: only figures that have something to count are shown as cards (active members always),
+ * and the "Your people" card gives the role counts with the next step when a role is missing.
  */
 export default function LiveOrgAdminDashboard() {
   const org = useCurrentOrg()
@@ -59,21 +61,30 @@ export default function LiveOrgAdminDashboard() {
         actions={<ButtonLink to={`${base}/manage/invitations`} iconStart="plus">Invite members</ButtonLink>}
       />
       {org.status === 'draft' ? (
-        <p className={styles.muted} style={{ marginBottom: 16 }}>
+        <p className={styles.muted} style={{ marginBottom: 'var(--space-16)' }}>
           This organization is being set up. Learners can join once a Platform Admin activates it.
         </p>
       ) : null}
-      <Loaded resource={data} label="Loading your organization">
+      <Loaded resource={data} label="Loading your organization" loading="dashboard">
         {({ members, invitations, courses, loadedAt }) => {
           const pending = invitations.filter((i) => i.status === 'pending' && Date.parse(i.expiresAt) > loadedAt)
           const awaiting = courses.filter((c) => c.status === 'draft' && c.publicationRequestedAt)
           const count = (role: string) => members.filter((m) => m.roles.includes(role as never)).length
+          const published = courses.filter((c) => c.status === 'published').length
+          const roles = [
+            { role: 'org_admin', label: 'Organization admins', next: null },
+            { role: 'instructor', label: 'Instructors', next: 'No instructors yet: invite one so courses can be created.' },
+            { role: 'learner', label: 'Learners', next: 'No learners yet: invite your staff to start learning.' },
+          ]
           return (
             <>
               <div className={styles.stats}>
                 <StatCard label="Active members" value={members.length} note={`${count('learner')} learners`} />
-                <StatCard label="Pending invitations" value={pending.length} />
-                <StatCard label="Courses awaiting approval" value={awaiting.length} note="Review before they go live" />
+                {pending.length > 0 ? <StatCard label="Pending invitations" value={pending.length} note="Waiting to be accepted" /> : null}
+                {awaiting.length > 0 ? (
+                  <StatCard label="Courses awaiting approval" value={awaiting.length} note="Review before they go live" />
+                ) : null}
+                {published > 0 ? <StatCard label="Published courses" value={published} /> : null}
               </div>
               <div className={styles.main}>
                 <Card padding="none" as="section" aria-label="Courses">
@@ -99,16 +110,31 @@ export default function LiveOrgAdminDashboard() {
                     />
                   </div>
                 </Card>
-                <Card as="section" aria-label="Roles" className={styles.side}>
-                  <CardHeader title="Roles" headingLevel="h2" size="md" />
-                  <ul className={styles.roleList}>
-                    <li>Organization admins: {count('org_admin')}</li>
-                    <li>Instructors: {count('instructor')}</li>
-                    <li>Learners: {count('learner')}</li>
-                  </ul>
-                  <ButtonLink to={`${base}/manage/members`} variant="text" size="sm" iconEnd="arrowRight">
-                    Manage members
-                  </ButtonLink>
+                <Card as="section" aria-label="Your people" className={styles.side}>
+                  <CardHeader title="Your people" subtitle="Who is in your organization, by role." headingLevel="h2" size="md" />
+                  <dl className={styles.roleList}>
+                    {roles.map(({ role, label }) => (
+                      <div key={role}>
+                        <dt>{label}</dt>
+                        <dd>{count(role)}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                  {roles
+                    .filter(({ role, next }) => next && count(role) === 0)
+                    .map(({ role, next }) => (
+                      <p key={role} className={styles.muted}>
+                        {next}
+                      </p>
+                    ))}
+                  <div className={styles.peopleActions}>
+                    <ButtonLink to={`${base}/manage/invitations`} variant="secondary" size="sm">
+                      Invite members
+                    </ButtonLink>
+                    <ButtonLink to={`${base}/manage/members`} variant="text" size="sm" iconEnd="arrowRight">
+                      Manage members
+                    </ButtonLink>
+                  </div>
                 </Card>
               </div>
             </>

@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Badge, Banner, ButtonLink, EmptyState, ProgressBar, StatCard, Tabs, type TabItem } from '../../../components/ui'
 import { cx } from '../../../lib/cx'
+import { CourseArtwork } from '../../components/CourseArtwork/CourseArtwork'
 import styles from '../../../pages/LearnerDashboardPage.module.css'
 import { ErrorBanner, LoadingBlock } from '../../components/States'
 import { LiveShell } from '../../components/LiveShell'
@@ -45,7 +46,7 @@ export default function LiveLearnerDashboard() {
         <h1 className="text-title">Welcome back{firstName ? `, ${firstName}` : ''}</h1>
       </header>
 
-      {overview.state === 'loading' ? <LoadingBlock label="Loading your dashboard" rows={4} /> : null}
+      {overview.state === 'loading' ? <LoadingBlock label="Loading your dashboard" shape="cards" /> : null}
       {overview.state === 'error' ? <ErrorBanner error={overview.error} onRetry={overview.reload} /> : null}
       {overview.state === 'ready' && overview.data.unavailable.length > 0 ? (
         <Banner tone="info">
@@ -185,7 +186,12 @@ export function CourseImage({ course, tint, wide = false, hero = false }: { cour
       </div>
     )
   }
-  return <div className={className} aria-hidden="true" />
+  // Task 8-2: no thumbnail yet, so the course's own artwork in AQS colours, not an empty box.
+  return (
+    <div className={className} aria-hidden="true">
+      <CourseArtwork title={course.title} />
+    </div>
+  )
 }
 
 function ContinueHero({ course }: { course: EnrolledCourse }) {
