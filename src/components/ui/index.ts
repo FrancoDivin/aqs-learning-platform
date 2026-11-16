@@ -1,6 +1,7 @@
 // One import path for all UI primitives: import { Button, Card } from '../components/ui'
 export { Icon, type IconName } from './Icon/Icon'
 export { Button, ButtonLink } from './Button/Button'
+export { ConnectionContext } from './Button/connection'
 export { TextField, TextArea, Select } from './FormField/FormField'
 export { Card, CardHeader, StatCard } from './Card/Card'
 export { Badge, type BadgeTone } from './Badge/Badge'

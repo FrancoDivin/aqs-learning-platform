@@ -5,6 +5,7 @@ import { NotFound } from '../pages/NotFound'
 import { LoadingBlock } from './components/States'
 import { HomeRedirect, RequireOrgRole, RequirePlatformAdmin, RequireSignedIn } from './guards'
 import { SessionProvider } from './SessionProvider'
+import { ConnectionProvider } from './components/Connection'
 import { LiveAccessDenied, LiveSignInRequired } from './pages/LiveNotices'
 
 /*
@@ -74,6 +75,7 @@ function Page({ children }: { children: ReactNode }) {
 export function LiveApp({ extraRoutes }: { extraRoutes?: ReactNode }) {
   return (
     <SessionProvider>
+      <ConnectionProvider>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/sign-in" element={<Page><LiveSignInPage /></Page>} />
@@ -137,6 +139,7 @@ export function LiveApp({ extraRoutes }: { extraRoutes?: ReactNode }) {
         {extraRoutes}
         <Route path="*" element={<NotFound />} />
       </Routes>
+      </ConnectionProvider>
     </SessionProvider>
   )
 }
