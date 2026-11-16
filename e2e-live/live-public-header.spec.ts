@@ -37,7 +37,7 @@ test('signed in: My workspace and an account menu listing the workspaces', async
   await expect(button).toHaveAttribute('aria-expanded', 'true')
   await expect(banner(page).getByText(USER.email)).toBeVisible()
   const workspaces = banner(page).getByRole('list', { name: 'Your workspaces' }).getByRole('link')
-  await expect(workspaces).toHaveText(['ZZ Test Org A · Teaching', 'My learning'])
+  await expect(workspaces).toHaveText(['ZZ Test Org A · Teaching Studio', 'My learning'])
   await expect(workspaces.first()).toHaveAttribute('href', '/o/zz-a/teach')
 
   // Escape closes the menu and returns focus to its button

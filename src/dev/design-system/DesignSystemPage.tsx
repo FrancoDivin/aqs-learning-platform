@@ -8,7 +8,15 @@
  * from production builds (see src/App.tsx).
  */
 import { useEffect, useRef, type MouseEvent, type ReactNode } from 'react'
-import { AppShell, AuthLayout, FocusLayout, PublicLayout, type NavItem } from '../../components/layout'
+import {
+  AppShell,
+  AuthLayout,
+  FocusLayout,
+  PublicLayout,
+  type NavItem,
+  type WorkspaceIdentity,
+  type WorkspaceKind,
+} from '../../components/layout'
 import {
   Avatar,
   Badge,
@@ -167,6 +175,64 @@ const learnerNav: NavItem[] = [
 ]
 
 const mockUser = { name: 'Sample Learner', roleLabel: 'Learner' }
+
+/*
+ * The three staff workspaces (refinement plan, Phase 2): the same AppShell with a different
+ * `workspaceKind`. The learner shell above is the fourth and keeps its navy sidebar.
+ */
+const WORKSPACE_SHELL_SAMPLES: {
+  kind: WorkspaceKind
+  label: string
+  roleLabel: string
+  helpTitle: string
+  heading: string
+  note: string
+  workspace: WorkspaceIdentity
+  nav: NavItem[]
+}[] = [
+  {
+    kind: 'studio',
+    helpTitle: 'Here to help you teach',
+    label: 'AppShell — Teaching Studio (instructor)',
+    roleLabel: 'Instructor',
+    heading: 'Teaching Studio',
+    note: 'White sidebar with a warm active item.',
+    workspace: { title: 'Teaching Studio', subtitle: 'Sample organization', mark: 'SO' },
+    nav: [
+      { label: 'Dashboard', to: '/mock/teach', active: true },
+      { label: 'Courses', to: '/mock/teach/courses' },
+      { label: 'Learners', to: '/mock/teach/learners' },
+    ],
+  },
+  {
+    kind: 'organization',
+    helpTitle: 'Here to help you manage',
+    label: 'AppShell — Organization workspace (organization admin)',
+    roleLabel: 'Organization Admin',
+    heading: 'Organization workspace',
+    note: 'Navy sidebar with the organization tile in the header.',
+    workspace: { title: 'Sample organization', subtitle: 'Organization workspace', mark: 'SO' },
+    nav: [
+      { label: 'Dashboard', to: '/mock/manage', active: true },
+      { label: 'Members', to: '/mock/manage/members' },
+      { label: 'Invitations', to: '/mock/manage/invitations' },
+    ],
+  },
+  {
+    kind: 'platform',
+    helpTitle: 'Here to help you manage',
+    label: 'AppShell — Platform Control Center (platform admin)',
+    roleLabel: 'Platform Admin',
+    heading: 'Platform Control Center',
+    note: 'Charcoal sidebar, indigo marker and the Platform-wide tag.',
+    workspace: { title: 'AQS Platform', subtitle: 'Control Center', mark: 'AQS', scope: 'Platform-wide' },
+    nav: [
+      { label: 'Overview', to: '/mock/admin', active: true },
+      { label: 'Organizations', to: '/mock/admin/organizations' },
+      { label: 'Users and roles', to: '/mock/admin/users' },
+    ],
+  },
+]
 
 const sections = [
   { id: 'colour', label: 'Colour' },
@@ -817,6 +883,25 @@ export default function DesignSystemPage() {
                 </div>
               </AppShell>
             </Frame>
+
+            {WORKSPACE_SHELL_SAMPLES.map((sample) => (
+              <Frame key={sample.kind} label={sample.label} note="Mock content" cue={skipFrameCue}>
+                <AppShell
+                  mainId={`sample-shell-${sample.kind}-main`}
+                  navItems={sample.nav}
+                  user={{ name: 'Sample Person', roleLabel: sample.roleLabel }}
+                  workspaceKind={sample.kind}
+                  workspace={sample.workspace}
+                  helpTitle={sample.helpTitle}
+                >
+                  <h3 className="text-title">{sample.heading}</h3>
+                  <p className="text-muted" style={{ margin: '8px 0 24px' }}>
+                    {sample.note} (Mock content.)
+                  </p>
+                  <div className={styles.mockBlock}>Page content area</div>
+                </AppShell>
+              </Frame>
+            ))}
 
             <Frame label="FocusLayout — course player and quiz" note="Mock content" cue={skipFrameCue}>
               <FocusLayout

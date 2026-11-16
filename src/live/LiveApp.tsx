@@ -54,6 +54,9 @@ const LiveRequestWorkspacePage = lazy(() => import('./pages/LiveRequestWorkspace
 // The condition must be a build-time constant so production builds leave the pages out entirely
 // (`npm run check:build` fails otherwise). When the owner approves the content, set
 // ABOUT_AND_CONTACT_APPROVED in content/public-site.ts and change `import.meta.env.DEV` here to `true`.
+// Terms of Use, Privacy Policy and Cookie Policy (tasks 5-3 and 5-5, 15 November 2026): the owner's
+// documents, word for word. Their content is provisional until the owner replaces it (content/legal).
+const LegalPage = lazy(() => import('../pages/legal/LegalPage'))
 const AboutPage = import.meta.env.DEV ? lazy(() => import('../pages/AboutPage')) : null
 const ContactPage = import.meta.env.DEV ? lazy(() => import('../pages/ContactPage')) : null
 
@@ -87,6 +90,9 @@ export function LiveApp({ extraRoutes }: { extraRoutes?: ReactNode }) {
         <Route path="/courses/:courseId" element={<Page><LiveCourseDetail /></Page>} />
         <Route path="/access-denied" element={<LiveAccessDenied />} />
         <Route path="/session-expired" element={<LiveSignInRequired />} />
+        <Route path="/terms" element={<Page><LegalPage document="terms" /></Page>} />
+        <Route path="/privacy" element={<Page><LegalPage document="privacy" /></Page>} />
+        <Route path="/cookies" element={<Page><LegalPage document="cookies" /></Page>} />
         {AboutPage ? <Route path="/about" element={<Page><AboutPage /></Page>} /> : null}
         {ContactPage ? <Route path="/contact" element={<Page><ContactPage /></Page>} /> : null}
 

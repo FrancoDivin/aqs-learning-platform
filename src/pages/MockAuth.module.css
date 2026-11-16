@@ -87,3 +87,19 @@
   line-height: var(--leading-hint);
   color: var(--color-blue-100);
 }
+
+/* Sign-in notice with the Terms and Privacy links (live cards, 15 November 2026). */
+.legalNotice {
+  max-width: 360px;
+  margin: 0;
+  color: var(--color-text-subtle);
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  text-align: center;
+}
+
+.legalNotice a,
+.footerRow a {
+  color: var(--color-blue);
+  font-weight: var(--weight-medium);
+}

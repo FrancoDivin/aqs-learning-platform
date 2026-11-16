@@ -25,11 +25,15 @@ const FORBIDDEN = [
   // so the content itself is matched as well: the placeholders and the invented featured courses.
   { name: 'invented featured courses', pattern: /MOCK_FEATURED_COURSES|Maya Chen|Daniel Park|Sofia Alvarez|Noah Reed|Priya Shah|Elena Brooks/ },
   { name: 'hero image placeholder', pattern: /Hero image placeholder/ },
+  // Landing hero (15 November 2026): the placeholder card that reached integration with the PR #32 merge never ships again.
+  { name: 'landing image placeholder card', pattern: /Image placeholder|asset selection pending/i },
   { name: 'sign-in photo placeholder caption', pattern: /Hero photo placeholder/ },
   { name: 'partner logo placeholders', pattern: /Partner logos \(placeholders|PARTNER_PLACEHOLDERS/ },
   { name: 'thumbnail placeholder text', pattern: /Thumbnail placeholder/ },
   // Landing page Concept C (owner, 10 November 2026): placeholder and dummy company content never ships.
   { name: 'About/Contact placeholder', pattern: /AQS to supply|Placeholder · |\[AQS (?:email address|phone number|physical or postal address)/ },
+  // About AQS and Contact sample content (15 November 2026): illustrative text for design review never ships.
+  { name: 'About/Contact sample content', pattern: /Sample content · not approved|aqs-elearning\.example|KG 000 St|Kigali-based team that helps/ },
   // WP3 (10 November 2026): the request form's preview sends nothing, so it never ships.
   { name: 'request form preview', pattern: /requests are not sent or saved here|REQ-SAMPLE/ },
   // Secrets (T6). The publishable key (sb_publishable_…) is public by design and allowed.

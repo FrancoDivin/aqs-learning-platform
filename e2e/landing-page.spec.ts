@@ -42,11 +42,41 @@ test.describe('landing page content', () => {
     await expect(page.getByText(/Invited by your organization\? Sign in with the email address the invitation was sent to\./)).toBeVisible()
   })
 
-  test('shows the product as a labelled sample, with alternative text', async ({ page }) => {
+  test('the hero shows the office team photo, with alternative text, cropped to the hero frame', async ({ page }) => {
     await page.goto('/')
-    const image = page.getByRole('img', { name: /The learner dashboard/ })
+    const image = page.getByRole('img', { name: 'Four colleagues wearing headsets work together at laptops and a monitor in an office.' })
     await expect(image).toBeVisible()
-    await expect(page.getByText('The learner dashboard, shown with sample data.')).toBeVisible()
+    await expect(image).toHaveAttribute('src', '/images/landing/team-working-office.jpg')
+    expect(await image.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth)).toBe(1600)
+    await expect(image).toHaveCSS('object-fit', 'cover')
+    await expect(image).toHaveCSS('border-radius', '0px')
+    await expect(page.getByText('The learner dashboard, shown with sample data.')).toHaveCount(0)
+  })
+
+  for (const width of [1440, 1920]) {
+    test(`at ${width}px the photo runs from the header to the screen's right edge, beside the text`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 })
+      await page.goto('/')
+      const image = page.locator('img[src="/images/landing/team-working-office.jpg"]')
+      const text = page.getByRole('heading', { level: 1 }).locator('xpath=..')
+      const [photo, column, header] = [await image.boundingBox(), await text.boundingBox(), await page.getByRole('banner').boundingBox()]
+      const pageWidth = await page.evaluate(() => document.documentElement.clientWidth)
+      expect(Math.abs(photo!.y - (header!.y + header!.height))).toBeLessThanOrEqual(1)
+      expect(Math.abs(photo!.x + photo!.width - pageWidth)).toBeLessThanOrEqual(1)
+      expect(photo!.x).toBeGreaterThan(column!.x + column!.width)
+      // The photo reaches at least the bottom of the text, and the page never scrolls sideways
+      expect(photo!.y + photo!.height).toBeGreaterThanOrEqual(column!.y + column!.height - 1)
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)).toBe(false)
+    })
+  }
+
+  test('below 1024px the photo keeps the wide 1200 : 505 frame under the text', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto('/')
+    const image = page.locator('img[src="/images/landing/team-working-office.jpg"]')
+    const box = await image.boundingBox()
+    expect(box && Math.abs(box.width / box.height - 1200 / 505)).toBeLessThan(0.02)
+    await expect(image).toHaveCSS('border-radius', '0px')
   })
 
   test('without published public courses the Courses block shows a neutral empty state', async ({ page }) => {

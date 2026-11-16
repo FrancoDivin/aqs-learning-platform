@@ -3,19 +3,24 @@ import {
   getOrgAdminShell,
   getPlatformAdminShell,
   getShellDefinition,
+  workspaceInitials,
   type ShellDefinition,
 } from '../lib/navigation'
 
 /*
  * Shells for the live routes. They start from the approved shells in lib/navigation.ts and
- * only change what live data decides: the organization's name in the header, and entries for
- * features outside the first release (P21: messaging, certificates; instructor invitations,
- * D6) stay visibly unavailable instead of opening sample pages.
+ * only change what live data decides: the organization's name in the header, and the entries for
+ * features outside the first release (P21: messaging, certificates; instructor invitations, D6;
+ * instructor reports and profile; platform settings).
+ *
+ * Refinement plan, Phase 3 (16 November 2026): those entries are left out of live menus instead of
+ * shown dimmed, so no menu item leads nowhere. This replaces the dimmed-item signal chosen in task
+ * 1-8. The design previews (lib/navigation.ts) still show them, marked unavailable.
  */
 
 const off = (shell: ShellDefinition, labels: string[]): ShellDefinition => ({
   ...shell,
-  navItems: shell.navItems.map((item) => (labels.includes(item.label) ? { ...item, unavailable: true } : item)),
+  navItems: shell.navItems.filter((item) => !labels.includes(item.label)),
 })
 
 export function learnerShell(): ShellDefinition {
@@ -24,7 +29,8 @@ export function learnerShell(): ShellDefinition {
 
 export function instructorShell(orgSlug: string, orgName: string): ShellDefinition {
   const shell = off(getInstructorShell(orgSlug), ['Invitations', 'Messages', 'Reports', 'Profile'])
-  return { ...shell, workspace: { title: orgName, subtitle: 'Instructor workspace' } }
+  // Phase 2: the Teaching Studio names itself first, then the organization it belongs to.
+  return { ...shell, workspace: { title: 'Teaching Studio', subtitle: orgName, mark: workspaceInitials(orgName) } }
 }
 
 export function orgAdminShell(orgSlug: string, orgName: string): ShellDefinition {
@@ -32,7 +38,8 @@ export function orgAdminShell(orgSlug: string, orgName: string): ShellDefinition
   // WP1 task 1-4: the page has invitations only until domain admission (WP4, D40) is built; WP4 restores
   // the design's "Invitations and domains" label. Design previews keep the design label.
   const navItems = shell.navItems.map((item) => (item.label === 'Invitations and domains' ? { ...item, label: 'Invitations' } : item))
-  return { ...shell, navItems, workspace: { title: orgName, subtitle: 'Organization admin' } }
+  // Phase 2: the Organization Workspace is named after the organization, with its initials as a badge.
+  return { ...shell, navItems, workspace: { title: orgName, subtitle: 'Organization workspace', mark: workspaceInitials(orgName) } }
 }
 
 export function platformShell(): ShellDefinition {
