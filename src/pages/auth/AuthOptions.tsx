@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type ComponentType, type FormEvent } from 'react'
 import { Button, TextField } from '../../components/ui'
 import { OAUTH_PROVIDER_LABELS, isOAuthProvider, type AuthMethodId, type OAuthProviderId } from '../../lib/auth-methods'
 import {
@@ -9,6 +9,9 @@ import {
   fullNameError,
   newPasswordError,
 } from '../../lib/auth-validation'
+import { AppleMark } from './AppleMark'
+import { FacebookMark } from './FacebookMark'
+import { GoogleMark } from './GoogleMark'
 import styles from './AuthOptions.module.css'
 
 /*
@@ -43,12 +46,25 @@ export function ProviderButtons({ methods, onProvider, busyProvider = null, disa
             disabled={disabled}
             loading={busyProvider === provider}
           >
+            {/* Task 2-2: each provider's own logo on its button (the spinner takes its place while opening). */}
+            {busyProvider !== provider ? <ProviderMark provider={provider} /> : null}
             {busyProvider === provider ? `Opening ${OAUTH_PROVIDER_LABELS[provider]}…` : `Continue with ${OAUTH_PROVIDER_LABELS[provider]}`}
           </Button>
         </li>
       ))}
     </ul>
   )
+}
+
+const PROVIDER_MARKS: Record<OAuthProviderId, ComponentType> = {
+  google: GoogleMark,
+  apple: AppleMark,
+  facebook: FacebookMark,
+}
+
+function ProviderMark({ provider }: { provider: OAuthProviderId }) {
+  const Mark = PROVIDER_MARKS[provider]
+  return <Mark />
 }
 
 /** "or" between the provider buttons and the email option. Decorative for assistive technology. */
