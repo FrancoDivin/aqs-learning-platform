@@ -50,3 +50,13 @@
     transform: none;
   }
 }
+
+/* Assignment 2.1: what happens, what is kept, whether it can be undone, one paragraph each. */
+.parts {
+  display: grid;
+  gap: var(--space-8);
+}
+
+.parts p {
+  margin: 0;
+}
