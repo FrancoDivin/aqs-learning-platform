@@ -56,7 +56,7 @@ export default function LivePlatformCourses() {
                 <CardHeader title="Platform courses" subtitle="Public courses owned by AQS." size="md" />
               </div>
               <div className={sectionStyles.tableWrap}>
-                <Table caption="Platform courses" columns={columns} rows={platform} getRowKey={(c) => c.id} emptyMessage={<EmptyState title="No platform courses yet" description="Courses that Platform Admins create for every organization appear here." />} />
+                <Table density="compact" caption="Platform courses" columns={columns} rows={platform} getRowKey={(c) => c.id} emptyMessage={<EmptyState title="No platform courses yet" description="Courses that Platform Admins create for every organization appear here." />} />
               </div>
             </Card>
             <Card padding="lg" as="section" aria-label="New platform course">

@@ -62,7 +62,7 @@ export function LivePlatformOverview() {
   const report = useResource(() => platformReport(), 'report')
   return (
     <LiveShell shell={platformShell()}>
-      <PageHeader title="Overview" description="Organizations, people and courses on AQS E-Learning, as of now." />
+      <PageHeader title="Platform overview" description="Organizations, people and courses on AQS E-Learning, as of now." />
       <Loaded resource={report} label="Loading the platform report" loading="dashboard">
         {(rows) => {
           const orgs = rows.filter((r) => r.orgId)
@@ -88,7 +88,7 @@ export function LivePlatformOverview() {
                   />
                 </div>
                 <div className={sectionStyles.tableWrap}>
-                  <Table caption="Organizations" columns={orgColumns()} rows={orgs.slice(0, 8)} getRowKey={(r) => r.orgId ?? 'platform'} emptyMessage={<EmptyState title="No organizations yet" description="Create the first organization for a client." />} />
+                  <Table density="compact" caption="Organizations" columns={orgColumns()} rows={orgs.slice(0, 8)} getRowKey={(r) => r.orgId ?? 'platform'} emptyMessage={<EmptyState title="No organizations yet" description="Create the first organization for a client." />} />
                 </div>
               </Card>
             </>
@@ -116,7 +116,7 @@ export default function LivePlatformOrganizations() {
       <section className={styles.panel} aria-label="Organization list">
         <div className={styles.toolbar} role="group" aria-label="Filter by status">
           {(['all', 'draft', 'active', 'suspended'] as const).map((s) => (
-            <Button key={s} size="sm" variant={status === s ? 'primary' : 'neutral'} aria-pressed={status === s} onClick={() => setStatus(s)}>
+            <Button key={s} size="sm" variant={status === s ? 'secondary' : 'neutral'} aria-pressed={status === s} onClick={() => setStatus(s)}>
               {s === 'all' ? 'All' : ORG_STATUS[s].label}
             </Button>
           ))}
@@ -124,7 +124,7 @@ export default function LivePlatformOrganizations() {
         <Loaded resource={report} label="Loading organizations" loading="table">
           {(rows) => (
             <div className={styles.tableWrap}>
-              <Table
+              <Table density="compact"
                 caption="Organizations"
                 columns={orgColumns()}
                 rows={rows.filter((r) => r.orgId)}
@@ -205,7 +205,7 @@ export function LivePlatformReports() {
         {(rows) => (
           <Card padding="none" as="section" aria-label="Platform report">
             <div className={sectionStyles.tableWrap}>
-              <Table caption="Platform report" columns={columns} rows={rows} getRowKey={(r) => r.orgId ?? 'platform'} footer={`Platform Admins: ${rows.find((r) => !r.orgId)?.platformAdmins ?? 0}`} />
+              <Table density="compact" caption="Platform report" columns={columns} rows={rows} getRowKey={(r) => r.orgId ?? 'platform'} footer={`Platform Admins: ${rows.find((r) => !r.orgId)?.platformAdmins ?? 0}`} />
             </div>
           </Card>
         )}
