@@ -1,6 +1,7 @@
 import type { NavItem } from '../components/layout/types'
 import {
   GET_STARTED_PAGE_AVAILABLE,
+  INFO_PAGES_AVAILABLE,
   LEGAL_PAGES_AVAILABLE,
   REQUEST_WORKSPACE_AVAILABLE,
 } from '../content/public-site'
@@ -8,7 +9,8 @@ import {
 /*
  * Public header and footer destinations (landing page Concept C, approved 10 November 2026).
  *
- * About AQS and Contact are included with clearly marked placeholder content for design review.
+ * About AQS and Contact appear wherever their pages exist (INFO_PAGES_AVAILABLE): development builds,
+ * with clearly marked placeholders, and production once the owner approves the content.
  * Request a workspace appears with task 3-3, the legal pages with task 5-5.
  */
 
@@ -26,15 +28,14 @@ export const HOME_PATH = '/'
  * Sign in and Get started follow in the header's actions. For organizations stays in the footer
  * and in the landing page's own buttons.
  *
- * About and Contact open the About AQS and Contact pages.
+ * About and Contact open the About AQS and Contact pages, only where those pages exist.
  */
 export function publicHeaderNav(options: { courses?: string } = {}): NavItem[] {
   const items: NavItem[] = [
     { label: 'Home', to: HOME_PATH },
     { label: 'Courses', to: options.courses ?? '/catalog' },
-    { label: 'About', to: '/about' },
-    { label: 'Contact', to: '/contact' },
   ]
+  if (INFO_PAGES_AVAILABLE) items.push({ label: 'About', to: '/about' }, { label: 'Contact', to: '/contact' })
   return items
 }
 
@@ -53,8 +54,10 @@ export function publicFooterColumns(options: { signInAvailable?: boolean } = {})
   const columns: FooterColumn[] = [
     { heading: 'Learn', links: learn },
     { heading: 'Organizations', links: organizations },
-    { heading: 'AQS', links: [{ label: 'About AQS', to: '/about' }, { label: 'Contact', to: '/contact' }] },
   ]
+  if (INFO_PAGES_AVAILABLE) {
+    columns.push({ heading: 'AQS', links: [{ label: 'About AQS', to: '/about' }, { label: 'Contact', to: '/contact' }] })
+  }
   if (LEGAL_PAGES_AVAILABLE) {
     columns.push({
       heading: 'Legal',

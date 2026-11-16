@@ -30,6 +30,13 @@ export const GET_STARTED_PAGE_AVAILABLE = true
 /** Development builds show the About and Contact pages with placeholders, for design review only. */
 export const SHOW_INFO_PAGE_PREVIEWS = import.meta.env.DEV && !ABOUT_AND_CONTACT_APPROVED
 
+/**
+ * Whether the About AQS and Contact pages exist in this build: always in development builds (with
+ * marked placeholders), in production only once ABOUT_AND_CONTACT_APPROVED is true. Every link to
+ * them follows this, so a production build never links to a page it does not have.
+ */
+export const INFO_PAGES_AVAILABLE = import.meta.env.DEV || ABOUT_AND_CONTACT_APPROVED
+
 /*
  * Public statements reviewed in the landing page proposal (Revision 2, section 9). A statement is
  * shown only when `cleared` is true. The owner's restriction of 10 November 2026: no security,

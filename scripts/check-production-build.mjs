@@ -84,6 +84,8 @@ if (!infoGateOpen) {
   FORBIDDEN.push(
     { name: 'About AQS page before approval', pattern: /Why we built AQS E-Learning|Questions about AQS\?/ },
     { name: 'Contact page before approval', pattern: /Choose the route that fits your question|Help with an assigned course/ },
+    // A link to a page the build does not have leads to Not Found (header, footer or any button).
+    { name: 'link to /about or /contact before approval', pattern: /["'`]\/(about|contact)["'`]/ },
   )
 }
 
