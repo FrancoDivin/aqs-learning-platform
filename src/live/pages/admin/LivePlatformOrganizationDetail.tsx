@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { PageHeader } from '../../../components/layout/PageHeader'
-import { Badge, Banner, Button, Card, CardHeader, EmptyState, Select, StatCard, Table, TextField, type TableColumn, useConfirm } from '../../../components/ui'
+import { Badge, Banner, Button, Card, CardHeader, EmptyState, Select, StatCard, Table, TextField, type TableColumn, useConfirm, highImpact, revokeInvitation } from '../../../components/ui'
 import { ORGANIZATION_TYPE_OPTIONS, organizationTypeLabel } from '../../../lib/workspace-request'
 import styles from '../../../pages/PlatformAdminOrganizationDetailPage.module.css'
 import { NotFound } from '../../../pages/NotFound'
@@ -81,7 +81,15 @@ export default function LivePlatformOrganizationDetail() {
       render: (i) =>
         i.status === 'pending' ? (
           <div style={{ display: 'flex', gap: 'var(--space-8)' }}>
-            <Button variant="text" size="sm" onClick={() => act.run(() => invitationActions.revoke(i.id), `The invitation for ${i.email} was revoked.`)}>
+            <Button
+              variant="text"
+              size="sm"
+              needsConnection
+              onClick={async () => {
+                const ok = await confirm(revokeInvitation(i.email))
+                if (ok) void act.run(() => invitationActions.revoke(i.id), `The invitation for ${i.email} was revoked.`)
+              }}
+            >
               Revoke<span className="visually-hidden"> {i.email}</span>
             </Button>
             <Button
@@ -140,7 +148,25 @@ export default function LivePlatformOrganizationDetail() {
         {org.status === 'draft' ? (
           <>
             <p className={styles.muted}>Activation needs an Organization Admin who accepted their invitation.</p>
-            <Button onClick={() => act.run(() => platformActions.setStatus(org.id, 'active'), `${org.name} is active.`)} loading={act.busy}>
+            <Button
+              variant={admins.length > 0 ? 'primary' : 'secondary'}
+              needsConnection
+              loading={act.busy}
+              onClick={async () => {
+                const ok = await confirm(
+                  highImpact({
+                    title: `Activate ${org.name}?`,
+                    happens: 'Its Organization Admins and the people they invite can use the workspace, and learners can join its courses.',
+                    kept: 'Everything set up while it was a draft is kept.',
+                    canUndo: true,
+                    undo: 'You can suspend it later from this page.',
+                    confirmLabel: 'Activate organization',
+                    tone: 'default',
+                  }),
+                )
+                if (ok) void act.run(() => platformActions.setStatus(org.id, 'active'), `${org.name} is active.`)
+              }}
+            >
               Activate organization
             </Button>
           </>
@@ -149,11 +175,16 @@ export default function LivePlatformOrganizationDetail() {
           <Button needsConnection
             variant="danger"
             onClick={async () => {
-              const ok = await confirm({
-                title: `Suspend ${org.name}?`,
-                message: 'Its members lose access to its courses until it is reactivated. Their records are kept.',
-                confirmLabel: 'Suspend organization',
-              })
+              const ok = await confirm(
+                highImpact({
+                  title: `Suspend ${org.name}?`,
+                  happens: 'Its members lose access to its courses straight away and see a neutral notice instead.',
+                  kept: 'Their records, courses and roles are kept.',
+                  canUndo: true,
+                  undo: 'You can reactivate it from this page; members then regain access.',
+                  confirmLabel: 'Suspend organization',
+                }),
+              )
               if (ok) void act.run(() => platformActions.setStatus(org.id, 'suspended'), `${org.name} is suspended.`)
             }}
           >
@@ -163,7 +194,25 @@ export default function LivePlatformOrganizationDetail() {
         {org.status === 'suspended' ? (
           <>
             <Banner tone="warning">Suspended {formatDate(org.suspendedAt)}. Members see a neutral notice; their records are kept.</Banner>
-            <Button onClick={() => act.run(() => platformActions.setStatus(org.id, 'active'), `${org.name} is active again.`)}>Reactivate organization</Button>
+            <Button
+              needsConnection
+              onClick={async () => {
+                const ok = await confirm(
+                  highImpact({
+                    title: `Reactivate ${org.name}?`,
+                    happens: 'Its members regain access to its courses straight away, with the roles they had.',
+                    kept: 'Their records were kept while it was suspended.',
+                    canUndo: true,
+                    undo: 'You can suspend it again from this page.',
+                    confirmLabel: 'Reactivate organization',
+                    tone: 'default',
+                  }),
+                )
+                if (ok) void act.run(() => platformActions.setStatus(org.id, 'active'), `${org.name} is active again.`)
+              }}
+            >
+              Reactivate organization
+            </Button>
           </>
         ) : null}
       </Card>
@@ -197,7 +246,12 @@ export default function LivePlatformOrganizationDetail() {
           <TextField id="admin-invite" label="Invite an Organization Admin" type="email" required value={email} disabled={org.status === 'suspended'} onChange={(e) => setEmail(e.target.value)} />
           <ActionFeedback error={invite.error} />
           <div>
-            <Button type="submit" loading={invite.busy} disabled={!email.trim() || org.status === 'suspended'}>
+            <Button
+              type="submit"
+              variant={org.status === 'active' || (org.status === 'draft' && admins.length === 0) ? 'primary' : 'secondary'}
+              loading={invite.busy}
+              disabled={!email.trim() || org.status === 'suspended'}
+            >
               Send invitation
             </Button>
           </div>
@@ -250,7 +304,7 @@ export default function LivePlatformOrganizationDetail() {
 
       <section aria-label="Invitations" className={styles.panel}>
         <div className={styles.tableWrap}>
-          <Table caption="Invitations you can see" columns={inviteColumns} rows={invitations} getRowKey={(i) => i.id} emptyMessage={<EmptyState title="No invitations yet" description="Invitations sent for this organization appear here." />} />
+          <Table density="compact" caption="Invitations you can see" columns={inviteColumns} rows={invitations} getRowKey={(i) => i.id} emptyMessage={<EmptyState title="No invitations yet" description="Invitations sent for this organization appear here." />} />
         </div>
         <p className={styles.note}>Shows pending Organization Admin invitations and the invitations you sent.</p>
       </section>
@@ -311,7 +365,7 @@ function ProfileCard({
           <TextField id="profile-contact-email" label="Primary contact email" type="email" value={draft.contactEmail} onChange={(e) => set('contactEmail', e.target.value)} />
           {error ? <Banner tone="warning">{error}</Banner> : null}
           <div style={{ display: 'flex', gap: 'var(--space-12)' }}>
-            <Button type="submit" loading={busy}>
+            <Button type="submit" variant="secondary" loading={busy}>
               Save profile
             </Button>
             <Button type="button" variant="neutral" onClick={() => setEditing(false)}>
