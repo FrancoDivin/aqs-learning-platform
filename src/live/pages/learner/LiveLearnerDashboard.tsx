@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import { Badge, Banner, ButtonLink, EmptyState, ProgressBar, StatCard, Tabs, type TabItem } from '../../../components/ui'
 import { cx } from '../../../lib/cx'
+import { CourseArtwork } from '../../components/CourseArtwork/CourseArtwork'
 import styles from '../../../pages/LearnerDashboardPage.module.css'
 import { ErrorBanner, LoadingBlock } from '../../components/States'
 import { LiveShell } from '../../components/LiveShell'
@@ -185,7 +186,12 @@ export function CourseImage({ course, tint, wide = false, hero = false }: { cour
       </div>
     )
   }
-  return <div className={className} aria-hidden="true" />
+  // Task 8-2: no thumbnail yet, so the course's own artwork in AQS colours, not an empty box.
+  return (
+    <div className={className} aria-hidden="true">
+      <CourseArtwork title={course.title} />
+    </div>
+  )
 }
 
 function ContinueHero({ course }: { course: EnrolledCourse }) {
