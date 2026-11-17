@@ -254,6 +254,7 @@ for (const width of WIDTHS) {
       await page.getByLabel('Lesson text').fill('Know your exits and assembly points.')
       await tap(page, page.getByRole('button', { name: 'Save lesson' }))
       await expect(page.getByText('Lesson saved.')).toBeVisible()
+      await tap(page, page.getByRole('tab', { name: 'Publish' })) // Phase B (B.3): publication is on the Publish tab
       await tap(page, page.getByRole('button', { name: 'Propose for publication' }))
       await expect(page.getByText('Awaiting approval', { exact: true })).toBeVisible()
       await noSidewaysScroll(page)
