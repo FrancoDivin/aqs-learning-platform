@@ -77,6 +77,7 @@ async function studio(page: Page, o: { roles?: string[]; admin?: boolean; course
       my_video_submissions: () => ({ json: [] }),
       course_learners: () => ({ json: LEARNERS }),
       quiz_results: () => ({ json: [] }),
+      course_corrections: () => ({ json: [] }),
       create_course: () => ({ json: NEW_ID }),
       archive_course: () => ({ json: null }),
       delete_lesson: () => ({ json: null }),
