@@ -240,7 +240,8 @@ test('an open submission can be withdrawn', async ({ page }) => {
     },
   })
   await page.getByRole('button', { name: 'Withdraw this submission' }).click()
-  await page.getByRole('dialog', { name: 'Withdraw this video submission?' }).getByRole('button', { name: 'Withdraw submission' }).click() // CM3-8
+  // Phase B (B.5): the dialog's title now names the lesson
+  await page.getByRole('dialog', { name: /Withdraw the video submission for “/ }).getByRole('button', { name: 'Withdraw submission' }).click() // CM3-8
   await expect(page.getByRole('group', { name: 'Video submission status' }).getByText('Withdrawn', { exact: true })).toBeVisible()
   expect(mock.calls.find((c) => c.name === 'withdraw_video_submission')?.body).toEqual({ p_submission: SUB })
 })
