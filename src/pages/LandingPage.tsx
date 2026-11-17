@@ -257,8 +257,9 @@ export function LandingPage() {
             ))}
           </ol>
           {REQUEST_WORKSPACE_AVAILABLE ? (
-            /* Step 1 starts here (WP3, task 3-3). On navy the primary button uses its inverse style (D41). */
-            <div className={cx('on-dark', styles.organizationsAction)}>
+            /* Step 1 starts here (WP3, task 3-3). The band is light (client request, 11 November 2026), so the
+               standard primary button and text colours apply. */
+            <div className={styles.organizationsAction}>
               <ButtonLink to="/request-workspace">Request a workspace</ButtonLink>
               <p>AQS reviews every request. Nothing is set up until we have checked it with you.</p>
             </div>
