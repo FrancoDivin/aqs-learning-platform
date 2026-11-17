@@ -29,7 +29,8 @@ test.describe('sign-in demo route (development only)', () => {
       'Continue with Apple',
       'Continue with Facebook',
     ])
-    await expect(page.getByRole('button', { name: 'Sign in with Email' })).toBeVisible()
+    // Phase A (A.1): the email form itself is the email option
+    await expect(page.getByRole('form', { name: 'Sign in with email' })).toBeVisible()
     await expect(page.getByText(DEMO_NOTICE, { exact: true })).toBeVisible()
     await expect(page.getByText(PLACEHOLDER, { exact: true })).toHaveCount(0)
   })
@@ -58,8 +59,7 @@ test.describe('sign-in demo route (development only)', () => {
     const requests: string[] = []
     page.on('request', (request) => requests.push(request.url()))
     for (const name of ['Continue with Apple', 'Continue with Facebook']) await page.getByRole('button', { name }).click()
-    await page.getByRole('button', { name: 'Sign in with Email' }).click()
-    await expect(page.getByRole('button', { name: 'Sign in with Email' })).toHaveAttribute('aria-expanded', 'true')
+    // Phase A (A.1): no toggle to click; the form is already shown
     const form = page.getByRole('form', { name: 'Sign in with email' })
     await expect(form.getByLabel('Email address')).toBeDisabled()
     await expect(form.getByLabel('Password')).toBeDisabled()

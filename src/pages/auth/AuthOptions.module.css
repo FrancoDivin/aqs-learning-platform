@@ -51,3 +51,8 @@
     transform: none;
   }
 }
+
+/* A.1: the providers' group, labelled by the "Or continue with" divider above its buttons. */
+.group {
+  display: grid;
+}

@@ -52,7 +52,8 @@ test.describe('sign-in page', () => {
       'Continue with Facebook',
     ])
     // The email form comes first and starts open (integration 275f12a, 14 Nov); the providers follow it
-    await expect(page.getByRole('button', { name: 'Sign in with Email' })).toHaveAttribute('aria-expanded', 'true')
+    // Phase A (A.1): the form is the one email option, shown without a separate "Sign in with Email" button
+    await expect(page.getByRole('form', { name: 'Sign in with email' })).toBeVisible()
     const formBox = await page.getByRole('form', { name: 'Sign in with email' }).boundingBox()
     const providersBox = await page.getByRole('list', { name: 'Sign-in options' }).boundingBox()
     expect(formBox && providersBox && formBox.y < providersBox.y).toBe(true)
@@ -143,7 +144,8 @@ test.describe('sign-up page', () => {
       'Continue with Apple',
       'Continue with Facebook',
     ])
-    await expect(page.getByRole('button', { name: 'Sign up with Email' })).toHaveAttribute('aria-expanded', 'true')
+    // Phase A (A.1): the form is the one email option, shown without a separate "Sign up with Email" button
+    await expect(page.getByRole('form', { name: 'Sign up with email' })).toBeVisible()
     await expect(page.getByRole('link', { name: 'Sign in', exact: true })).toHaveAttribute('href', '/sign-in')
     // The organisation route is the workspace request form now that it exists (task 3-3).
     await expect(page.getByRole('link', { name: 'See how organizations get started' })).toHaveAttribute('href', '/request-workspace')

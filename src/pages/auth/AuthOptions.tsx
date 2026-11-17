@@ -1,4 +1,4 @@
-import { useState, type ComponentType, type FormEvent } from 'react'
+import { useId, useState, type ComponentType, type FormEvent, type ReactNode } from 'react'
 import { Button, TextField } from '../../components/ui'
 import { OAUTH_PROVIDER_LABELS, isOAuthProvider, type AuthMethodId, type OAuthProviderId } from '../../lib/auth-methods'
 import {
@@ -16,7 +16,9 @@ import styles from './AuthOptions.module.css'
 
 /*
  * Sign-in and sign-up options shared by the sign-in and sign-up pages (D42, 12 November 2026):
- * "Continue with" buttons for the OAuth providers, then the email option, which opens its form.
+ * the email form first (commit 275f12a), then the OAuth providers' "Continue with" buttons in one group
+ * under "Or continue with" (Revision 2 Phase 7, A.1: one email entry point, no second email control).
+ * Presentation only (amendment 4): which methods appear still comes from the page (VITE_AUTH_PROVIDERS).
  * The pages decide what each action does; in the development previews (D27) nothing is wired and
  * every control is inert.
  */
@@ -67,29 +69,19 @@ function ProviderMark({ provider }: { provider: OAuthProviderId }) {
   return <Mark />
 }
 
-/** "or" between the provider buttons and the email option. Decorative for assistive technology. */
-export function OrDivider() {
+/**
+ * The provider buttons under a visible "Or continue with" label, as one named group. Used when the email
+ * form is offered above them; with Google alone the page shows the buttons without the label.
+ */
+export function ProviderGroup({ children }: { children: ReactNode }) {
+  const labelId = useId()
   return (
-    <p className={styles.divider} aria-hidden="true">
-      <span>or</span>
-    </p>
-  )
-}
-
-type EmailToggleProps = {
-  label: string
-  open: boolean
-  onToggle: () => void
-  controls: string
-  disabled?: boolean
-}
-
-/** The "Sign up with Email" / "Sign in with Email" option: shows or hides its form. */
-export function EmailToggle({ label, open, onToggle, controls, disabled }: EmailToggleProps) {
-  return (
-    <Button variant="neutral" fullWidth aria-expanded={open} aria-controls={controls} onClick={onToggle} disabled={disabled}>
-      {label}
-    </Button>
+    <div role="group" aria-labelledby={labelId} className={styles.group}>
+      <p className={styles.divider} id={labelId}>
+        <span>Or continue with</span>
+      </p>
+      {children}
+    </div>
   )
 }
 
