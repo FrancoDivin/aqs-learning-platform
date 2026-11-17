@@ -83,10 +83,13 @@ function DashboardBody({
     <>
       {featured && featured.progress.next ? <ContinueHero course={featured} /> : null}
 
-      <div className={styles.statsRow}>
-        <StatCard label="Courses in progress" value={inProgress.length} />
-        <StatCard label="Lessons completed" value={lessonsCompleted} />
-      </div>
+      {/* A.4: a number card shows only when it has something to count; a new learner sees none. */}
+      {inProgress.length > 0 || lessonsCompleted > 0 ? (
+        <div className={styles.statsRow}>
+          {inProgress.length > 0 ? <StatCard label="Courses in progress" value={inProgress.length} /> : null}
+          {lessonsCompleted > 0 ? <StatCard label="Lessons completed" value={lessonsCompleted} /> : null}
+        </div>
+      ) : null}
 
       <section className={styles.section} aria-labelledby="my-courses-heading">
         <SectionHeader
