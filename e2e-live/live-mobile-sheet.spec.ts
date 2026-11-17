@@ -30,6 +30,16 @@ async function open(page: Page) {
 test.describe('at 390 px', () => {
   test.use({ viewport: { width: 390, height: 844 } })
 
+  // Fix F1 (16 November 2026): the sheet used --color-surface, which is not a token, so the lesson page
+  // showed through it. The open sheet must be an opaque card, like the confirmation dialog.
+  test('the open sheet has an opaque background', async ({ page }) => {
+    await open(page)
+    await page.getByRole('button', { name: 'Lesson details' }).click()
+    const sheet = page.getByRole('dialog', { name: READING.title })
+    await expect(sheet).toBeVisible()
+    expect(await sheet.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(255, 255, 255)')
+  })
+
   test('the sheet shows Overview and Documents only, traps focus, closes with Escape and returns focus', async ({ page }) => {
     await open(page)
     await expect(page.getByRole('region', { name: 'Lesson text' })).toBeHidden() // inline text moves into the sheet
