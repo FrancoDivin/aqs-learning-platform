@@ -35,7 +35,6 @@ export default function LiveSignInPage() {
     <SignInView
       methods={METHODS}
       busy={busy}
-      defaultEmailOpen={true}
       signUpTo={`/sign-up${query}`}
       notice={
         !authAvailable ? (

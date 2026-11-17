@@ -34,7 +34,6 @@ export default function LiveSignUpPage() {
     <SignUpView
       methods={METHODS}
       busy={busy}
-      defaultEmailOpen={true}
       confirmationSentTo={confirmationSentTo}
       signInTo={`/sign-in${query}`}
       notice={

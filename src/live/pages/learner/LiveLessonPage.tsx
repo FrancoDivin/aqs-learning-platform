@@ -176,6 +176,7 @@ function LessonContentView({
     <FocusLayout
       back={{ label: 'course', to: `/courses/${course.id}` }}
       title={course.title}
+      titleLevel="h2"
       progress={{ label: 'Your progress', value: percent }}
       user={user}
       footer={footer}
@@ -216,7 +217,8 @@ function LessonContentView({
           <p className={styles.meta}>
             {moduleTitle} · Lesson {index + 1} of {lessons.length} · {LESSON_TYPE_LABEL[lesson.type]}
           </p>
-          <h2 className={styles.lessonTitle}>{lesson.title}</h2>
+          {/* A.2: the lesson is the page's subject, so its title is the one h1 (the course title is h2). */}
+          <h1 className={styles.lessonTitle}>{lesson.title}</h1>
 
           {/* CM3-4 (G15): on narrow screens Overview and Documents open in the sheet. */}
           <div className={sheetStyles.mobileOnly}>
