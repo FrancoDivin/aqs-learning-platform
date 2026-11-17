@@ -18,6 +18,7 @@ import { instructorShell, platformShell } from '../../navigation'
 import { useCurrentOrgOptional } from '../../org-context'
 import { useSession } from '../../session-context'
 import { useAction, useResource } from '../../useResource'
+import editor from './CourseEditor.module.css'
 
 /*
  * Quiz builder at .../courses/:courseId/quizzes/:lessonId, from the approved quiz builder
@@ -161,7 +162,7 @@ function Builder({
                 { value: 'never', label: 'Never' },
               ]}
             />
-            <label style={{ display: 'flex', gap: 'var(--space-8)', alignItems: 'center' }}>
+            <label className={editor.checkLabel}>
               <input type="checkbox" checked={retake} disabled={!editable} onChange={(e) => setRetake(e.target.checked)} />
               <span>Allow retakes after passing</span>
             </label>

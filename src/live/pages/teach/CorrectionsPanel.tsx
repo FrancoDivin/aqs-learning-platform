@@ -153,7 +153,7 @@ export function CorrectionsPanel({
           rows.length === 0 ? (
             <EmptyState title="No corrections yet" description="Corrections proposed for this course appear here with their review status." />
           ) : (
-            <ul style={{ listStyle: 'none', padding: 0 }}>
+            <ul className={styles.plainList}>
               {rows
                 .slice()
                 .reverse()
