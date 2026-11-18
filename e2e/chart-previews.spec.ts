@@ -9,8 +9,8 @@ import { settleAnimations } from './settle-animations.js'
 const WCAG_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa']
 const NOTE = 'Sample chart data · not real figures'
 const PREVIEWS = [
-  { name: 'Organization Admin', path: '/o/sample-org/manage', charts: ['Completion by course', 'Overdue assignments by course', 'Invitations by status'] },
-  { name: 'Instructor', path: '/o/sample-org/teach', charts: ['Completion by course', 'Quiz attempts passed, by course'] },
+  { name: 'Organization Admin', path: '/o/sample-org/manage', charts: ['Course completion', 'Overdue assignments by course', 'Invitations by status'] },
+  { name: 'Instructor', path: '/o/sample-org/teach', charts: ['Course completion', 'Quiz attempts passed, by course'] },
   { name: 'Platform counts', path: '/admin', charts: ['Organizations by status', 'Learners and courses'] },
 ]
 
@@ -74,7 +74,7 @@ test('Platform counts are counts only: no person is named', async ({ page }) => 
 test('with reduced motion nothing in a chart animates', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.goto('/o/sample-org/manage')
-  await expect(chart(page, 'Completion by course')).toBeVisible()
+  await expect(chart(page, 'Course completion')).toBeVisible()
   const running = await page.evaluate(() =>
     document.getAnimations().filter((a) => (a.effect as KeyframeEffect | null)?.target instanceof Element && ((a.effect as KeyframeEffect).target as Element).closest('figure')).length,
   )

@@ -116,7 +116,7 @@ export default function OrgAdminDashboardPage() {
       {/* Phase C (C.3, task 7-3): chart designs with sample data; real figures need the summaries of 7-1. */}
       <section className={styles.charts} aria-label="Charts (sample data)">
         <Card padding="lg">
-          <BarChart title="Completion by course" description={SAMPLE_CHART_NOTE} unit="percent" labelHeading="Course" valueHeading="Completion" data={ORG_COMPLETION_BY_COURSE} />
+          <BarChart title="Course completion" description={SAMPLE_CHART_NOTE} unit="percent" labelHeading="Course" valueHeading="Completion" data={ORG_COMPLETION_BY_COURSE} />
         </Card>
         <Card padding="lg">
           <BarChart title="Overdue assignments by course" description={SAMPLE_CHART_NOTE} labelHeading="Course" valueHeading="Overdue" data={ORG_OVERDUE_BY_COURSE} />

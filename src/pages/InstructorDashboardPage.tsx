@@ -109,7 +109,7 @@ export default function InstructorDashboardPage() {
       {/* Phase C (C.4, task 7-4): chart designs with sample data, after the number cards as on the live dashboard (Phase B). */}
       <section className={styles.charts} aria-label="Charts (sample data)">
         <Card padding="lg">
-          <BarChart title="Completion by course" description={SAMPLE_CHART_NOTE} unit="percent" labelHeading="Course" valueHeading="Completion" data={INSTRUCTOR_COMPLETION_BY_COURSE} />
+          <BarChart title="Course completion" description={SAMPLE_CHART_NOTE} unit="percent" labelHeading="Course" valueHeading="Completion" data={INSTRUCTOR_COMPLETION_BY_COURSE} />
         </Card>
         <Card padding="lg">
           <BarChart title="Quiz attempts passed, by course" description={SAMPLE_CHART_NOTE} unit="percent" labelHeading="Course" valueHeading="Passed" data={INSTRUCTOR_QUIZ_PASS_BY_COURSE} />
